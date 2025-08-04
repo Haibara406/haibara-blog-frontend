@@ -88,6 +88,16 @@ function getCategoryIcon(index: number) {
   return categoryIcons[index % categoryIcons.length]
 }
 
+// 获取当前分类的图标
+function getCurrentCategoryIcon() {
+  const currentCategory = categorys.value.find(cat => cat.isActive)
+  if (currentCategory) {
+    const index = categorys.value.indexOf(currentCategory)
+    return getCategoryIcon(index)
+  }
+  return 'collection' // 默认图标
+}
+
 // 处理卡牌悬浮效果
 function handleCardHover(index: number, isHover: boolean) {
   // 这里可以添加额外的悬浮逻辑，比如音效或其他交互
@@ -238,24 +248,106 @@ onUnmounted(() => {
           </div>
         </template>
         <template v-if="isQueryArticle">
-          <div class="category_container">
-            <div class="title">
-              {{ title }}
+          <div class="category-detail-page">
+            <!-- 优化的页面头部 -->
+            <div class="detail-header">
+              <div class="header-content">
+                <div class="category-info">
+                  <div class="category-icon">
+                    <SvgIcon :name="getCurrentCategoryIcon()" width="28" height="28"/>
+                  </div>
+                  <div class="category-text">
+                    <h1 class="category-title">{{ title }}</h1>
+                    <p class="article-count">{{ articleList.length }} 篇文章</p>
+                  </div>
+                </div>
+
+                <div class="back-button" @click="$router.push('/category')">
+                  <SvgIcon name="jt_x" width="18" height="18"/>
+                  <span>返回分类</span>
+                </div>
+              </div>
             </div>
-            <div>
+
+            <!-- 分类导航 -->
+            <div class="category-nav">
               <el-scrollbar>
-                <div class="scrollbar-flex-content">
+                <div class="nav-items">
                   <template v-for="category in categorys" :key="category.id">
-                    <p @click="$router.push(`/category/${category.id}`)"
-                       class="scrollbar-item" :class="category.isActive?'active':''">
-                      {{ category.categoryName }}
-                    </p>
+                    <div
+                      @click="$router.push(`/category/${category.id}`)"
+                      class="nav-item"
+                      :class="{ 'active': category.isActive }"
+                    >
+                      <SvgIcon :name="getCategoryIcon(categorys.indexOf(category))" width="16" height="16"/>
+                      <span>{{ category.categoryName }}</span>
+                    </div>
                   </template>
                 </div>
               </el-scrollbar>
             </div>
-            <el-divider/>
-            <ArticleList :articleList="articleList"/>
+
+            <!-- 文章列表 -->
+            <div class="articles-container">
+              <template v-if="articleList.length > 0">
+                <div class="articles-grid">
+                  <template v-for="(article, index) in articleList" :key="article.id">
+                    <div
+                      class="modern-article-card"
+                      @click="$router.push(`/article/${article.id}`)"
+                    >
+                      <div class="article-image">
+                        <img :src="article.articleCover" :alt="article.articleTitle">
+                        <div class="image-overlay">
+                          <div class="read-btn">
+                            <SvgIcon name="reading" width="20" height="20"/>
+                            <span>阅读</span>
+                          </div>
+                        </div>
+                        <div class="view-count">
+                          <SvgIcon name="heat" width="12" height="12"/>
+                          {{ article.visitCount }}
+                        </div>
+                      </div>
+
+                      <div class="article-content">
+                        <div class="article-date">{{ article.createTime }}</div>
+                        <h3 class="article-title">{{ article.articleTitle }}</h3>
+                        <div class="article-tags">
+                          <template v-for="tag in article.tags" :key="tag.id">
+                            <span
+                              class="tag"
+                              @click.stop="$router.push(`/tags/${tag.id}`)"
+                            >
+                              #{{ tag.tagName }}
+                            </span>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- 空状态 -->
+              <template v-else>
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <SvgIcon name="essay_icon" width="64" height="64"/>
+                  </div>
+                  <h3>暂无文章</h3>
+                  <p>{{ title }} 分类下还没有文章</p>
+                  <div class="empty-actions">
+                    <button class="btn-primary" @click="$router.push('/category')">
+                      浏览其他分类
+                    </button>
+                    <button class="btn-secondary" @click="$router.push('/')">
+                      返回首页
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
         </template>
       </template>
@@ -1123,6 +1215,542 @@ onUnmounted(() => {
         }
         100% {
           transform: translateY(-6px) rotateX(1deg) scale(1.01);
+        }
+      }
+    }
+  }
+}
+
+// 分类详情页面
+.category-detail-page {
+  position: relative;
+  z-index: 1;
+
+  // 页面头部
+  .detail-header {
+    background: linear-gradient(135deg,
+      rgba(64, 158, 255, 0.06) 0%,
+      rgba(103, 194, 58, 0.06) 100%);
+    padding: 1.5rem 2rem;
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 1.5rem;
+    position: relative;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+
+      .category-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .category-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(135deg,
+            rgba(64, 158, 255, 0.1) 0%,
+            rgba(103, 194, 58, 0.1) 100%);
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+
+          svg {
+            color: var(--el-color-primary);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+          }
+        }
+
+        .category-text {
+          .category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--el-text-color-primary);
+            margin-bottom: 0.2rem;
+            background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+          }
+
+          .article-count {
+            font-size: 0.9rem;
+            color: var(--el-text-color-regular);
+            opacity: 0.7;
+          }
+        }
+      }
+
+      .back-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.2rem;
+        background: rgba(64, 158, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(64, 158, 255, 0.2);
+        color: var(--el-color-primary);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 500;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
+
+        svg {
+          color: var(--el-color-primary);
+          transition: transform 0.3s ease;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+        }
+
+        span {
+          color: var(--el-color-primary);
+          font-weight: 600;
+        }
+
+        &:hover {
+          background: rgba(64, 158, 255, 0.15);
+          backdrop-filter: blur(25px);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(64, 158, 255, 0.2);
+          border-color: rgba(64, 158, 255, 0.4);
+
+          svg {
+            transform: translateX(-2px);
+          }
+        }
+
+        &:active {
+          transform: translateY(0);
+          box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
+        }
+      }
+    }
+  }
+
+  // 分类导航
+  .category-nav {
+    margin-bottom: 1.5rem;
+    padding: 0 2rem;
+
+    .nav-items {
+      display: flex;
+      gap: 0.8rem;
+      padding: 0.5rem 0;
+      max-width: 1200px;
+      margin: 0 auto;
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        background: var(--el-bg-color);
+        border: 1px solid var(--el-border-color-lighter);
+        border-radius: 18px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        font-size: 0.85rem;
+
+        svg {
+          color: var(--el-color-primary);
+          width: 14px;
+          height: 14px;
+        }
+
+        span {
+          font-weight: 500;
+          color: var(--el-text-color-regular);
+        }
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+          border-color: var(--el-color-primary);
+          background: var(--el-color-primary-light-9);
+        }
+
+        &.active {
+          background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+          color: white;
+          border-color: transparent;
+          box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
+
+          svg, span {
+            color: white;
+          }
+        }
+      }
+    }
+  }
+
+  // 文章容器
+  .articles-container {
+    padding: 0 2rem;
+
+    // 文章网格
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+
+      .modern-article-card {
+        background: var(--el-bg-color);
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid var(--el-border-color-lighter);
+
+        &:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+          border-color: var(--el-color-primary-light-7);
+
+          .article-image img {
+            transform: scale(1.03);
+          }
+
+          .image-overlay {
+            opacity: 1;
+          }
+        }
+
+        .article-image {
+          position: relative;
+          height: 160px;
+          overflow: hidden;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+          }
+
+          .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
+
+            .read-btn {
+              display: flex;
+              align-items: center;
+              gap: 0.4rem;
+              padding: 0.5rem 1rem;
+              background: rgba(255, 255, 255, 0.95);
+              backdrop-filter: blur(10px);
+              color: var(--el-color-primary);
+              border-radius: 18px;
+              font-weight: 600;
+              font-size: 0.85rem;
+              border: 1px solid rgba(255, 255, 255, 0.3);
+
+              svg {
+                color: var(--el-color-primary);
+                width: 16px;
+                height: 16px;
+              }
+            }
+          }
+
+          .view-count {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.2rem 0.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            color: white;
+            border-radius: 10px;
+            font-size: 0.7rem;
+
+            svg {
+              color: #ff6b6b;
+              width: 10px;
+              height: 10px;
+            }
+          }
+        }
+
+        .article-content {
+          padding: 1rem;
+
+          .article-date {
+            font-size: 0.8rem;
+            color: var(--el-text-color-regular);
+            opacity: 0.6;
+            margin-bottom: 0.5rem;
+          }
+
+          .article-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--el-text-color-primary);
+            margin-bottom: 0.6rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.3s ease;
+
+            &:hover {
+              color: var(--el-color-primary);
+            }
+          }
+
+          .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+
+            .tag {
+              padding: 0.15rem 0.5rem;
+              background: var(--el-color-primary-light-9);
+              color: var(--el-color-primary);
+              border-radius: 8px;
+              font-size: 0.7rem;
+              cursor: pointer;
+              transition: all 0.3s ease;
+
+              &:hover {
+                background: var(--el-color-primary);
+                color: white;
+                transform: translateY(-1px);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 空状态
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+
+      .empty-icon {
+        margin-bottom: 2rem;
+
+        svg {
+          color: var(--el-color-primary);
+          opacity: 0.6;
+        }
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--el-text-color-primary);
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-size: 1rem;
+        color: var(--el-text-color-regular);
+        opacity: 0.8;
+        margin-bottom: 2rem;
+      }
+
+      .empty-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.8rem 1.5rem;
+          border: none;
+          border-radius: 25px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          font-size: 0.9rem;
+          min-width: 140px;
+          backdrop-filter: blur(20px);
+
+          &.btn-primary {
+            background: linear-gradient(135deg,
+              rgba(64, 158, 255, 0.9) 0%,
+              rgba(103, 194, 58, 0.9) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(64, 158, 255, 0.3);
+
+            &:hover {
+              background: linear-gradient(135deg,
+                rgba(64, 158, 255, 1) 0%,
+                rgba(103, 194, 58, 1) 100%);
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+              backdrop-filter: blur(25px);
+            }
+          }
+
+          &.btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--el-text-color-primary);
+            border: 1px solid rgba(64, 158, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+            &:hover {
+              background: rgba(64, 158, 255, 0.1);
+              border-color: rgba(64, 158, 255, 0.4);
+              color: var(--el-color-primary);
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px rgba(64, 158, 255, 0.15);
+              backdrop-filter: blur(25px);
+            }
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+    }
+  }
+
+  // 响应式设计
+  @media screen and (max-width: 768px) {
+    .category-detail-page {
+      .detail-header {
+        padding: 1rem 1.5rem;
+
+        .header-content {
+          flex-direction: column;
+          gap: 1rem;
+          align-items: flex-start;
+
+          .category-info {
+            .category-text .category-title {
+              font-size: 1.3rem;
+            }
+          }
+
+          .back-button {
+            align-self: flex-end;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+          }
+        }
+      }
+
+      .category-nav {
+        padding: 0 1.5rem;
+
+        .nav-items {
+          gap: 0.6rem;
+
+          .nav-item {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 15px;
+          }
+        }
+      }
+
+      .articles-container {
+        padding: 0 1.5rem;
+
+        .articles-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+
+          .modern-article-card {
+            .article-image {
+              height: 140px;
+            }
+
+            .article-content {
+              padding: 0.8rem;
+
+              .article-title {
+                font-size: 0.95rem;
+              }
+            }
+          }
+        }
+      }
+
+      .empty-state {
+        padding: 2rem 1rem;
+
+        .empty-actions {
+          flex-direction: column;
+          align-items: center;
+
+          button {
+            width: 100%;
+            max-width: 200px;
+          }
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .category-detail-page {
+      .detail-header {
+        padding: 0.8rem 1rem;
+
+        .header-content {
+          .category-info {
+            gap: 0.8rem;
+
+            .category-icon {
+              width: 40px;
+              height: 40px;
+            }
+
+            .category-text .category-title {
+              font-size: 1.2rem;
+            }
+          }
+        }
+      }
+
+      .category-nav {
+        padding: 0 1rem;
+      }
+
+      .articles-container {
+        padding: 0 1rem;
+
+        .articles-grid {
+          .modern-article-card {
+            .article-image {
+              height: 120px;
+            }
+          }
         }
       }
     }
