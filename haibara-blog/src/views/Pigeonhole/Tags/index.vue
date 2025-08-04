@@ -2,6 +2,7 @@
 import ArticleList from "../ArticleList/index.vue"
 import {tagList} from "@/apis/tag";
 import {whereArticleList} from "@/apis/article";
+import {getWebsiteInfo} from "@/apis/website";
 import {dayjs} from "element-plus";
 
 const route = useRoute()
@@ -11,6 +12,7 @@ const isQueryArticle = ref(false)
 const tags = ref([])
 const articleList = ref([])
 const title = ref('')
+const totalArticleCount = ref(0)
 
 // 标签图标数组，为不同标签设置不同图标
 const tagIcons = [
@@ -80,7 +82,23 @@ function debounce(func: Function, wait: number) {
 
 const debouncedAdjustTagLayout = debounce(adjustTagLayout, 100)
 
+// 获取网站信息（包含文章总数）
+async function getWebsiteData() {
+  try {
+    const res = await getWebsiteInfo()
+    if (res.data) {
+      totalArticleCount.value = res.data.articleCount || 0
+    }
+  } catch (error) {
+    console.error('获取网站信息失败:', error)
+    totalArticleCount.value = 0
+  }
+}
+
 onMounted(async () => {
+  // 获取网站信息
+  await getWebsiteData()
+
   await tagList().then(res => {
     if (res.code === 200) {
       tags.value = res.data
@@ -236,7 +254,7 @@ function getCurrentTagIcon() {
                 </span>
                 <span class="stat-item">
                   <SvgIcon name="essay_icon" width="16" height="16"/>
-                  {{ tags.reduce((sum, tag) => sum + tag.articleCount, 0) }} 篇文章
+                  {{ totalArticleCount }} 篇文章
                 </span>
               </div>
             </div>
