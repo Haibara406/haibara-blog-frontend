@@ -14,6 +14,7 @@ interface Props {
 
 const emit = defineEmits<{
   (e: 'breadcrumbClick', index: number): void
+  (e: 'refresh'): void
 }>()
 
 const props = defineProps<Props>()
@@ -25,15 +26,24 @@ const props = defineProps<Props>()
       backgroundImage: props.coverImage ? `url(${props.coverImage})` : 'linear-gradient(45deg, #2c3e50, #3498db)'
     }"></div>
 
-    <!-- 添加面包屑导航 -->
-    <div class="breadcrumb-nav">
-      <span class="breadcrumb-item home" @click="emit('breadcrumbClick', -1)">首页</span>
-      <template v-for="(item, index) in props.breadcrumbs" :key="item.id">
-        <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-item" @click="emit('breadcrumbClick', index)">
-          {{ item.name }}
-        </span>
-      </template>
+    <!-- 刷新按钮和面包屑导航 -->
+    <div class="nav-controls">
+      <!-- 刷新按钮 -->
+      <div class="refresh-btn" @click="emit('refresh')" title="刷新页面">
+        <span class="refresh-icon">🔄</span>
+        <span class="refresh-text">刷新</span>
+      </div>
+
+      <!-- 面包屑导航 -->
+      <div class="breadcrumb-nav" v-if="props.breadcrumbs.length > 0">
+        <span class="breadcrumb-item home" @click="emit('breadcrumbClick', -1)">首页</span>
+        <template v-for="(item, index) in props.breadcrumbs" :key="item.id">
+          <span class="breadcrumb-separator">/</span>
+          <span class="breadcrumb-item" @click="emit('breadcrumbClick', index)">
+            {{ item.name }}
+          </span>
+        </template>
+      </div>
     </div>
 
     <div class="banner-content">
@@ -198,12 +208,66 @@ const props = defineProps<Props>()
   }
 }
 
-/* 添加面包屑导航样式 */
-.breadcrumb-nav {
+/* 导航控制区域 */
+.nav-controls {
   position: absolute;
   top: 20px;
-  left: 30px;
+  right: 30px; /* 移到右上角，避免遮挡标题文字 */
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 刷新按钮样式 */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+}
+
+.refresh-icon {
+  font-size: 1.1em;
+  animation: none;
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover .refresh-icon {
+  transform: rotate(180deg);
+}
+
+.refresh-btn:active .refresh-icon {
+  animation: spin 0.6s ease-in-out;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 面包屑导航样式 */
+.breadcrumb-nav {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -280,9 +344,19 @@ const props = defineProps<Props>()
     padding: 6px 12px;
   }
 
-  .breadcrumb-nav {
+  .nav-controls {
     top: 15px;
-    left: 20px;
+    right: 20px;
+    gap: 8px;
+  }
+
+  .refresh-btn {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    gap: 4px;
+  }
+
+  .breadcrumb-nav {
     padding: 6px 12px;
     gap: 6px;
   }
@@ -306,6 +380,15 @@ const props = defineProps<Props>()
         rgba(0, 0, 0, 0.4) 40%,
         rgba(0, 0, 0, 0.7) 100%
     );
+  }
+
+  .refresh-btn {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .refresh-btn:hover {
+    background: rgba(0, 0, 0, 0.3);
   }
 
   .breadcrumb-nav {

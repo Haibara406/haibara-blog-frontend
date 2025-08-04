@@ -35,6 +35,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:currentPath', value: number[]): void
   (e: 'loadMore'): void
+  (e: 'refresh'): void
 }>()
 
 const showPreview = ref(false)
@@ -235,6 +236,11 @@ const handleBreadcrumbClick = (index: number) => {
   }
 }
 
+// 处理刷新按钮点击
+const handleRefresh = () => {
+  emit('refresh')
+}
+
 // 判断是否为照片类型的辅助函数
 const isPhoto = (item: GalleryItem): item is { type: 'photo', data: Photo } => {
   return item.type === 'photo'
@@ -257,6 +263,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
         :breadcrumbs="breadcrumbs"
         :is-dark-mode="isDarkMode"
         @breadcrumb-click="handleBreadcrumbClick"
+        @refresh="handleRefresh"
     />
 
     <div class="gallery-wrapper">

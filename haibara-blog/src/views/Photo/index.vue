@@ -106,6 +106,14 @@ const loadMore = async () => {
   await loadGalleryData(currentId, currentPage.value + 1, true)
 }
 
+// 刷新当前页面数据
+const refreshCurrentPage = async () => {
+  const currentId = currentPath.value.length > 0 ? currentPath.value[currentPath.value.length - 1] : undefined
+  currentPage.value = 1
+  hasMore.value = true
+  await loadGalleryData(currentId, 1, false)
+}
+
 // 监听路径变化，加载对应的数据
 watch(() => currentPath.value, async (newPath) => {
   const currentId = newPath.length > 0 ? newPath[newPath.length - 1] : undefined
@@ -316,6 +324,7 @@ const isDark = useDark()
             :loading="loading"
             :has-more="hasMore"
             @load-more="loadMore"
+            @refresh="refreshCurrentPage"
         />
       </div>
     </main>
