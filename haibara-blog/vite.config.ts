@@ -58,7 +58,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
                     javascriptEnabled: true,
                     additionalData: '@import "./src/styles/variable.scss";',
                     // 抑制 Sass 弃用警告
-                    silenceDeprecations: ['legacy-js-api', 'import'],
+                    silenceDeprecations: ['legacy-js-api', 'import', 'mixed-decls'],
                 },
             },
             postcss: {
