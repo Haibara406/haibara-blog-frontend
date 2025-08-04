@@ -160,6 +160,36 @@ onUnmounted(() => {
       </template>
       <template #content>
         <template v-if="!isQueryArticle">
+          <!-- 全局动态背景装饰 -->
+          <div class="global-decorations">
+            <!-- 浮动几何图形 -->
+            <div class="floating-shapes">
+              <div class="shape hexagon" v-for="i in 5" :key="'hexagon-' + i" :style="{ '--delay': i * 1 + 's', '--duration': (6 + i) + 's' }"></div>
+              <div class="shape diamond" v-for="i in 6" :key="'diamond-' + i" :style="{ '--delay': i * 0.7 + 's', '--duration': (4 + i) + 's' }"></div>
+              <div class="shape pentagon" v-for="i in 4" :key="'pentagon-' + i" :style="{ '--delay': i * 1.5 + 's', '--duration': (7 + i) + 's' }"></div>
+            </div>
+
+            <!-- 螺旋光线 -->
+            <div class="spiral-lights">
+              <div class="spiral" v-for="i in 3" :key="'spiral-' + i" :style="{ '--delay': i * 2 + 's', '--size': (100 + i * 50) + 'px' }"></div>
+            </div>
+
+            <!-- 粒子流 -->
+            <div class="particle-stream">
+              <div class="particle" v-for="i in 20" :key="'particle-' + i" :style="{ '--delay': i * 0.2 + 's', '--path': i % 4 }"></div>
+            </div>
+
+            <!-- 脉冲圆环 -->
+            <div class="pulse-rings">
+              <div class="ring" v-for="i in 4" :key="'ring-' + i" :style="{ '--delay': i * 1.5 + 's' }"></div>
+            </div>
+
+            <!-- 漂浮文字 -->
+            <div class="floating-text">
+              <span class="text-item" v-for="(text, i) in ['Code', 'Design', 'Create', 'Inspire', 'Dream']" :key="text" :style="{ '--delay': i * 0.8 + 's' }">{{ text }}</span>
+            </div>
+          </div>
+
           <div class="category_container">
             <div class="title">
               文章分类
@@ -235,10 +265,297 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 
+// 全局动态装饰
+.global-decorations {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+
+  // 浮动几何图形
+  .floating-shapes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    .shape {
+      position: absolute;
+      opacity: 0.08;
+      animation: floatComplexShape var(--duration, 8s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+
+      &.hexagon {
+        width: 30px;
+        height: 26px;
+        background: var(--el-color-primary);
+        position: relative;
+
+        &:before, &:after {
+          content: "";
+          position: absolute;
+          width: 0;
+          border-left: 15px solid transparent;
+          border-right: 15px solid transparent;
+        }
+
+        &:before {
+          bottom: 100%;
+          border-bottom: 8px solid var(--el-color-primary);
+        }
+
+        &:after {
+          top: 100%;
+          border-top: 8px solid var(--el-color-primary);
+        }
+
+        &:nth-child(1) { top: 15%; left: 8%; }
+        &:nth-child(2) { top: 40%; right: 12%; }
+        &:nth-child(3) { top: 70%; left: 15%; }
+        &:nth-child(4) { top: 25%; right: 25%; }
+        &:nth-child(5) { top: 85%; right: 8%; }
+      }
+
+      &.diamond {
+        width: 20px;
+        height: 20px;
+        background: var(--el-color-success);
+        transform: rotate(45deg);
+        position: relative;
+
+        &:before {
+          content: '';
+          position: absolute;
+          top: -10px;
+          left: -10px;
+          right: -10px;
+          bottom: -10px;
+          border: 1px solid var(--el-color-success);
+          transform: rotate(45deg);
+          opacity: 0.3;
+        }
+
+        &:nth-child(1) { top: 20%; left: 25%; }
+        &:nth-child(2) { top: 55%; right: 18%; }
+        &:nth-child(3) { top: 80%; left: 30%; }
+        &:nth-child(4) { top: 35%; right: 35%; }
+        &:nth-child(5) { top: 65%; left: 5%; }
+        &:nth-child(6) { top: 10%; right: 5%; }
+      }
+
+      &.pentagon {
+        width: 25px;
+        height: 25px;
+        background: var(--el-color-warning);
+        clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+
+        &:nth-child(1) { top: 30%; left: 12%; }
+        &:nth-child(2) { top: 60%; right: 20%; }
+        &:nth-child(3) { top: 45%; left: 40%; }
+        &:nth-child(4) { top: 75%; right: 40%; }
+      }
+    }
+
+    @keyframes floatComplexShape {
+      0%, 100% {
+        transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+        opacity: 0.08;
+      }
+      25% {
+        transform: translateY(-25px) translateX(15px) rotate(90deg) scale(1.2);
+        opacity: 0.15;
+      }
+      50% {
+        transform: translateY(-15px) translateX(-20px) rotate(180deg) scale(0.8);
+        opacity: 0.12;
+      }
+      75% {
+        transform: translateY(-35px) translateX(8px) rotate(270deg) scale(1.1);
+        opacity: 0.18;
+      }
+    }
+  }
+
+  // 螺旋光线
+  .spiral-lights {
+    position: absolute;
+    top: 20%;
+    right: 15%;
+
+    .spiral {
+      position: absolute;
+      width: var(--size, 100px);
+      height: var(--size, 100px);
+      border: 2px solid rgba(64, 158, 255, 0.2);
+      border-radius: 50%;
+      border-top-color: rgba(64, 158, 255, 0.6);
+      border-right-color: rgba(103, 194, 58, 0.4);
+      animation: spiralRotate 8s linear infinite;
+      animation-delay: var(--delay, 0s);
+
+      &:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 80%;
+        height: 80%;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        animation: spiralRotate 6s linear infinite reverse;
+      }
+    }
+
+    @keyframes spiralRotate {
+      0% { transform: rotate(0deg) scale(1); opacity: 0.3; }
+      50% { transform: rotate(180deg) scale(1.1); opacity: 0.8; }
+      100% { transform: rotate(360deg) scale(1); opacity: 0.3; }
+    }
+  }
+
+  // 粒子流
+  .particle-stream {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: radial-gradient(circle, rgba(64, 158, 255, 0.8), transparent);
+      border-radius: 50%;
+      animation: particleFlow 6s linear infinite;
+      animation-delay: var(--delay, 0s);
+
+      &[style*="--path: 0"] {
+        left: 0%;
+        animation-name: particleFlowPath1;
+      }
+
+      &[style*="--path: 1"] {
+        right: 0%;
+        animation-name: particleFlowPath2;
+      }
+
+      &[style*="--path: 2"] {
+        top: 0%;
+        animation-name: particleFlowPath3;
+      }
+
+      &[style*="--path: 3"] {
+        bottom: 0%;
+        animation-name: particleFlowPath4;
+      }
+    }
+
+    @keyframes particleFlowPath1 {
+      0% { left: -10px; top: 20%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { left: 100%; top: 80%; opacity: 0; }
+    }
+
+    @keyframes particleFlowPath2 {
+      0% { right: -10px; top: 60%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { right: 100%; top: 30%; opacity: 0; }
+    }
+
+    @keyframes particleFlowPath3 {
+      0% { top: -10px; left: 40%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 100%; left: 70%; opacity: 0; }
+    }
+
+    @keyframes particleFlowPath4 {
+      0% { bottom: -10px; left: 80%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { bottom: 100%; left: 20%; opacity: 0; }
+    }
+  }
+
+  // 脉冲圆环
+  .pulse-rings {
+    position: absolute;
+    bottom: 25%;
+    left: 20%;
+
+    .ring {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(103, 194, 58, 0.4);
+      border-radius: 50%;
+      animation: pulseRing 4s ease-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    @keyframes pulseRing {
+      0% {
+        width: 60px;
+        height: 60px;
+        opacity: 0.8;
+        border-width: 3px;
+      }
+      100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+        border-width: 0px;
+        transform: translate(-35%, -35%);
+      }
+    }
+  }
+
+  // 漂浮文字
+  .floating-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    .text-item {
+      position: absolute;
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(64, 158, 255, 0.15);
+      animation: floatText 8s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+      pointer-events: none;
+
+      &:nth-child(1) { top: 25%; left: 5%; }
+      &:nth-child(2) { top: 45%; right: 10%; }
+      &:nth-child(3) { top: 65%; left: 20%; }
+      &:nth-child(4) { top: 35%; right: 30%; }
+      &:nth-child(5) { top: 75%; left: 40%; }
+    }
+
+    @keyframes floatText {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.1;
+      }
+      50% {
+        transform: translateY(-20px) rotate(5deg);
+        opacity: 0.3;
+      }
+    }
+  }
+}
+
 .category_container {
   display: flex;
   flex-direction: column;
   width: 100%;
+  position: relative;
+  z-index: 1;
 
   .scrollbar-flex-content {
     display: flex;

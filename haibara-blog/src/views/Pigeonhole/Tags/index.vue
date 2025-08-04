@@ -145,6 +145,31 @@ function getArticle(id: string) {
       </template>
       <template #content>
         <div class="tags_container">
+          <!-- 全局动态背景装饰 -->
+          <div class="global-decorations">
+            <!-- 浮动几何图形 -->
+            <div class="floating-shapes">
+              <div class="shape triangle" v-for="i in 6" :key="'triangle-' + i" :style="{ '--delay': i * 0.8 + 's', '--duration': (4 + i) + 's' }"></div>
+              <div class="shape square" v-for="i in 4" :key="'square-' + i" :style="{ '--delay': i * 1.2 + 's', '--duration': (5 + i) + 's' }"></div>
+              <div class="shape circle" v-for="i in 8" :key="'circle-' + i" :style="{ '--delay': i * 0.6 + 's', '--duration': (3 + i) + 's' }"></div>
+            </div>
+
+            <!-- 光线效果 -->
+            <div class="light-rays">
+              <div class="ray" v-for="i in 5" :key="'ray-' + i" :style="{ '--angle': i * 72 + 'deg', '--delay': i * 0.4 + 's' }"></div>
+            </div>
+
+            <!-- 星星闪烁 -->
+            <div class="twinkling-stars">
+              <div class="star" v-for="i in 12" :key="'star-' + i" :style="{ '--delay': i * 0.3 + 's' }">✦</div>
+            </div>
+
+            <!-- 波纹扩散 -->
+            <div class="ripple-waves">
+              <div class="wave" v-for="i in 3" :key="'wave-' + i" :style="{ '--delay': i * 2 + 's' }"></div>
+            </div>
+          </div>
+
           <div class="page-title" v-if="!isQueryArticle">
             <!-- 装饰性背景元素 -->
             <div class="title-decoration">
@@ -252,6 +277,195 @@ function getArticle(id: string) {
   flex-direction: column;
   width: 100%;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  // 全局动态装饰
+  .global-decorations {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+
+    // 浮动几何图形
+    .floating-shapes {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+
+      .shape {
+        position: absolute;
+        opacity: 0.1;
+        animation: floatShape var(--duration, 6s) ease-in-out infinite;
+        animation-delay: var(--delay, 0s);
+
+        &.triangle {
+          width: 0;
+          height: 0;
+          border-left: 15px solid transparent;
+          border-right: 15px solid transparent;
+          border-bottom: 25px solid var(--el-color-primary);
+
+          &:nth-child(1) { top: 10%; left: 5%; }
+          &:nth-child(2) { top: 30%; right: 8%; }
+          &:nth-child(3) { top: 60%; left: 12%; }
+          &:nth-child(4) { top: 80%; right: 15%; }
+          &:nth-child(5) { top: 45%; left: 3%; }
+          &:nth-child(6) { top: 25%; right: 25%; }
+        }
+
+        &.square {
+          width: 20px;
+          height: 20px;
+          background: var(--el-color-success);
+          transform: rotate(45deg);
+
+          &:nth-child(1) { top: 15%; left: 20%; }
+          &:nth-child(2) { top: 70%; right: 10%; }
+          &:nth-child(3) { top: 40%; left: 8%; }
+          &:nth-child(4) { top: 85%; right: 30%; }
+        }
+
+        &.circle {
+          width: 12px;
+          height: 12px;
+          background: var(--el-color-warning);
+          border-radius: 50%;
+
+          &:nth-child(1) { top: 8%; left: 15%; }
+          &:nth-child(2) { top: 35%; right: 5%; }
+          &:nth-child(3) { top: 55%; left: 25%; }
+          &:nth-child(4) { top: 75%; right: 20%; }
+          &:nth-child(5) { top: 20%; left: 35%; }
+          &:nth-child(6) { top: 90%; right: 35%; }
+          &:nth-child(7) { top: 50%; left: 5%; }
+          &:nth-child(8) { top: 65%; right: 40%; }
+        }
+      }
+
+      @keyframes floatShape {
+        0%, 100% {
+          transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+          opacity: 0.1;
+        }
+        25% {
+          transform: translateY(-20px) translateX(10px) rotate(90deg) scale(1.1);
+          opacity: 0.3;
+        }
+        50% {
+          transform: translateY(-10px) translateX(-15px) rotate(180deg) scale(0.9);
+          opacity: 0.2;
+        }
+        75% {
+          transform: translateY(-30px) translateX(5px) rotate(270deg) scale(1.2);
+          opacity: 0.25;
+        }
+      }
+    }
+
+    // 光线效果
+    .light-rays {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      transform: translate(-50%, -50%);
+
+      .ray {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 2px;
+        height: 100px;
+        background: linear-gradient(to top, transparent, rgba(64, 158, 255, 0.3), transparent);
+        transform-origin: bottom center;
+        transform: translate(-50%, -100%) rotate(var(--angle, 0deg));
+        animation: rotateRay 12s linear infinite;
+        animation-delay: var(--delay, 0s);
+        opacity: 0.6;
+      }
+
+      @keyframes rotateRay {
+        0% { transform: translate(-50%, -100%) rotate(var(--angle, 0deg)) scaleY(0.5); opacity: 0.3; }
+        50% { transform: translate(-50%, -100%) rotate(calc(var(--angle, 0deg) + 180deg)) scaleY(1); opacity: 0.8; }
+        100% { transform: translate(-50%, -100%) rotate(calc(var(--angle, 0deg) + 360deg)) scaleY(0.5); opacity: 0.3; }
+      }
+    }
+
+    // 星星闪烁
+    .twinkling-stars {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+
+      .star {
+        position: absolute;
+        font-size: 16px;
+        color: var(--el-color-warning);
+        animation: twinkle 3s ease-in-out infinite;
+        animation-delay: var(--delay, 0s);
+
+        &:nth-child(1) { top: 12%; left: 10%; }
+        &:nth-child(2) { top: 25%; right: 12%; }
+        &:nth-child(3) { top: 45%; left: 18%; }
+        &:nth-child(4) { top: 65%; right: 8%; }
+        &:nth-child(5) { top: 80%; left: 22%; }
+        &:nth-child(6) { top: 35%; right: 25%; }
+        &:nth-child(7) { top: 15%; left: 40%; }
+        &:nth-child(8) { top: 70%; right: 30%; }
+        &:nth-child(9) { top: 90%; left: 35%; }
+        &:nth-child(10) { top: 55%; right: 45%; }
+        &:nth-child(11) { top: 30%; left: 60%; }
+        &:nth-child(12) { top: 75%; right: 15%; }
+      }
+
+      @keyframes twinkle {
+        0%, 100% { opacity: 0.2; transform: scale(0.8) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+      }
+    }
+
+    // 波纹扩散
+    .ripple-waves {
+      position: absolute;
+      top: 30%;
+      right: 20%;
+      width: 100px;
+      height: 100px;
+
+      .wave {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(64, 158, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        animation: rippleExpand 4s ease-out infinite;
+        animation-delay: var(--delay, 0s);
+      }
+
+      @keyframes rippleExpand {
+        0% {
+          width: 20px;
+          height: 20px;
+          opacity: 0.8;
+          border-width: 2px;
+        }
+        100% {
+          width: 200px;
+          height: 200px;
+          opacity: 0;
+          border-width: 0px;
+        }
+      }
+    }
+  }
 
   // 页面标题样式
   .page-title {
