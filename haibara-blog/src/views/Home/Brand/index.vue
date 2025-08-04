@@ -32,11 +32,11 @@ const useWebsite = useWebsiteStore()
 const obj = reactive({
   output: "",
   isEnd: false,
-  speed: 300,
+  speed: 150,        // 加快打字速度，提升体验
   singleBack: false,
-  sleep: 3000,
+  sleep: 2000,       // 减少休眠时间，让循环更流畅
   type: "rollback",
-  backSpeed: 100,
+  backSpeed: 80,     // 稍微加快回退速度
   sentencePause: false,
 });
 
