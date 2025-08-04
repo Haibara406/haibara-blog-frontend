@@ -126,13 +126,24 @@ const copyToClipboard = async () => {
 
 // 公告
 function announcement() {
-  ElMessageBox.alert(`<pre>${websiteStore.webInfo?.sidebarAnnouncement}</pre>`, '公告', {
-    // if you want to disable its autofocus
-    // autofocus: false,
-    confirmButtonText: '关闭',
-    closeOnPressEscape: true,
-    dangerouslyUseHTMLString: true,
-  })
+  ElMessageBox.alert(
+    `<div class="announcement-modal-content">
+      <div class="announcement-icon">📢</div>
+      <div class="announcement-text">${websiteStore.webInfo?.sidebarAnnouncement}</div>
+    </div>`,
+    '📋 网站公告',
+    {
+      confirmButtonText: '收到啦~',
+      closeOnPressEscape: true,
+      dangerouslyUseHTMLString: true,
+      customClass: 'announcement-modal',
+      center: true,
+      showClose: true,
+      beforeClose: (action, instance, done) => {
+        done();
+      }
+    }
+  )
 }
 
 // 收藏标记
@@ -860,6 +871,123 @@ function ReadingModeFunc() {
 
 .pre-text {
   text-align: left;
-  overflow: auto; /* 如果内容超出了元素盒子的宽度，显示滚动条 */
+  overflow-x: hidden; /* 隐藏横向滚动条 */
+  overflow-y: auto; /* 只显示垂直滚动条 */
+  white-space: pre-wrap; /* 保持换行并自动换行 */
+  word-wrap: break-word; /* 长单词自动换行 */
+  word-break: break-all; /* 强制换行 */
+  max-height: 160px; /* 增加最大高度 */
+  min-height: 100px; /* 增加最小高度 */
+  padding: 12px; /* 增加内边距 */
+  line-height: 1.6; /* 增加行高 */
+  font-size: 14px; /* 设置字体大小 */
+}
+
+// 公告弹窗样式优化
+:deep(.announcement-modal) {
+  .el-message-box {
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border: none;
+    overflow: hidden;
+    max-width: 500px;
+
+    .el-message-box__header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      border-bottom: none;
+
+      .el-message-box__title {
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+      }
+
+      .el-message-box__headerbtn {
+        top: 15px;
+        right: 20px;
+
+        .el-message-box__close {
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 18px;
+
+          &:hover {
+            color: white;
+          }
+        }
+      }
+    }
+
+    .el-message-box__content {
+      padding: 24px;
+      background: white;
+
+      .el-message-box__message {
+        margin: 0;
+
+        .announcement-modal-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+
+          .announcement-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: bounce 2s infinite;
+          }
+
+          .announcement-text {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+          }
+        }
+      }
+    }
+
+    .el-message-box__btns {
+      padding: 16px 24px 24px;
+      background: white;
+
+      .el-button--primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 32px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+      }
+    }
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
 }
 </style>

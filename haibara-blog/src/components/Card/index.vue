@@ -186,11 +186,12 @@ function invoke(){
   }
 
   .content {
-    min-height: 5em;
+    min-height: 7em; /* 进一步增加最小高度以适应更长的公告 */
     text-align: center;
     line-height: 22px;
-    padding: 10px;
+    padding: 12px; /* 增加内边距 */
     color: grey;
+    overflow: hidden; /* 防止内容溢出 */
   }
 }
 </style>
