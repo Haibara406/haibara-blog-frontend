@@ -1389,9 +1389,9 @@ function getCurrentTagIcon() {
     background: linear-gradient(135deg,
       rgba(64, 158, 255, 0.03) 0%,
       rgba(103, 194, 58, 0.03) 100%);
-    padding: 2rem;
-    border-radius: 0 0 24px 24px;
-    margin-bottom: 2rem;
+    padding: 1.5rem 2rem;
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 1.5rem;
     position: relative;
     overflow: hidden;
 
@@ -1444,14 +1444,14 @@ function getCurrentTagIcon() {
       .tag-info {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
+        gap: 1rem;
 
         .tag-icon {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 64px;
-          height: 64px;
+          width: 48px;
+          height: 48px;
           background: linear-gradient(135deg,
             rgba(255, 255, 255, 0.9) 0%,
             rgba(255, 255, 255, 0.7) 100%);
@@ -1493,10 +1493,10 @@ function getCurrentTagIcon() {
 
         .tag-text {
           .tag-title {
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: 1.5rem;
+            font-weight: 700;
             color: var(--el-text-color-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             background: linear-gradient(135deg,
               var(--el-color-primary) 0%,
               var(--el-color-success) 50%,
@@ -1512,11 +1512,12 @@ function getCurrentTagIcon() {
             &::before {
               content: '#';
               position: absolute;
-              left: -1.5rem;
+              left: -1.2rem;
               top: 0;
               color: var(--el-color-primary);
               opacity: 0.6;
               font-weight: 600;
+              font-size: 1.2rem;
               animation: hashFloat 2s ease-in-out infinite;
             }
           }
@@ -1532,16 +1533,16 @@ function getCurrentTagIcon() {
           }
 
           .article-count {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: var(--el-text-color-regular);
             opacity: 0.8;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
 
             &::before {
               content: '📝';
-              font-size: 0.9rem;
+              font-size: 0.8rem;
             }
           }
         }
@@ -1550,15 +1551,15 @@ function getCurrentTagIcon() {
       .back-button {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        padding: 0.8rem 1.5rem;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
         background: linear-gradient(135deg,
           rgba(255, 255, 255, 0.9) 0%,
           rgba(255, 255, 255, 0.7) 100%);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(64, 158, 255, 0.2);
         color: var(--el-color-primary);
-        border-radius: 30px;
+        border-radius: 25px;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         font-weight: 600;
@@ -1593,6 +1594,7 @@ function getCurrentTagIcon() {
           font-weight: 600;
           position: relative;
           z-index: 2;
+          transition: opacity 0.3s ease;
         }
 
         &:hover {
@@ -2030,6 +2032,29 @@ function getCurrentTagIcon() {
   }
 
   // 响应式设计
+  @media screen and (max-width: 1024px) {
+    .tag-detail-page {
+      .detail-header {
+        .header-content {
+          .back-button {
+            // 中等屏幕隐藏文字，只显示图标
+            span {
+              display: none;
+            }
+
+            // 调整只有图标时的样式
+            padding: 0.8rem;
+            min-width: auto;
+            width: 48px;
+            height: 48px;
+            justify-content: center;
+            gap: 0;
+          }
+        }
+      }
+    }
+  }
+
   @media screen and (max-width: 768px) {
     .tag-detail-page {
       .detail-header {
@@ -2047,14 +2072,14 @@ function getCurrentTagIcon() {
             gap: 1rem;
 
             .tag-icon {
-              width: 56px;
-              height: 56px;
-              border-radius: 16px;
+              width: 44px;
+              height: 44px;
+              border-radius: 14px;
             }
 
             .tag-text {
               .tag-title {
-                font-size: 1.5rem;
+                font-size: 1.3rem;
 
                 &::before {
                   display: none; // 隐藏移动端的 # 符号
@@ -2068,9 +2093,16 @@ function getCurrentTagIcon() {
           }
 
           .back-button {
-            padding: 0.7rem 1.2rem;
-            font-size: 0.85rem;
-            border-radius: 25px;
+            // 保持图标样式
+            span {
+              display: none;
+            }
+
+            padding: 0.8rem;
+            width: 48px;
+            height: 48px;
+            justify-content: center;
+            gap: 0;
           }
         }
       }
@@ -2141,9 +2173,9 @@ function getCurrentTagIcon() {
             gap: 0.8rem;
 
             .tag-icon {
-              width: 48px;
-              height: 48px;
-              border-radius: 14px;
+              width: 40px;
+              height: 40px;
+              border-radius: 12px;
             }
 
             .tag-text {
@@ -2158,9 +2190,15 @@ function getCurrentTagIcon() {
           }
 
           .back-button {
-            padding: 0.6rem 1rem;
+            padding: 0.7rem;
             font-size: 0.8rem;
             border-radius: 20px;
+            width: 44px;
+            height: 44px;
+
+            span {
+              display: none;
+            }
           }
         }
       }
@@ -2183,4 +2221,6 @@ function getCurrentTagIcon() {
     }
   }
 }
+
+
 </style>

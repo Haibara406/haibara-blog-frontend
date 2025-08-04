@@ -1396,6 +1396,7 @@ onUnmounted(() => {
         span {
           color: var(--el-color-primary);
           font-weight: 600;
+          transition: opacity 0.3s ease;
         }
 
         &:hover {
@@ -1827,6 +1828,29 @@ onUnmounted(() => {
   }
 
   // 响应式设计
+  @media screen and (max-width: 1024px) {
+    .category-detail-page {
+      .detail-header {
+        .header-content {
+          .back-button {
+            // 中等屏幕隐藏文字，只显示图标
+            span {
+              display: none;
+            }
+
+            // 调整只有图标时的样式
+            padding: 0.8rem;
+            min-width: auto;
+            width: 48px;
+            height: 48px;
+            justify-content: center;
+            gap: 0;
+          }
+        }
+      }
+    }
+  }
+
   @media screen and (max-width: 768px) {
     .category-detail-page {
       .detail-header {
@@ -1845,8 +1869,17 @@ onUnmounted(() => {
 
           .back-button {
             align-self: flex-end;
-            padding: 0.6rem 1rem;
-            font-size: 0.85rem;
+
+            // 保持图标样式
+            span {
+              display: none;
+            }
+
+            padding: 0.8rem;
+            width: 48px;
+            height: 48px;
+            justify-content: center;
+            gap: 0;
           }
         }
       }
@@ -1920,6 +1953,16 @@ onUnmounted(() => {
 
             .category-text .category-title {
               font-size: 1.2rem;
+            }
+          }
+
+          .back-button {
+            padding: 0.7rem;
+            width: 44px;
+            height: 44px;
+
+            span {
+              display: none;
             }
           }
         }
