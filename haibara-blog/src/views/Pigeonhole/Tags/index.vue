@@ -281,11 +281,11 @@ function getCurrentTagIcon() {
 
                     <div class="tag-info">
                       <div class="tag-name"># {{ tag.tagName }}</div>
-                      <div class="article-count">{{ tag.articleCount }} 篇文章</div>
+                      <div class="article-count">{{ tag.articleCount || 0 }} 篇文章</div>
                     </div>
 
                     <!-- 数字动画效果 -->
-                    <div class="count-animation">{{ tag.articleCount }}</div>
+                    <div class="count-animation">{{ tag.articleCount || 0 }}</div>
                   </div>
 
                   <!-- 悬浮时的波纹效果 -->
@@ -302,8 +302,10 @@ function getCurrentTagIcon() {
                 <div class="detail-header">
                   <div class="header-content">
                     <div class="tag-info">
-                      <div class="tag-icon">
-                        <SvgIcon :name="getCurrentTagIcon()" width="28" height="28"/>
+                      <div class="tag-icon-container">
+                        <div class="tag-icon">
+                          <SvgIcon :name="getCurrentTagIcon()" width="28" height="28"/>
+                        </div>
                       </div>
                       <div class="tag-text">
                         <h1 class="tag-title">{{ title }}</h1>
@@ -313,7 +315,7 @@ function getCurrentTagIcon() {
 
                     <div class="back-button" @click="router.push('/tags')">
                       <SvgIcon name="jt_x" width="18" height="18"/>
-                      <span>返回标签云</span>
+                      <span>返回标签</span>
                     </div>
                   </div>
                 </div>
@@ -1150,17 +1152,13 @@ function getCurrentTagIcon() {
         }
 
         .article-count {
-          font-size: clamp(0.75rem, 1.6vw, 0.9rem);
+          font-size: clamp(0.8rem, 1.8vw, 1rem);
           color: var(--el-text-color-regular);
-          font-weight: 500;
-          opacity: 0.8;
+          font-weight: 600;
+          opacity: 0.9;
           transition: all 0.3s ease;
-          background: linear-gradient(135deg, var(--el-color-primary-light-8), var(--el-color-success-light-8));
-          padding: clamp(0.15rem, 0.35vw, 0.25rem) clamp(0.4rem, 0.9vw, 0.7rem);
-          border-radius: clamp(10px, 1.8vw, 14px);
-          border: 1px solid var(--el-border-color-lighter);
-          width: fit-content;
         }
+
       }
 
       .count-animation {
@@ -1446,48 +1444,83 @@ function getCurrentTagIcon() {
         align-items: center;
         gap: 1rem;
 
-        .tag-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.9) 0%,
-            rgba(255, 255, 255, 0.7) 100%);
-          border-radius: 20px;
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow: 0 8px 32px rgba(64, 158, 255, 0.1),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        .tag-icon-container {
           position: relative;
 
-          // 图标光晕效果
-          &::before {
-            content: '';
+          .tag-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg,
+              rgba(255, 255, 255, 0.9) 0%,
+              rgba(255, 255, 255, 0.7) 100%);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(64, 158, 255, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            position: relative;
+
+            // 图标光晕效果
+            &::before {
+              content: '';
+              position: absolute;
+              inset: -2px;
+              background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+              border-radius: 22px;
+              opacity: 0.1;
+              z-index: -1;
+              animation: iconGlow 3s ease-in-out infinite;
+            }
+
+            @keyframes iconGlow {
+              0%, 100% { opacity: 0.1; transform: scale(1); }
+              50% { opacity: 0.2; transform: scale(1.05); }
+            }
+
+            svg {
+              color: var(--el-color-primary);
+              filter: drop-shadow(0 2px 8px rgba(64, 158, 255, 0.3));
+              animation: iconFloat 4s ease-in-out infinite;
+            }
+
+            @keyframes iconFloat {
+              0%, 100% { transform: translateY(0px) rotate(0deg); }
+              50% { transform: translateY(-3px) rotate(2deg); }
+            }
+          }
+
+          .article-count {
             position: absolute;
-            inset: -2px;
-            background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
-            border-radius: 22px;
-            opacity: 0.1;
-            z-index: -1;
-            animation: iconGlow 3s ease-in-out infinite;
-          }
+            top: -2px;
+            right: -2px;
+            background: linear-gradient(135deg,
+              rgba(255, 255, 255, 0.95) 0%,
+              rgba(255, 255, 255, 0.85) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 0.1rem 0.35rem;
+            font-size: 0.65rem;
+            color: var(--el-text-color-regular);
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            white-space: nowrap;
+            min-height: 16px;
 
-          @keyframes iconGlow {
-            0%, 100% { opacity: 0.1; transform: scale(1); }
-            50% { opacity: 0.2; transform: scale(1.05); }
-          }
+            svg {
+              color: var(--el-color-primary);
+              opacity: 0.8;
+            }
 
-          svg {
-            color: var(--el-color-primary);
-            filter: drop-shadow(0 2px 8px rgba(64, 158, 255, 0.3));
-            animation: iconFloat 4s ease-in-out infinite;
-          }
-
-          @keyframes iconFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-3px) rotate(2deg); }
+            span {
+              font-weight: 500;
+              line-height: 1;
+            }
           }
         }
 
@@ -1496,7 +1529,7 @@ function getCurrentTagIcon() {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--el-text-color-primary);
-            margin-bottom: 0.3rem;
+            margin: 0;
             background: linear-gradient(135deg,
               var(--el-color-primary) 0%,
               var(--el-color-success) 50%,
@@ -1522,6 +1555,13 @@ function getCurrentTagIcon() {
             }
           }
 
+          .article-count {
+            font-size: 0.9rem;
+            color: var(--el-text-color-regular);
+            opacity: 0.7;
+            margin: 0.3rem 0 0 0;
+          }
+
           @keyframes titleShimmer {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -1532,19 +1572,7 @@ function getCurrentTagIcon() {
             50% { transform: translateY(-2px); opacity: 0.8; }
           }
 
-          .article-count {
-            font-size: 0.9rem;
-            color: var(--el-text-color-regular);
-            opacity: 0.8;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
 
-            &::before {
-              content: '📝';
-              font-size: 0.8rem;
-            }
-          }
         }
       }
 
@@ -1552,72 +1580,37 @@ function getCurrentTagIcon() {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        background: linear-gradient(135deg,
-          rgba(255, 255, 255, 0.9) 0%,
-          rgba(255, 255, 255, 0.7) 100%);
+        padding: 0.7rem 1.2rem;
+        background: rgba(64, 158, 255, 0.1);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(64, 158, 255, 0.2);
         color: var(--el-color-primary);
         border-radius: 25px;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-weight: 600;
+        font-weight: 500;
         font-size: 0.9rem;
-        box-shadow: 0 4px 20px rgba(64, 158, 255, 0.1);
-        position: relative;
-        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
 
-        // 按钮光晕效果
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.4),
-            transparent);
-          transition: left 0.5s ease;
+        &:hover {
+          background: rgba(64, 158, 255, 0.15);
+          border-color: rgba(64, 158, 255, 0.3);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(64, 158, 255, 0.2);
+        }
+
+        &:active {
+          transform: translateY(-1px);
         }
 
         svg {
-          color: var(--el-color-primary);
-          transition: transform 0.3s ease;
-          filter: drop-shadow(0 1px 3px rgba(64, 158, 255, 0.3));
+          transition: all 0.3s ease;
         }
 
         span {
           color: var(--el-color-primary);
           font-weight: 600;
-          position: relative;
-          z-index: 2;
           transition: opacity 0.3s ease;
-        }
-
-        &:hover {
-          background: linear-gradient(135deg,
-            rgba(64, 158, 255, 0.1) 0%,
-            rgba(103, 194, 58, 0.1) 100%);
-          backdrop-filter: blur(25px);
-          transform: translateY(-3px);
-          box-shadow: 0 8px 30px rgba(64, 158, 255, 0.2);
-          border-color: rgba(64, 158, 255, 0.4);
-
-          &::before {
-            left: 100%;
-          }
-
-          svg {
-            transform: translateX(-3px) scale(1.1);
-          }
-        }
-
-        &:active {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 20px rgba(64, 158, 255, 0.1);
         }
       }
     }
@@ -2071,7 +2064,7 @@ function getCurrentTagIcon() {
             flex-direction: column;
             gap: 1rem;
 
-            .tag-icon {
+            .tag-icon-container .tag-icon {
               width: 44px;
               height: 44px;
               border-radius: 14px;
@@ -2172,7 +2165,7 @@ function getCurrentTagIcon() {
           .tag-info {
             gap: 0.8rem;
 
-            .tag-icon {
+            .tag-icon-container .tag-icon {
               width: 40px;
               height: 40px;
               border-radius: 12px;
