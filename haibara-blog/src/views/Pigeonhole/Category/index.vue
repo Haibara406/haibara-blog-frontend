@@ -93,6 +93,63 @@ function handleCardHover(index: number, isHover: boolean) {
   // 这里可以添加额外的悬浮逻辑，比如音效或其他交互
   console.log(`Card ${index} hover: ${isHover}`)
 }
+
+// 动态调整网格布局防止溢出
+function adjustGridLayout() {
+  const container = document.querySelector('.category-cards-container') as HTMLElement
+  if (!container) return
+
+  const containerWidth = container.clientWidth
+  const gap = 32 // 2rem gap
+  const minCardWidth = 280
+  const maxCardWidth = 350
+
+  // 计算可以放置的列数
+  let columns = Math.floor((containerWidth + gap) / (minCardWidth + gap))
+  columns = Math.max(1, columns) // 至少1列
+
+  // 计算实际卡牌宽度
+  const actualCardWidth = (containerWidth - gap * (columns - 1)) / columns
+
+  // 如果卡牌宽度超过最大值，减少列数
+  if (actualCardWidth > maxCardWidth && columns > 1) {
+    columns = Math.floor((containerWidth + gap) / (maxCardWidth + gap))
+    columns = Math.max(1, columns)
+  }
+
+  // 应用新的网格样式
+  container.style.gridTemplateColumns = `repeat(${columns}, 1fr)`
+
+  // 调试信息
+  console.log(`Container width: ${containerWidth}px, Columns: ${columns}, Card width: ${actualCardWidth}px`)
+}
+
+// 防抖函数
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
+const debouncedAdjustLayout = debounce(adjustGridLayout, 100)
+
+// 监听窗口大小变化
+onMounted(() => {
+  nextTick(() => {
+    adjustGridLayout()
+  })
+  window.addEventListener('resize', debouncedAdjustLayout)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', debouncedAdjustLayout)
+})
 </script>
 
 <template>
@@ -219,15 +276,17 @@ function handleCardHover(index: number, isHover: boolean) {
     padding: 1rem;
   }
 
-  // 分类卡牌容器
+  // 分类卡牌容器 - 防止溢出的响应式设计
   .category-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2.5rem;
-    padding: 3rem 1rem;
-    max-width: 1400px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    width: calc(100% - 4rem);
     margin: 0 auto;
     perspective: 1000px;
+    box-sizing: border-box;
 
     // 容器背景动画
     &::before {
@@ -255,17 +314,17 @@ function handleCardHover(index: number, isHover: boolean) {
   .category-card {
     position: relative;
     background: var(--el-bg-color);
-    border-radius: 20px;
-    padding: 2.5rem;
+    border-radius: clamp(10px, 2vw, 20px);
+    padding: clamp(1rem, 3vw, 2.5rem);
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow:
-      0 10px 30px rgba(0, 0, 0, 0.1),
-      0 1px 8px rgba(0, 0, 0, 0.06),
+      0 clamp(4px, 1vw, 10px) clamp(15px, 3vw, 30px) rgba(0, 0, 0, 0.1),
+      0 1px clamp(3px, 0.5vw, 8px) rgba(0, 0, 0, 0.06),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
-    min-height: 220px;
+    min-height: clamp(140px, 20vw, 220px);
     transform-style: preserve-3d;
 
     // 初始状态
@@ -368,12 +427,15 @@ function handleCardHover(index: number, isHover: boolean) {
       pointer-events: none;
     }
 
-    // 悬浮效果
+    // 悬浮效果 - 整个卡牌3D旋转
     &:hover {
-      transform: translateY(-15px) rotateX(5deg) rotateY(2deg);
+      transform: translateY(-20px) rotateX(8deg) rotateY(5deg) rotateZ(2deg) scale(1.05);
       box-shadow:
-        0 25px 50px rgba(0, 0, 0, 0.2),
-        0 10px 30px rgba(64, 158, 255, 0.3);
+        0 30px 60px rgba(0, 0, 0, 0.25),
+        0 15px 40px rgba(64, 158, 255, 0.4);
+
+      // 添加整体3D旋转动画（速度调慢）
+      animation: cardHoverRotate 4s ease-in-out infinite;
 
       &::before {
         opacity: 1;
@@ -385,35 +447,54 @@ function handleCardHover(index: number, isHover: boolean) {
 
       .glow-effect {
         opacity: 1;
-        animation: glowPulse 2s ease-in-out infinite;
+        animation: glowPulse 4s ease-in-out infinite;
       }
 
       .border-animation {
         opacity: 1;
-        animation: borderSweep 1.5s ease-in-out infinite;
+        animation: borderSweep 3s linear infinite;
       }
 
       .category-icon .icon-wrapper {
-        transform: scale(1.2) rotateY(180deg);
+        transform: scale(1.3) rotateY(360deg);
 
         .icon-glow {
           opacity: 1;
-          transform: scale(1.5);
+          transform: scale(1.8);
         }
       }
 
       .category-name {
         color: var(--el-color-primary);
-        transform: translateY(-5px);
+        transform: translateY(-8px);
       }
 
       .count-animation {
         opacity: 1;
-        transform: scale(1.2) translateY(-10px);
+        transform: scale(1.3) translateY(-15px);
       }
 
       .ripple-effect {
-        animation: ripple 0.6s ease-out;
+        animation: ripple 0.8s ease-out;
+      }
+    }
+
+    // 悬浮时整体3D旋转动画（速度调慢）
+    @keyframes cardHoverRotate {
+      0% {
+        transform: translateY(-20px) rotateX(8deg) rotateY(5deg) rotateZ(2deg) scale(1.05);
+      }
+      25% {
+        transform: translateY(-22px) rotateX(10deg) rotateY(8deg) rotateZ(3deg) scale(1.06);
+      }
+      50% {
+        transform: translateY(-25px) rotateX(12deg) rotateY(10deg) rotateZ(4deg) scale(1.07);
+      }
+      75% {
+        transform: translateY(-22px) rotateX(10deg) rotateY(8deg) rotateZ(3deg) scale(1.06);
+      }
+      100% {
+        transform: translateY(-20px) rotateX(8deg) rotateY(5deg) rotateZ(2deg) scale(1.05);
       }
     }
 
@@ -554,7 +635,7 @@ function handleCardHover(index: number, isHover: boolean) {
       text-align: center;
 
       .category-icon {
-        margin-bottom: 1.5rem;
+        margin-bottom: clamp(0.8rem, 2vw, 1.5rem);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -565,8 +646,10 @@ function handleCardHover(index: number, isHover: boolean) {
           transform-style: preserve-3d;
 
           svg {
+            width: clamp(24px, 4vw, 40px);
+            height: clamp(24px, 4vw, 40px);
             transition: all 0.3s ease;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+            filter: drop-shadow(0 clamp(2px, 0.5vw, 4px) clamp(4px, 1vw, 8px) rgba(0, 0, 0, 0.2));
             z-index: 2;
             position: relative;
           }
@@ -575,8 +658,8 @@ function handleCardHover(index: number, isHover: boolean) {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 60px;
-            height: 60px;
+            width: clamp(32px, 6vw, 60px);
+            height: clamp(32px, 6vw, 60px);
             background: radial-gradient(circle, rgba(64, 158, 255, 0.4) 0%, transparent 70%);
             border-radius: 50%;
             transform: translate(-50%, -50%) scale(0);
@@ -588,10 +671,10 @@ function handleCardHover(index: number, isHover: boolean) {
       }
 
       .category-name {
-        font-size: 1.4rem;
+        font-size: clamp(1rem, 2.5vw, 1.4rem);
         font-weight: 700;
         color: var(--el-text-color-primary);
-        margin-bottom: 0.8rem;
+        margin-bottom: clamp(0.4rem, 1vw, 0.8rem);
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         line-height: 1.4;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -611,22 +694,22 @@ function handleCardHover(index: number, isHover: boolean) {
       }
 
       .article-count {
-        font-size: 1rem;
+        font-size: clamp(0.8rem, 1.8vw, 1rem);
         color: var(--el-text-color-regular);
         font-weight: 600;
         opacity: 0.9;
         transition: all 0.3s ease;
         background: linear-gradient(135deg, var(--el-color-primary-light-7), var(--el-color-success-light-7));
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
+        padding: clamp(0.15rem, 0.5vw, 0.3rem) clamp(0.4rem, 1vw, 0.8rem);
+        border-radius: clamp(10px, 2vw, 20px);
         border: 1px solid var(--el-border-color-lighter);
       }
 
       .count-animation {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 2rem;
+        top: clamp(5px, 1vw, 10px);
+        right: clamp(5px, 1vw, 10px);
+        font-size: clamp(1rem, 3vw, 2rem);
         font-weight: 900;
         color: rgba(64, 158, 255, 0.1);
         opacity: 0;
@@ -641,98 +724,88 @@ function handleCardHover(index: number, isHover: boolean) {
     }
   }
 
-  // 响应式设计
-  @media screen and (max-width: 1000px) {
+  // 修复特定宽度溢出问题
+  @media screen and (min-width: 900px) and (max-width: 1100px) {
     .category-cards-container {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem 1.5rem;
+    }
+  }
+
+  @media screen and (min-width: 1600px) and (max-width: 1800px) {
+    .category-cards-container {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 2rem;
-      padding: 2rem 1rem;
+      padding: 2.5rem 2rem;
+    }
+  }
+
+  // 通用的溢出防护
+  @media screen and (max-width: 1200px) {
+    .category-cards-container {
+      padding-left: max(1rem, calc((100vw - 1160px) / 2));
+      padding-right: max(1rem, calc((100vw - 1160px) / 2));
+    }
+  }
+
+  // 简化的响应式调整 - 只在极小屏幕时微调
+  @media screen and (max-width: 480px) {
+    .category-cards-container {
+      // 在极小屏幕上稍微调整最小宽度
+      grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 30vw, 280px), 1fr));
     }
 
     .category-card {
-      padding: 2rem;
-      min-height: 200px;
-
       &:hover {
-        transform: translateY(-10px) rotateX(3deg);
+        // 小屏幕上减少3D效果强度
+        transform: translateY(clamp(-15px, -2vw, -8px)) rotateX(4deg) rotateY(2deg) rotateZ(1deg) scale(clamp(1.01, 1.02, 1.03));
+        animation: cardHoverRotateResponsive 6s ease-in-out infinite;
       }
 
-      .card-content {
-        .category-icon .icon-wrapper {
-          svg {
-            width: 32px;
-            height: 32px;
-          }
-
-          .icon-glow {
-            width: 50px;
-            height: 50px;
-          }
+      @keyframes cardHoverRotateResponsive {
+        0% {
+          transform: translateY(clamp(-15px, -2vw, -8px)) rotateX(4deg) rotateY(2deg) rotateZ(1deg) scale(clamp(1.01, 1.02, 1.03));
         }
-
-        .category-name {
-          font-size: 1.2rem;
+        50% {
+          transform: translateY(clamp(-18px, -2.5vw, -10px)) rotateX(6deg) rotateY(3deg) rotateZ(1.5deg) scale(clamp(1.02, 1.03, 1.04));
         }
-
-        .article-count {
-          font-size: 0.9rem;
+        100% {
+          transform: translateY(clamp(-15px, -2vw, -8px)) rotateX(4deg) rotateY(2deg) rotateZ(1deg) scale(clamp(1.01, 1.02, 1.03));
         }
+      }
 
-        .count-animation {
-          font-size: 1.5rem;
-        }
+      .particles .particle {
+        width: clamp(2px, 0.5vw, 4px);
+        height: clamp(2px, 0.5vw, 4px);
       }
     }
   }
 
-  @media screen and (max-width: 600px) {
+  // 超小屏幕优化
+  @media screen and (max-width: 320px) {
     .category-cards-container {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1.5rem;
-      padding: 1.5rem 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: clamp(0.8rem, 2vw, 1.5rem);
+      padding: clamp(0.8rem, 3vw, 2rem) clamp(0.3rem, 1vw, 1rem);
     }
 
     .category-card {
-      padding: 1.8rem;
-      min-height: 180px;
-
       &:hover {
-        transform: translateY(-8px);
+        // 超小屏幕进一步减少动画效果
+        transform: translateY(-6px) rotateX(1deg) scale(1.01);
+        animation: cardHoverRotateTiny 6s ease-in-out infinite;
       }
 
-      .particles .particle {
-        width: 3px;
-        height: 3px;
-      }
-
-      .card-content {
-        .category-icon {
-          margin-bottom: 1rem;
-
-          .icon-wrapper {
-            svg {
-              width: 28px;
-              height: 28px;
-            }
-
-            .icon-glow {
-              width: 40px;
-              height: 40px;
-            }
-          }
+      @keyframes cardHoverRotateTiny {
+        0% {
+          transform: translateY(-6px) rotateX(1deg) scale(1.01);
         }
-
-        .category-name {
-          font-size: 1.1rem;
-          margin-bottom: 0.6rem;
+        50% {
+          transform: translateY(-8px) rotateX(2deg) scale(1.02);
         }
-
-        .article-count {
-          font-size: 0.85rem;
-        }
-
-        .count-animation {
-          font-size: 1.2rem;
+        100% {
+          transform: translateY(-6px) rotateX(1deg) scale(1.01);
         }
       }
     }
