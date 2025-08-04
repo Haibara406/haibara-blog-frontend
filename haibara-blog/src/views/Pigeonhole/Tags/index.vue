@@ -146,8 +146,39 @@ function getArticle(id: string) {
       <template #content>
         <div class="tags_container">
           <div class="page-title" v-if="!isQueryArticle">
-            <h1>标签云</h1>
-            <p>探索不同主题的精彩内容</p>
+            <!-- 装饰性背景元素 -->
+            <div class="title-decoration">
+              <div class="decoration-circle circle-1"></div>
+              <div class="decoration-circle circle-2"></div>
+              <div class="decoration-circle circle-3"></div>
+              <div class="decoration-line line-1"></div>
+              <div class="decoration-line line-2"></div>
+            </div>
+
+            <!-- 左侧装饰图标 -->
+            <div class="title-icon left">
+              <SvgIcon name="tag" width="32" height="32"/>
+            </div>
+
+            <div class="title-content">
+              <h1>标签云</h1>
+              <p>探索不同主题的精彩内容</p>
+              <div class="title-stats">
+                <span class="stat-item">
+                  <SvgIcon name="statistics" width="16" height="16"/>
+                  {{ tags.length }} 个标签
+                </span>
+                <span class="stat-item">
+                  <SvgIcon name="essay_icon" width="16" height="16"/>
+                  {{ tags.reduce((sum, tag) => sum + tag.articleCount, 0) }} 篇文章
+                </span>
+              </div>
+            </div>
+
+            <!-- 右侧装饰图标 -->
+            <div class="title-icon right">
+              <SvgIcon name="collection" width="32" height="32"/>
+            </div>
           </div>
           <div class="page-title" v-if="isQueryArticle">
             <h1>标签 - {{ title }}</h1>
@@ -224,26 +255,215 @@ function getArticle(id: string) {
 
   // 页面标题样式
   .page-title {
-    text-align: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 3rem;
-    padding: 2rem 1rem;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg,
+      rgba(64, 158, 255, 0.03) 0%,
+      rgba(103, 194, 58, 0.03) 50%,
+      rgba(255, 107, 107, 0.03) 100%);
+    border-radius: 20px;
+    overflow: hidden;
 
-    h1 {
-      font-size: clamp(2rem, 4vw, 3.5rem);
-      font-weight: 700;
-      color: var(--el-text-color-primary);
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    // 装饰性背景元素
+    .title-decoration {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+
+      .decoration-circle {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(45deg, rgba(64, 158, 255, 0.1), rgba(103, 194, 58, 0.1));
+        animation: floatCircle 8s ease-in-out infinite;
+
+        &.circle-1 {
+          width: 60px;
+          height: 60px;
+          top: 20%;
+          left: 10%;
+          animation-delay: 0s;
+        }
+
+        &.circle-2 {
+          width: 40px;
+          height: 40px;
+          top: 60%;
+          right: 15%;
+          animation-delay: 2s;
+        }
+
+        &.circle-3 {
+          width: 30px;
+          height: 30px;
+          bottom: 20%;
+          left: 20%;
+          animation-delay: 4s;
+        }
+      }
+
+      .decoration-line {
+        position: absolute;
+        background: linear-gradient(90deg, transparent, rgba(64, 158, 255, 0.2), transparent);
+        animation: moveLine 6s ease-in-out infinite;
+
+        &.line-1 {
+          width: 100px;
+          height: 2px;
+          top: 30%;
+          right: 20%;
+          animation-delay: 1s;
+        }
+
+        &.line-2 {
+          width: 80px;
+          height: 1px;
+          bottom: 40%;
+          left: 25%;
+          animation-delay: 3s;
+        }
+      }
+
+      @keyframes floatCircle {
+        0%, 100% { transform: translateY(0px) scale(1); opacity: 0.3; }
+        50% { transform: translateY(-10px) scale(1.1); opacity: 0.6; }
+      }
+
+      @keyframes moveLine {
+        0%, 100% { transform: translateX(0px) scaleX(1); opacity: 0.2; }
+        50% { transform: translateX(10px) scaleX(1.2); opacity: 0.5; }
+      }
     }
 
-    p {
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      color: var(--el-text-color-regular);
-      opacity: 0.8;
+    // 左右装饰图标
+    .title-icon {
+      position: relative;
+      z-index: 2;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+
+      svg {
+        color: var(--el-color-primary);
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        transition: all 0.3s ease;
+      }
+
+      &:hover {
+        transform: scale(1.1) rotate(5deg);
+        background: rgba(255, 255, 255, 0.2);
+
+        svg {
+          color: var(--el-color-success);
+          transform: rotate(-5deg);
+        }
+      }
+
+      &.left {
+        margin-right: 2rem;
+        animation: iconBounceLeft 3s ease-in-out infinite;
+      }
+
+      &.right {
+        margin-left: 2rem;
+        animation: iconBounceRight 3s ease-in-out infinite;
+        animation-delay: 1.5s;
+      }
+
+      @keyframes iconBounceLeft {
+        0%, 100% { transform: translateX(0px) rotate(0deg); }
+        50% { transform: translateX(-5px) rotate(-3deg); }
+      }
+
+      @keyframes iconBounceRight {
+        0%, 100% { transform: translateX(0px) rotate(0deg); }
+        50% { transform: translateX(5px) rotate(3deg); }
+      }
+    }
+
+    // 标题内容
+    .title-content {
+      text-align: center;
+      z-index: 2;
+      position: relative;
+
+      h1 {
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        font-weight: 700;
+        color: var(--el-text-color-primary);
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -8px;
+          left: 50%;
+          width: 60px;
+          height: 3px;
+          background: linear-gradient(90deg, var(--el-color-primary), var(--el-color-success));
+          border-radius: 2px;
+          transform: translateX(-50%);
+          animation: underlineGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes underlineGlow {
+          0%, 100% { box-shadow: 0 0 5px rgba(64, 158, 255, 0.3); }
+          50% { box-shadow: 0 0 15px rgba(64, 158, 255, 0.6); }
+        }
+      }
+
+      p {
+        font-size: clamp(1rem, 2vw, 1.2rem);
+        color: var(--el-text-color-regular);
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+      }
+
+      // 统计信息
+      .title-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+
+        .stat-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          font-size: 0.9rem;
+          color: var(--el-text-color-regular);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          transition: all 0.3s ease;
+
+          svg {
+            color: var(--el-color-primary);
+          }
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+        }
+      }
     }
   }
 
@@ -690,6 +910,43 @@ function getArticle(id: string) {
 
   // 响应式设计
   @media screen and (max-width: 768px) {
+    .page-title {
+      flex-direction: column;
+      padding: 2rem 1rem;
+
+      .title-icon {
+        margin: 0 0 1rem 0;
+
+        &.left {
+          margin-bottom: 1rem;
+          animation: iconBounceUp 3s ease-in-out infinite;
+        }
+
+        &.right {
+          margin-top: 1rem;
+          animation: iconBounceDown 3s ease-in-out infinite;
+        }
+
+        @keyframes iconBounceUp {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-3px); }
+        }
+
+        @keyframes iconBounceDown {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(3px); }
+        }
+      }
+
+      .title-content .title-stats {
+        gap: 1rem;
+
+        .stat-item {
+          font-size: 0.8rem;
+          padding: 0.4rem 0.8rem;
+        }
+      }
+    }
     .tags-grid-container {
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 1.2rem;
