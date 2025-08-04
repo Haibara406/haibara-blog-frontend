@@ -54,6 +54,10 @@ export const useUserStore = defineStore('user', () => {
       userInfo.value = undefined
       routerData.value = undefined
       menuData.value = []
+
+      // 清除登录相关的本地存储，确保下次登录时显示欢迎弹窗
+      localStorage.removeItem('haibara-login-time')
+      localStorage.removeItem('haibara-welcome-shown')
     }
   }
 

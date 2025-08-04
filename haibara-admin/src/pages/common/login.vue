@@ -62,6 +62,11 @@ async function submit() {
     }
     const { data } = await loginApi(params)
     token.value = JSON.stringify({ token: data?.token, expires: data?.expire })
+
+    // 清除之前的登录时间记录，确保新登录时会显示欢迎弹窗
+    localStorage.removeItem('haibara-login-time')
+    localStorage.removeItem('haibara-welcome-shown')
+
     notification.success({
       message: '登录成功',
       description: '欢迎回来！',

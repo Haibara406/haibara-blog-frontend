@@ -819,17 +819,34 @@ const openLink = (url: string) => {
 
 // 励志弹窗功能
 const showWelcomeMessage = () => {
-  // 每次进入首页都显示励志弹窗
-  // 延迟1秒显示，让页面先加载完成
-  setTimeout(() => {
-    showWelcomeModal.value = true
-  }, 1000)
+  // 检查当前登录会话是否已经显示过弹窗
+  const currentLoginTime = localStorage.getItem('haibara-login-time')
+  const welcomeShownTime = localStorage.getItem('haibara-welcome-shown')
+
+  // 如果没有登录时间记录，说明是新登录，记录当前时间
+  if (!currentLoginTime) {
+    const now = Date.now().toString()
+    localStorage.setItem('haibara-login-time', now)
+    localStorage.removeItem('haibara-welcome-shown') // 清除之前的显示记录
+  }
+
+  // 如果当前登录会话还没有显示过弹窗，则显示
+  if (!welcomeShownTime || welcomeShownTime !== currentLoginTime) {
+    // 延迟1秒显示，让页面先加载完成
+    setTimeout(() => {
+      showWelcomeModal.value = true
+    }, 1000)
+  }
 }
-
-
 
 const closeWelcomeModal = () => {
   showWelcomeModal.value = false
+
+  // 记录当前登录会话已经显示过弹窗
+  const currentLoginTime = localStorage.getItem('haibara-login-time')
+  if (currentLoginTime) {
+    localStorage.setItem('haibara-welcome-shown', currentLoginTime)
+  }
 }
 
 onMounted(() => {
