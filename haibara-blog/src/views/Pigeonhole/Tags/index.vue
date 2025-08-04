@@ -5,6 +5,7 @@ import {whereArticleList} from "@/apis/article";
 import {dayjs} from "element-plus";
 
 const route = useRoute()
+const router = useRouter()
 
 const isQueryArticle = ref(false)
 const tags = ref([])
@@ -106,33 +107,73 @@ onUnmounted(() => {
   window.removeEventListener('resize', debouncedAdjustTagLayout)
 })
 
-watch(() => route.params.id, (id) => {
+watch(() => route.params.id, (id, oldId) => {
   if (id) {
+    // 如果是不同的标签，先清空文章列表
+    if (id !== oldId) {
+      articleList.value = []
+    }
+
     isQueryArticle.value = true
     tags.value.forEach(item => {
-      if (item.id === Number(route.params.id)) {
+      if (item.id === Number(id)) {
         title.value = item.tagName
       }
     })
     getArticle(id)
   } else {
     isQueryArticle.value = false
+    articleList.value = []
   }
 })
 
 // 文章
-function getArticle(id: string) {
-  whereArticleList(2, id).then(res => {
+async function getArticle(id: string) {
+  try {
+    // 确保文章列表为空，避免显示旧数据
+    articleList.value = []
+
+    const res = await whereArticleList(2, id)
     if (res.code === 200 && res.data !== undefined) {
       res.data.forEach(item => {
         item.createTime = dayjs(item.createTime).format('YYYY-MM-DD')
       })
-      console.log(res.data)
+      // 使用nextTick确保DOM更新后再设置数据
+      await nextTick()
       articleList.value = res.data
     } else {
       articleList.value = []
     }
+  } catch (error) {
+    console.error('获取文章失败:', error)
+    articleList.value = []
+  }
+}
+
+// 处理标签切换
+function handleTagChange(tagId: number) {
+  // 立即清空文章列表，避免显示上一个标签的文章
+  articleList.value = []
+
+  // 更新标签状态
+  tags.value.forEach(item => {
+    if (item.id === tagId) {
+      title.value = item.tagName
+    }
   })
+
+  // 跳转到新标签
+  router.push(`/tags/${tagId}`)
+}
+
+// 获取当前标签的图标
+function getCurrentTagIcon() {
+  const currentTag = tags.value.find(tag => tag.tagName === title.value)
+  if (currentTag) {
+    const index = tags.value.indexOf(currentTag)
+    return getTagIcon(index)
+  }
+  return 'tag' // 默认图标
 }
 
 </script>
@@ -187,7 +228,7 @@ function getArticle(id: string) {
 
             <div class="title-content">
               <h1>标签云</h1>
-              <p>探索不同主题的精彩内容</p>
+              <p>尽情探索不同主题下的精彩内容</p>
               <div class="title-stats">
                 <span class="stat-item">
                   <SvgIcon name="statistics" width="16" height="16"/>
@@ -205,10 +246,7 @@ function getArticle(id: string) {
               <SvgIcon name="collection" width="32" height="32"/>
             </div>
           </div>
-          <div class="page-title" v-if="isQueryArticle">
-            <h1>标签 - {{ title }}</h1>
-            <p>{{ title }} 相关的所有文章</p>
-          </div>
+
 
           <template v-if="!isQueryArticle">
             <div class="tags-grid-container">
@@ -218,7 +256,7 @@ function getArticle(id: string) {
                   class="tag-card"
                   :class="`tag-${index % 12}`"
                   :style="{ '--tag-index': index, '--total-tags': tags.length }"
-                  @click="$router.push(`/tags/${tag.id}`)"
+                  @click="router.push(`/tags/${tag.id}`)"
                   @mouseenter="handleTagHover(index, true)"
                   @mouseleave="handleTagHover(index, false)"
                 >
@@ -258,12 +296,103 @@ function getArticle(id: string) {
           </template>
 
           <template v-if="isQueryArticle">
-            <div class="back-button" @click="$router.push('/tags')">
-              <SvgIcon name="jt_x" width="20" height="20"/>
-              <span>返回标签云</span>
-            </div>
-            <el-divider/>
-            <ArticleList :article-list="articleList"/>
+            <transition name="page-slide" appear>
+              <div class="tag-detail-page" :key="$route.params.id">
+                <!-- 优化的页面头部 -->
+                <div class="detail-header">
+                  <div class="header-content">
+                    <div class="tag-info">
+                      <div class="tag-icon">
+                        <SvgIcon :name="getCurrentTagIcon()" width="28" height="28"/>
+                      </div>
+                      <div class="tag-text">
+                        <h1 class="tag-title">{{ title }}</h1>
+                        <p class="article-count">{{ articleList.length }} 篇文章</p>
+                      </div>
+                    </div>
+
+                    <div class="back-button" @click="router.push('/tags')">
+                      <SvgIcon name="jt_x" width="18" height="18"/>
+                      <span>返回标签云</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 标签导航 -->
+                <div class="tag-nav">
+                  <el-scrollbar>
+                    <div class="nav-items">
+                      <template v-for="(tag, index) in tags" :key="tag.id">
+                        <div
+                          @click="handleTagChange(tag.id)"
+                          class="nav-item"
+                          :class="{ 'active': tag.tagName === title }"
+                          :style="{ '--nav-index': index }"
+                        >
+                          <SvgIcon :name="getTagIcon(index)" width="16" height="16"/>
+                          <span>{{ tag.tagName }}</span>
+                        </div>
+                      </template>
+                    </div>
+                  </el-scrollbar>
+                </div>
+
+                <!-- 文章列表 -->
+                <div class="articles-container">
+                  <template v-if="articleList.length > 0">
+                    <div class="articles-grid">
+                      <template v-for="(article, index) in articleList" :key="article.id">
+                        <div
+                          class="modern-article-card"
+                          :style="{ '--card-index': index }"
+                          @click="router.push(`/article/${article.id}`)"
+                        >
+                          <div class="article-image">
+                            <img :src="article.articleCover" :alt="article.articleTitle">
+                            <div class="image-overlay">
+                              <div class="read-btn">
+                                <SvgIcon name="reading" width="20" height="20"/>
+                                <span>阅读</span>
+                              </div>
+                            </div>
+                            <div class="view-count">
+                              <SvgIcon name="heat" width="12" height="12"/>
+                              <span>{{ article.viewCount || 0 }}</span>
+                            </div>
+                          </div>
+                          <div class="article-content">
+                            <div class="article-date">{{ article.createTime }}</div>
+                            <h3 class="article-title">{{ article.articleTitle }}</h3>
+                            <div class="article-tags">
+                              <span class="tag" v-for="tag in article.tagNameList" :key="tag">{{ tag }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+
+                  <!-- 空状态 -->
+                  <template v-else>
+                    <div class="empty-state">
+                      <div class="empty-icon">
+                        <SvgIcon name="essay_icon" width="64" height="64"/>
+                      </div>
+                      <h3>暂无文章</h3>
+                      <p>{{ title }} 标签下还没有文章</p>
+                      <div class="empty-actions">
+                        <button class="btn-primary" @click="router.push('/tags')">
+                          浏览其他标签
+                        </button>
+                        <button class="btn-secondary" @click="router.push('/')">
+                          返回首页
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </transition>
           </template>
         </div>
       </template>
@@ -1217,6 +1346,839 @@ function getArticle(id: string) {
       .particles .particle {
         width: 2px;
         height: 2px;
+      }
+    }
+  }
+}
+
+// 页面过渡动画 - 淡入淡出效果
+.page-slide-enter-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-slide-enter-from {
+  opacity: 0;
+  transform: scale(0.98);
+  filter: blur(2px);
+}
+
+.page-slide-leave-to {
+  opacity: 0;
+  transform: scale(1.02);
+  filter: blur(2px);
+}
+
+.page-slide-enter-to,
+.page-slide-leave-from {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+// 标签详情页面
+.tag-detail-page {
+  position: relative;
+  z-index: 1;
+
+  // 页面头部
+  .detail-header {
+    background: linear-gradient(135deg,
+      rgba(64, 158, 255, 0.03) 0%,
+      rgba(103, 194, 58, 0.03) 100%);
+    padding: 2rem;
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+
+    // 背景装饰
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 20%, rgba(64, 158, 255, 0.05) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 80%, rgba(103, 194, 58, 0.05) 0%, transparent 50%);
+      animation: backgroundFloat 20s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes backgroundFloat {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(-20px, -10px) rotate(1deg); }
+      66% { transform: translate(20px, 10px) rotate(-1deg); }
+    }
+
+    // 头部进入动画 - 淡入效果
+    opacity: 0;
+    filter: blur(3px);
+    animation: headerFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.1s;
+
+    @keyframes headerFadeIn {
+      0% {
+        opacity: 0;
+        filter: blur(3px);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+
+      .tag-info {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+
+        .tag-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 64px;
+          height: 64px;
+          background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(255, 255, 255, 0.7) 100%);
+          border-radius: 20px;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 8px 32px rgba(64, 158, 255, 0.1),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+          position: relative;
+
+          // 图标光晕效果
+          &::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+            border-radius: 22px;
+            opacity: 0.1;
+            z-index: -1;
+            animation: iconGlow 3s ease-in-out infinite;
+          }
+
+          @keyframes iconGlow {
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.2; transform: scale(1.05); }
+          }
+
+          svg {
+            color: var(--el-color-primary);
+            filter: drop-shadow(0 2px 8px rgba(64, 158, 255, 0.3));
+            animation: iconFloat 4s ease-in-out infinite;
+          }
+
+          @keyframes iconFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(2deg); }
+          }
+        }
+
+        .tag-text {
+          .tag-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--el-text-color-primary);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg,
+              var(--el-color-primary) 0%,
+              var(--el-color-success) 50%,
+              var(--el-color-primary) 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShimmer 3s ease-in-out infinite;
+            position: relative;
+
+            // 标题前的装饰符号
+            &::before {
+              content: '#';
+              position: absolute;
+              left: -1.5rem;
+              top: 0;
+              color: var(--el-color-primary);
+              opacity: 0.6;
+              font-weight: 600;
+              animation: hashFloat 2s ease-in-out infinite;
+            }
+          }
+
+          @keyframes titleShimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+
+          @keyframes hashFloat {
+            0%, 100% { transform: translateY(0px); opacity: 0.6; }
+            50% { transform: translateY(-2px); opacity: 0.8; }
+          }
+
+          .article-count {
+            font-size: 1rem;
+            color: var(--el-text-color-regular);
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &::before {
+              content: '📝';
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+
+      .back-button {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.8rem 1.5rem;
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.9) 0%,
+          rgba(255, 255, 255, 0.7) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(64, 158, 255, 0.2);
+        color: var(--el-color-primary);
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 20px rgba(64, 158, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+
+        // 按钮光晕效果
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent);
+          transition: left 0.5s ease;
+        }
+
+        svg {
+          color: var(--el-color-primary);
+          transition: transform 0.3s ease;
+          filter: drop-shadow(0 1px 3px rgba(64, 158, 255, 0.3));
+        }
+
+        span {
+          color: var(--el-color-primary);
+          font-weight: 600;
+          position: relative;
+          z-index: 2;
+        }
+
+        &:hover {
+          background: linear-gradient(135deg,
+            rgba(64, 158, 255, 0.1) 0%,
+            rgba(103, 194, 58, 0.1) 100%);
+          backdrop-filter: blur(25px);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 30px rgba(64, 158, 255, 0.2);
+          border-color: rgba(64, 158, 255, 0.4);
+
+          &::before {
+            left: 100%;
+          }
+
+          svg {
+            transform: translateX(-3px) scale(1.1);
+          }
+        }
+
+        &:active {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 20px rgba(64, 158, 255, 0.1);
+        }
+      }
+    }
+  }
+
+  // 标签导航
+  .tag-nav {
+    margin-bottom: 1.5rem;
+    padding: 0 2rem;
+
+    // 导航栏进入动画 - 淡入效果
+    opacity: 0;
+    filter: blur(2px);
+    animation: navContainerFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.2s;
+
+    @keyframes navContainerFadeIn {
+      0% {
+        opacity: 0;
+        filter: blur(2px);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    .nav-items {
+      display: flex;
+      gap: 0.8rem;
+      padding: 0.5rem 0;
+      max-width: 1200px;
+      margin: 0 auto;
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        background: var(--el-bg-color);
+        border: 1px solid var(--el-border-color-lighter);
+        border-radius: 18px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        font-size: 0.85rem;
+
+        // 导航项进入动画 - 淡入效果
+        opacity: 0;
+        transform: scale(0.9);
+        filter: blur(2px);
+        animation: navItemFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: calc(var(--nav-index) * 0.04s + 0.3s);
+
+        @keyframes navItemFadeIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.9);
+            filter: blur(2px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+          }
+        }
+
+        svg {
+          color: var(--el-color-primary);
+          width: 14px;
+          height: 14px;
+          transition: transform 0.3s ease;
+        }
+
+        span {
+          font-weight: 500;
+          color: var(--el-text-color-regular);
+          transition: color 0.3s ease;
+        }
+
+        &:hover {
+          transform: translateY(-1px) scale(1);
+          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+          border-color: var(--el-color-primary);
+          background: var(--el-color-primary-light-9);
+
+          svg {
+            transform: scale(1.1);
+          }
+        }
+
+        &.active {
+          background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+          color: white;
+          border-color: transparent;
+          box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
+          transform: translateY(0) scale(1.05);
+
+          svg, span {
+            color: white;
+          }
+
+          svg {
+            transform: scale(1.1);
+          }
+        }
+      }
+    }
+  }
+
+  // 文章容器
+  .articles-container {
+    padding: 0 2rem;
+
+    // 文章网格
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+
+      .modern-article-card {
+        background: var(--el-bg-color);
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid var(--el-border-color-lighter);
+
+        // 进入动画 - 淡入效果
+        opacity: 0;
+        transform: scale(0.95);
+        filter: blur(4px);
+        animation: articleFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: calc(var(--card-index) * 0.08s);
+
+        @keyframes articleFadeIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.95);
+            filter: blur(4px);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(0.98);
+            filter: blur(2px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+          }
+        }
+
+        &:hover {
+          transform: translateY(-3px) scale(1);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+          border-color: var(--el-color-primary-light-7);
+
+          .article-image img {
+            transform: scale(1.03);
+          }
+
+          .image-overlay {
+            opacity: 1;
+          }
+        }
+
+        .article-image {
+          position: relative;
+          height: 160px;
+          overflow: hidden;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+          }
+
+          .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
+
+            .read-btn {
+              display: flex;
+              align-items: center;
+              gap: 0.4rem;
+              padding: 0.5rem 1rem;
+              background: rgba(255, 255, 255, 0.95);
+              backdrop-filter: blur(10px);
+              color: var(--el-color-primary);
+              border-radius: 18px;
+              font-weight: 600;
+              font-size: 0.85rem;
+              border: 1px solid rgba(255, 255, 255, 0.3);
+
+              svg {
+                color: var(--el-color-primary);
+                width: 16px;
+                height: 16px;
+              }
+            }
+          }
+
+          .view-count {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.2rem 0.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            color: white;
+            border-radius: 10px;
+            font-size: 0.7rem;
+
+            svg {
+              color: #ff6b6b;
+              width: 10px;
+              height: 10px;
+            }
+          }
+        }
+
+        .article-content {
+          padding: 1rem;
+
+          .article-date {
+            font-size: 0.8rem;
+            color: var(--el-text-color-regular);
+            opacity: 0.6;
+            margin-bottom: 0.5rem;
+          }
+
+          .article-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--el-text-color-primary);
+            margin-bottom: 0.6rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.3s ease;
+
+            &:hover {
+              color: var(--el-color-primary);
+            }
+          }
+
+          .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+
+            .tag {
+              padding: 0.15rem 0.5rem;
+              background: var(--el-color-primary-light-9);
+              color: var(--el-color-primary);
+              border-radius: 8px;
+              font-size: 0.7rem;
+              cursor: pointer;
+              transition: all 0.3s ease;
+
+              &:hover {
+                background: var(--el-color-primary);
+                color: white;
+                transform: translateY(-1px);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 空状态
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+
+      // 空状态进入动画 - 淡入效果
+      opacity: 0;
+      transform: scale(0.95);
+      filter: blur(3px);
+      animation: emptyStateFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation-delay: 0.4s;
+
+      @keyframes emptyStateFadeIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.95);
+          filter: blur(3px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+          filter: blur(0);
+        }
+      }
+
+      .empty-icon {
+        margin-bottom: 2rem;
+
+        svg {
+          color: var(--el-color-primary);
+          opacity: 0.6;
+          animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--el-text-color-primary);
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-size: 1rem;
+        color: var(--el-text-color-regular);
+        opacity: 0.8;
+        margin-bottom: 2rem;
+      }
+
+      .empty-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.8rem 1.5rem;
+          border: none;
+          border-radius: 25px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          font-size: 0.9rem;
+          min-width: 140px;
+          backdrop-filter: blur(20px);
+
+          &.btn-primary {
+            background: linear-gradient(135deg,
+              rgba(64, 158, 255, 0.9) 0%,
+              rgba(103, 194, 58, 0.9) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(64, 158, 255, 0.3);
+
+            &:hover {
+              background: linear-gradient(135deg,
+                rgba(64, 158, 255, 1) 0%,
+                rgba(103, 194, 58, 1) 100%);
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+              backdrop-filter: blur(25px);
+            }
+          }
+
+          &.btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--el-text-color-primary);
+            border: 1px solid rgba(64, 158, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+            &:hover {
+              background: rgba(64, 158, 255, 0.1);
+              border-color: rgba(64, 158, 255, 0.4);
+              color: var(--el-color-primary);
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px rgba(64, 158, 255, 0.15);
+              backdrop-filter: blur(25px);
+            }
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+    }
+  }
+
+  // 响应式设计
+  @media screen and (max-width: 768px) {
+    .tag-detail-page {
+      .detail-header {
+        padding: 1.5rem 1rem;
+        border-radius: 0 0 16px 16px;
+
+        .header-content {
+          flex-direction: column;
+          gap: 1.5rem;
+          align-items: center;
+          text-align: center;
+
+          .tag-info {
+            flex-direction: column;
+            gap: 1rem;
+
+            .tag-icon {
+              width: 56px;
+              height: 56px;
+              border-radius: 16px;
+            }
+
+            .tag-text {
+              .tag-title {
+                font-size: 1.5rem;
+
+                &::before {
+                  display: none; // 隐藏移动端的 # 符号
+                }
+              }
+
+              .article-count {
+                justify-content: center;
+              }
+            }
+          }
+
+          .back-button {
+            padding: 0.7rem 1.2rem;
+            font-size: 0.85rem;
+            border-radius: 25px;
+          }
+        }
+      }
+
+      .tag-nav {
+        padding: 0 1.5rem;
+
+        .nav-items {
+          gap: 0.6rem;
+
+          .nav-item {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 15px;
+          }
+        }
+      }
+
+      .articles-container {
+        padding: 0 1.5rem;
+
+        .articles-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+
+          .modern-article-card {
+            .article-image {
+              height: 140px;
+            }
+
+            .article-content {
+              padding: 0.8rem;
+
+              .article-title {
+                font-size: 0.95rem;
+              }
+            }
+          }
+        }
+      }
+
+      .empty-state {
+        padding: 2rem 1rem;
+
+        .empty-actions {
+          flex-direction: column;
+          align-items: center;
+
+          button {
+            width: 100%;
+            max-width: 200px;
+          }
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .tag-detail-page {
+      .detail-header {
+        padding: 1rem 0.8rem;
+        border-radius: 0 0 12px 12px;
+
+        .header-content {
+          gap: 1rem;
+
+          .tag-info {
+            gap: 0.8rem;
+
+            .tag-icon {
+              width: 48px;
+              height: 48px;
+              border-radius: 14px;
+            }
+
+            .tag-text {
+              .tag-title {
+                font-size: 1.3rem;
+              }
+
+              .article-count {
+                font-size: 0.9rem;
+              }
+            }
+          }
+
+          .back-button {
+            padding: 0.6rem 1rem;
+            font-size: 0.8rem;
+            border-radius: 20px;
+          }
+        }
+      }
+
+      .tag-nav {
+        padding: 0 1rem;
+      }
+
+      .articles-container {
+        padding: 0 1rem;
+
+        .articles-grid {
+          .modern-article-card {
+            .article-image {
+              height: 120px;
+            }
+          }
+        }
       }
     }
   }

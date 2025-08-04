@@ -21,6 +21,7 @@ declare module 'vue' {
     Controls: typeof import('./../components/Music/controls/index.vue')['default']
     CustomMusicList: typeof import('./../components/Music/list/components/custom-music-list.vue')['default']
     DevToolsBlocker: typeof import('./../components/DevToolsBlocker/index.vue')['default']
+    ElAffix: typeof import('element-plus/es')['ElAffix']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
