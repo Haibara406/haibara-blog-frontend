@@ -6,7 +6,7 @@ const chargingList = ref([
   {
     name: "One",
     money: "200",
-    message: "全网最美博客ruyu-blog，期待新功能"
+    message: "全网最美博客haibara-blog，期待新功能"
   },
   {
     name: "李貌",
@@ -41,7 +41,7 @@ const chargingList = ref([
   {
     name: "御坂10086号",
     money: "10",
-    message: "感谢群主开源，未来希望能看到更多的作品"
+    message: "感谢开源，未来希望能看到更多的作品"
   }
 ])
 </script>
@@ -92,13 +92,6 @@ const chargingList = ref([
         </div>
       </div>
       <div class="text-left text-[12px] mt-2 font-bold">
-<!--        <span class="text-[#999]">为项目充电(支付宝)：</span>-->
-<!--        <div class="flex justify-center items-center">-->
-<!--          <div style="width: 150px;height: 150px;margin-top: 1rem">-->
-<!--            <el-image-->
-<!--                src="https://image.kuailemao.xyz/blog/pay/%E6%94%AF%E4%BB%98%E5%AE%9D%E6%94%AF%E4%BB%98%E4%BA%8C%E7%BB%B4%E7%A0%81_.png"/>-->
-<!--          </div>-->
-<!--        </div>-->
         <span class="text-[#999]">为项目充电：联系站长</span>
       </div>
     </Card>

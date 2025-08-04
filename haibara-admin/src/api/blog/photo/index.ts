@@ -8,7 +8,7 @@ export async function photoAndAlbumList(params: {
   pageSize: number
   parentId: number | null
 }) {
-  return useGet('/photo/back/list', params).catch(msg => message.warn(msg))
+  return useGet('/photo/back/list', params).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -20,7 +20,7 @@ export async function createAlbum(data: {
   description: string
   parentId: number | null
 }) {
-  return usePost('/photo/album/create', data).catch(msg => message.warn(msg))
+  return usePost('/photo/album/create', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -32,7 +32,7 @@ export async function uploadPhoto(data: any) {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -43,12 +43,12 @@ export async function updateAlbum(data: {
   name: string
   description: string
 }) {
-  return usePost('/photo/album/update', data).catch(msg => message.warn(msg))
+  return usePost('/photo/album/update', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
  * 删除相册或照片
  */
 export async function deletePhotoOrAlbum(data: { id: number; type: 1 | 2 ;parentId: number | null }) {
-  return useDelete('/photo/delete', data).catch(msg => message.warn(msg))
+  return useDelete('/photo/delete', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }

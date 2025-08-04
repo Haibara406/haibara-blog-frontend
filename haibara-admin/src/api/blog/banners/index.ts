@@ -1,5 +1,5 @@
 // 上传banner
-import {message} from "ant-design-vue";
+import { message } from 'ant-design-vue'
 
 export async function uploadBanner(data: any, handleProgress: any) {
   return usePost('/banners/upload/banner', data, {
@@ -22,5 +22,5 @@ export async function deleteBanner(bannerId: any) {
 
 // 修改顺序
 export async function updateOrder(data: any) {
-  return usePut('/banners/update/sort/order', JSON.stringify(data)).catch(resp => message.error(resp))
+  return usePut('/banners/update/sort/order', JSON.stringify(data)).catch(resp => message.error({ content: resp, duration: 3 }))
 }

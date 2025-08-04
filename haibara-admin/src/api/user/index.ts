@@ -1,15 +1,16 @@
 // 查询所有用户
 import { message } from 'ant-design-vue'
+import { showApiError } from '~/utils/messageHelper'
 
 export async function userList() {
-  return useGet('/user/list').catch(msg => message.warn(msg))
+  return useGet('/user/list').catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
  * 搜索用户
  */
 export async function userSearch(data: any) {
-  return usePost('/user/search', data).catch(msg => message.warn(msg))
+  return usePost('/user/search', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -26,7 +27,7 @@ export async function userUpdateStatus(id: string, status: number) {
  * @param id 用户id
  */
 export async function userDetail(id: string) {
-  return useGet(`/user/details/${id}`).catch(msg => message.warn(msg))
+  return useGet(`/user/details/${id}`).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -34,5 +35,7 @@ export async function userDetail(id: string) {
  * @param ids 用户id
  */
 export async function userDelete(ids: string[]) {
-  return useDelete('/user/delete', { ids }).catch(msg => message.warn(msg))
+  return useDelete('/user/delete', { ids }).catch(msg => {
+    showApiError('user-delete', msg)
+  })
 }

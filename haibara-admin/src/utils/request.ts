@@ -70,7 +70,7 @@ function responseHandler(response: any): ResponseBody<any> | AxiosResponse<any> 
     // 未登录
     useAuthorization().value = null
     notification?.warning({
-      message: 'Token不可用',
+      message: '登陆凭证已过期',
       description: '请重新登录，正在为你跳转登录页...',
       duration: 3,
     })

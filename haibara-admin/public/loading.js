@@ -200,10 +200,10 @@
           </div>
         </div>
         <div class="loading-title">
-          正在加载资源
+          皮卡丘正在努力带着资源跑向你~
         </div>
         <div class="loading-sub-title">
-          初次加载资源可能需要较多时间 请耐心等待
+          首次进入网页，皮卡丘可能需要较多时间才能将资源带到你身边 请耐心等待
         </div>
       </div>
     `;

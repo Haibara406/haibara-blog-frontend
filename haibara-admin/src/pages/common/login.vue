@@ -115,10 +115,10 @@ onBeforeUnmount(() => {
         >
           <div class="flex-end">
             <span class="ant-pro-form-login-title">
-              ruyu-blog
+              haibara-blog
             </span>
             <span class="ant-pro-form-login-desc">
-              欢迎进入个人博客后台
+              欢迎进入haibara博客后台
             </span>
           </div>
           <div class="login-lang flex-center relative z-11">

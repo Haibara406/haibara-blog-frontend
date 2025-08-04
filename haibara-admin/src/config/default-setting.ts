@@ -1,22 +1,22 @@
 import type { LayoutSetting } from '~@/stores/app'
 
 export default {
-  'title': 'Ruyu-blog',
+  'title': 'haibara-blog',
   'theme': 'light',
-  'logo': 'https://image.kuailemao.xyz/blog/logo/blog后台logo.svg',
+  'logo': 'http://45.204.4.56:9000/haibara-blog/logo%2FblogAvatar.svg',
   'collapsed': false,
   'drawerVisible': true,
-  'colorPrimary': '#1677FF',
-  'layout': 'mix',
+  'colorPrimary': '#1890ff',
+  'layout': 'side',
   'contentWidth': 'Fluid',
   'fixedHeader': false,
   'fixedSider': true,
-  'splitMenus': true,
+  'splitMenus': false,
   'header': true,
   'menu': true,
   'watermark': true,
   'menuHeader': true,
-  'footer': false,
+  'footer': true,
   'colorWeak': false,
   'multiTab': true,
   'multiTabFixed': false,
@@ -24,8 +24,8 @@ export default {
   'accordionMode': false,
   'leftCollapsed': true,
   'headerHeight': 48,
-  'copyright': 'ruyu-blog 2024',
-  'animationName': 'slide-fadein-right',
+  'copyright': 'haibara-blog 2025',
+  'animationName': 'zoom-fadein',
 } as LayoutSetting
 
 export const animationNameList = [

@@ -21,7 +21,7 @@ export function getRouteMenusApi(typeId: number, username?: string, status?: num
  */
 export async function getMenusApi(typeId: number) {
   return useGet<MenuData>(`/menu/list/${typeId}`, null, {
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -33,7 +33,7 @@ export async function searchMenusApi(typeId: number, username?: string, status?:
       username,
       status,
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -41,7 +41,7 @@ export async function searchMenusApi(typeId: number, username?: string, status?:
  * @param data 菜单数据
  */
 export async function addRouteMenusApi(data: formType) {
-  return usePost<formType>('/menu', data).catch(msg => message.warn(msg))
+  return usePost<formType>('/menu', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -50,7 +50,7 @@ export async function addRouteMenusApi(data: formType) {
 export async function getRouteMenuByIdApi(id: string) {
   return useGet<formType>(`/menu/${id}`, null, {
     customDev: true,
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -60,7 +60,7 @@ export async function getRouteMenuByIdApi(id: string) {
 export async function updateRouteMenusApi(data: formType) {
   return usePut<formType>('/menu', data, {
     customDev: true,
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -70,7 +70,7 @@ export async function updateRouteMenusApi(data: formType) {
 export async function deleteRouteMenusApi(id: string) {
   return useDelete<formType>(`/menu/${id}`, null, {
     customDev: true,
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -79,5 +79,5 @@ export async function deleteRouteMenusApi(id: string) {
 export async function queryRoleList() {
   return useGet<roleListType[]>('/menu/role/list', null, {
     customDev: true,
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }

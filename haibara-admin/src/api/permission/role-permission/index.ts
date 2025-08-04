@@ -8,7 +8,7 @@ export async function queryPermissionRole(permissionId: string, roleName?: strin
       roleName,
       roleKey,
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 // 未分配该权限的角色列表
@@ -19,15 +19,15 @@ export async function queryPermissionNotRole(permissionId: string, roleName?: st
       roleName,
       roleKey,
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 // 添加角色权限关系
 export async function addRolePermission(data: any) {
-  return usePost('/role/permission/add', data).catch(msg => message.warn(msg))
+  return usePost('/role/permission/add', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 // 删除角色权限关系（取消授权）
 export async function deleteRolePermission(data: any) {
-  return useDelete('/role/permission/delete', data).catch(msg => message.warn(msg))
+  return useDelete('/role/permission/delete', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }

@@ -8,7 +8,7 @@ export async function queryRoleUser(roleId: string, username?: string, email?: s
       username,
       email,
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 // 没有对应角色的用户
@@ -19,15 +19,15 @@ export async function queryNotRoleUser(roleId: string, username?: string, email?
       username,
       email,
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 // 给用户添加角色权限
 export async function addUserRole(data: any) {
-  return usePost('/user/role/add', data).catch(msg => message.warn(msg))
+  return usePost('/user/role/add', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 // 取消用户授权
 export async function deleteUserRole(data: any) {
-  return useDelete('/user/role/delete', data).catch(msg => message.warn(msg))
+  return useDelete('/user/role/delete', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }

@@ -13,7 +13,7 @@ export async function queryUserRole(userId: string, roleName?: string, roleKey?:
       roleName,
       roleKey,
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -29,15 +29,14 @@ export async function queryUserNotRole(userId: string, roleName?: string, roleKe
       roleName,
       roleKey,
     },
-  }).catch(msg => message.warn(msg))
+  }).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
-
 /**
  * 添加角色用户关系
  * @param data 角色用户关系对象
  */
 export async function addRoleUser(data: any) {
-  return usePost('/user/role/user/add', data).catch(msg => message.warn(msg))
+  return usePost('/user/role/user/add', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
 
 /**
@@ -45,5 +44,5 @@ export async function addRoleUser(data: any) {
  * @param data 角色用户关系对象
  */
 export async function deleteRoleUser(data: any) {
-  return useDelete('/user/role/user/delete', data).catch(msg => message.warn(msg))
+  return useDelete('/user/role/user/delete', data).catch(msg => message.warn({ content: msg, duration: 3 }))
 }
