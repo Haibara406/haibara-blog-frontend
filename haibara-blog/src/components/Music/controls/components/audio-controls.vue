@@ -41,14 +41,14 @@ onMounted(() => {
   music().init();
   ElNotification({
     offset: 120,
-    title: "左下角听听歌吧～",
+    title: "左下角听听歌吧，由于技术问题目前仅支持热歌榜内的部分歌曲～",
   });
   ElNotification({
-    offset: 180,
+    offset: 200,
     title: "如果页面加载不出来请多刷新页面~",
   });
   ElNotification({
-    offset: 240,
+    offset: 260,
     title: "网页在凌晨1:00-2:00由于不定期的维护，可能无法访问，请见谅~",
   });
 });
