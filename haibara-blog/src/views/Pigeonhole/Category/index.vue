@@ -5,6 +5,7 @@ import ArticleList from "../ArticleList/index.vue"
 import {dayjs} from "element-plus";
 
 const route = useRoute()
+const router = useRouter()
 
 const categorys = ref([])
 const articleList = ref([])
@@ -36,11 +37,16 @@ onMounted(async () => {
 })
 
 // 地址栏是否有分类id
-watch(() => route.params.id, (id) => {
+watch(() => route.params.id, (id, oldId) => {
   if (id) {
+    // 如果是不同的分类，先清空文章列表
+    if (id !== oldId) {
+      articleList.value = []
+    }
+
     isQueryArticle.value = true
     categorys.value.forEach(item => {
-      if (item.id === Number(route.params.id)) {
+      if (item.id === Number(id)) {
         item.isActive = true
         title.value = item.categoryName
       } else {
@@ -50,21 +56,31 @@ watch(() => route.params.id, (id) => {
     getArticle(id)
   } else {
     isQueryArticle.value = false
+    articleList.value = []
   }
 })
 
 // 文章
-function getArticle(id: string) {
-  whereArticleList(1,id).then(res => {
+async function getArticle(id: string) {
+  try {
+    // 确保文章列表为空，避免显示旧数据
+    articleList.value = []
+
+    const res = await whereArticleList(1, id)
     if (res.code === 200 && res.data !== undefined) {
       res.data.forEach(item => {
         item.createTime = dayjs(item.createTime).format('YYYY-MM-DD')
       })
+      // 使用nextTick确保DOM更新后再设置数据
+      await nextTick()
       articleList.value = res.data
     } else {
       articleList.value = []
     }
-  })
+  } catch (error) {
+    console.error('获取文章失败:', error)
+    articleList.value = []
+  }
 }
 
 // 图标数组，为不同分类设置不同图标
@@ -96,6 +112,25 @@ function getCurrentCategoryIcon() {
     return getCategoryIcon(index)
   }
   return 'collection' // 默认图标
+}
+
+// 处理分类切换
+function handleCategoryChange(categoryId: number) {
+  // 立即清空文章列表，避免显示上一个分类的文章
+  articleList.value = []
+
+  // 更新分类状态
+  categorys.value.forEach(item => {
+    if (item.id === categoryId) {
+      item.isActive = true
+      title.value = item.categoryName
+    } else {
+      item.isActive = false
+    }
+  })
+
+  // 跳转到新分类
+  router.push(`/category/${categoryId}`)
 }
 
 // 处理卡牌悬浮效果
@@ -211,7 +246,7 @@ onUnmounted(() => {
                   class="category-card"
                   :class="`card-${index % 10}`"
                   :style="{ '--card-index': index, '--total-cards': categorys.length }"
-                  @click="$router.push(`/category/${category.id}`)"
+                  @click="router.push(`/category/${category.id}`)"
                   @mouseenter="handleCardHover(index, true)"
                   @mouseleave="handleCardHover(index, false)"
                 >
@@ -248,36 +283,38 @@ onUnmounted(() => {
           </div>
         </template>
         <template v-if="isQueryArticle">
-          <div class="category-detail-page">
-            <!-- 优化的页面头部 -->
-            <div class="detail-header">
-              <div class="header-content">
-                <div class="category-info">
-                  <div class="category-icon">
-                    <SvgIcon :name="getCurrentCategoryIcon()" width="28" height="28"/>
+          <transition name="page-slide" appear>
+            <div class="category-detail-page" :key="$route.params.id">
+              <!-- 优化的页面头部 -->
+              <div class="detail-header">
+                <div class="header-content">
+                  <div class="category-info">
+                    <div class="category-icon">
+                      <SvgIcon :name="getCurrentCategoryIcon()" width="28" height="28"/>
+                    </div>
+                    <div class="category-text">
+                      <h1 class="category-title">{{ title }}</h1>
+                      <p class="article-count">{{ articleList.length }} 篇文章</p>
+                    </div>
                   </div>
-                  <div class="category-text">
-                    <h1 class="category-title">{{ title }}</h1>
-                    <p class="article-count">{{ articleList.length }} 篇文章</p>
-                  </div>
-                </div>
 
-                <div class="back-button" @click="$router.push('/category')">
-                  <SvgIcon name="jt_x" width="18" height="18"/>
-                  <span>返回分类</span>
+                  <div class="back-button" @click="router.push('/category')">
+                    <SvgIcon name="jt_x" width="18" height="18"/>
+                    <span>返回分类</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
             <!-- 分类导航 -->
             <div class="category-nav">
               <el-scrollbar>
                 <div class="nav-items">
-                  <template v-for="category in categorys" :key="category.id">
+                  <template v-for="(category, index) in categorys" :key="category.id">
                     <div
-                      @click="$router.push(`/category/${category.id}`)"
+                      @click="handleCategoryChange(category.id)"
                       class="nav-item"
                       :class="{ 'active': category.isActive }"
+                      :style="{ '--nav-index': index }"
                     >
                       <SvgIcon :name="getCategoryIcon(categorys.indexOf(category))" width="16" height="16"/>
                       <span>{{ category.categoryName }}</span>
@@ -294,7 +331,8 @@ onUnmounted(() => {
                   <template v-for="(article, index) in articleList" :key="article.id">
                     <div
                       class="modern-article-card"
-                      @click="$router.push(`/article/${article.id}`)"
+                      :style="{ '--card-index': index }"
+                      @click="router.push(`/article/${article.id}`)"
                     >
                       <div class="article-image">
                         <img :src="article.articleCover" :alt="article.articleTitle">
@@ -338,10 +376,10 @@ onUnmounted(() => {
                   <h3>暂无文章</h3>
                   <p>{{ title }} 分类下还没有文章</p>
                   <div class="empty-actions">
-                    <button class="btn-primary" @click="$router.push('/category')">
+                    <button class="btn-primary" @click="router.push('/category')">
                       浏览其他分类
                     </button>
-                    <button class="btn-secondary" @click="$router.push('/')">
+                    <button class="btn-secondary" @click="router.push('/')">
                       返回首页
                     </button>
                   </div>
@@ -349,6 +387,7 @@ onUnmounted(() => {
               </template>
             </div>
           </div>
+          </transition>
         </template>
       </template>
     </Main>
@@ -1221,6 +1260,34 @@ onUnmounted(() => {
   }
 }
 
+// 页面过渡动画 - 淡入淡出效果
+.page-slide-enter-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-slide-enter-from {
+  opacity: 0;
+  transform: scale(0.98);
+  filter: blur(2px);
+}
+
+.page-slide-leave-to {
+  opacity: 0;
+  transform: scale(1.02);
+  filter: blur(2px);
+}
+
+.page-slide-enter-to,
+.page-slide-leave-from {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
 // 分类详情页面
 .category-detail-page {
   position: relative;
@@ -1235,6 +1302,23 @@ onUnmounted(() => {
     border-radius: 0 0 16px 16px;
     margin-bottom: 1.5rem;
     position: relative;
+
+    // 头部进入动画 - 淡入效果
+    opacity: 0;
+    filter: blur(3px);
+    animation: headerFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.1s;
+
+    @keyframes headerFadeIn {
+      0% {
+        opacity: 0;
+        filter: blur(3px);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
 
     .header-content {
       display: flex;
@@ -1339,6 +1423,23 @@ onUnmounted(() => {
     margin-bottom: 1.5rem;
     padding: 0 2rem;
 
+    // 导航栏进入动画 - 淡入效果
+    opacity: 0;
+    filter: blur(2px);
+    animation: navContainerFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.2s;
+
+    @keyframes navContainerFadeIn {
+      0% {
+        opacity: 0;
+        filter: blur(2px);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
     .nav-items {
       display: flex;
       gap: 0.8rem;
@@ -1359,22 +1460,48 @@ onUnmounted(() => {
         white-space: nowrap;
         font-size: 0.85rem;
 
+        // 导航项进入动画 - 淡入效果
+        opacity: 0;
+        transform: scale(0.9);
+        filter: blur(2px);
+        animation: navItemFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: calc(var(--nav-index) * 0.04s + 0.3s);
+
+        @keyframes navItemFadeIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.9);
+            filter: blur(2px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+          }
+        }
+
         svg {
           color: var(--el-color-primary);
           width: 14px;
           height: 14px;
+          transition: transform 0.3s ease;
         }
 
         span {
           font-weight: 500;
           color: var(--el-text-color-regular);
+          transition: color 0.3s ease;
         }
 
         &:hover {
-          transform: translateY(-1px);
+          transform: translateY(-1px) scale(1);
           box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
           border-color: var(--el-color-primary);
           background: var(--el-color-primary-light-9);
+
+          svg {
+            transform: scale(1.1);
+          }
         }
 
         &.active {
@@ -1382,9 +1509,14 @@ onUnmounted(() => {
           color: white;
           border-color: transparent;
           box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
+          transform: translateY(0) scale(1.05);
 
           svg, span {
             color: white;
+          }
+
+          svg {
+            transform: scale(1.1);
           }
         }
       }
@@ -1412,8 +1544,33 @@ onUnmounted(() => {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         border: 1px solid var(--el-border-color-lighter);
 
+        // 进入动画 - 淡入效果
+        opacity: 0;
+        transform: scale(0.95);
+        filter: blur(4px);
+        animation: articleFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: calc(var(--card-index) * 0.08s);
+
+        @keyframes articleFadeIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.95);
+            filter: blur(4px);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(0.98);
+            filter: blur(2px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+          }
+        }
+
         &:hover {
-          transform: translateY(-3px);
+          transform: translateY(-3px) scale(1);
           box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
           border-color: var(--el-color-primary-light-7);
 
@@ -1554,12 +1711,42 @@ onUnmounted(() => {
       max-width: 600px;
       margin: 0 auto;
 
+      // 空状态进入动画 - 淡入效果
+      opacity: 0;
+      transform: scale(0.95);
+      filter: blur(3px);
+      animation: emptyStateFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation-delay: 0.4s;
+
+      @keyframes emptyStateFadeIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.95);
+          filter: blur(3px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+          filter: blur(0);
+        }
+      }
+
       .empty-icon {
         margin-bottom: 2rem;
 
         svg {
           color: var(--el-color-primary);
           opacity: 0.6;
+          animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
         }
       }
 
