@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.mapper.EmailInformMapper">
+
+    <select id="getCommentEmailOne"
+            parameterType="map"
+            resultType="com.blog.domain.email.CommentEmail">
+        SELECT
+        <if test="type == 1">
+            a.article_title AS title,
+        </if>
+        <if test="type == 2">
+            NULL          AS title,  <!-- 留言没有文章标题时可设为 NULL -->
+        </if>
+        u.avatar,
+        u.nickname,
+        c.comment_content AS content,
+        c.type_id,
+        c.type,
+        c.create_time AS time
+        FROM t_comment c
+        <choose>
+            <when test="type == 1">
+                INNER JOIN t_article a ON c.type_id = a.id
+            </when>
+            <when test="type == 2">
+                INNER JOIN t_leave_word l ON c.type_id = l.id
+            </when>
+        </choose>
+        INNER JOIN sys_user u ON c.comment_user_id = u.id
+        WHERE c.id   = #{commentId}
+        AND c.type = #{type}
+    </select>
+
+</mapper>

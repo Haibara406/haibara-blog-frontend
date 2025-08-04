@@ -1,0 +1,182 @@
+server:
+  port: 8062
+spring:
+  profiles:
+    active: "@profiles.active@"
+  security:
+    jwt:
+      key: jwt-key
+      # jwt 的有效时间（天）
+      expire: 7
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://45.204.4.56:3306/haibara_blog?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: root123
+    hikari:
+      # 连接池最大连接数
+      maximum-pool-size: 20
+      # 最小空闲连接数
+      minimum-idle: 5
+      # 连接超时时间(毫秒)
+      connection-timeout: 30000
+      # 空闲连接存活最大时间(毫秒)
+      idle-timeout: 600000
+      # 连接最大存活时间(毫秒)
+      max-lifetime: 1800000
+      # 连接测试查询
+      connection-test-query: SELECT 1
+      # 是否自动提交
+      auto-commit: true
+      # 连接池名称
+      pool-name: HikariCP
+      # 验证连接的有效性
+      validation-timeout: 5000
+  data:
+    redis:
+      port: 6379
+      host: 45.204.4.56
+      timeout: 10000
+      database: 1
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  rabbitmq:
+    host: 45.204.4.56
+    port: 5672
+    username: admin
+    password: admin123
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 3 #最大重试次数
+          initial-interval: 6000 #重试间隔时间（单位毫秒）
+          multiplier: 2 #间隔时间乘子，间隔时间*乘子=下一次的间隔时间，最大不能超过设置的最大间隔时间
+          max-interval: 10000 #重试最大时间间隔（单位毫秒）
+    # 邮箱队列名称
+    queue:
+      email: email_queue
+      log-login: log_login_queue
+      log-system: log_system_queue
+    # 邮箱交换机名称
+    exchange:
+      email: email_exchange
+      log: log_exchange
+    # 邮箱路由键
+    routingKey:
+      email: email_routing_key
+      log-login: log_routing_key_login
+      log-system: log_routing_key_system
+  mail:
+    host: smtp.qq.com
+    username:  haibaraiii@foxmail.com
+    password:  miyfztrqalctbhgf
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  quartz:
+    # 将 Quartz 持久化方式修改为 jdbc
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          scheduler:
+            # 实例节点 ID 自动生成
+            instanceId: AUTO
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            dataSource: quartz_jobs
+          dataSource:
+            quartz_jobs:
+              driver: com.mysql.cj.jdbc.Driver
+              URL: jdbc:mysql://45.204.4.56:3306/haibara_blog?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+              user: root
+              password: root123
+mail:
+  link:
+    apply:
+      # 邮箱审核友链回调地址（如果不开启）apply-notice 则无需在意该配置，随便填写即可
+      redirect-uri: https://haikari.top/api/link/email/apply
+  # 是否开启文章邮箱评论提醒
+  article-email-notice: true
+  # 是否开启文章邮箱回复提醒
+  article-reply-notice: true
+  # 是否开启留言邮箱评论提醒
+  message-email-notice: true
+  # 是否开启新的留言提醒
+  message-new-notice: true
+  # 是否开启留言回复提醒
+  message-reply-notice: true
+  # 是否开启友链申请提醒（可以在邮箱中通过友链）
+  apply-notice: true
+  # 是否开启友链审核通知提醒对方
+  pass-notice: true
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      # 逻辑删除
+      logic-delete-field: isDeleted
+      # 逻辑删除值
+      logic-delete-value: 1
+      # 逻辑未删除值
+      logic-not-delete-value: 0
+      # id 自增
+      id-type: auto
+# springdoc-openapi项目配置，访问 http://127.0.0.1:8062/doc.html
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.blog
+oauth:
+  gitee:
+    client-id: 0b945db25fc519b0002b00bfa3e777dd9c5862c139512da78b8526ce273e7860
+    client-secret: 33021b98cad60b7c67d0e08d0f6beaf5cabfcae0ea0a560c752b33f22f672639
+    redirect-uri: https://haikari.top/api/oauth/gitee/callback
+  github:
+    client-id: Ov23liTlu5k5A48ASRLd
+    client-secret: 080b4abe616382aa3751758d2b3fd73938c947af
+    redirect-uri: https://haikari.top/api/oauth/github/callback
+web:
+  index:
+    path: https://haikari.top/
+# knife4j的增强配置，不需要增强可以不配
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+http_pool:
+  max_total: 200
+  default_max_per_route: 100
+  connect_timeout: 5000
+  connection_request_timeout: 1000
+  socket_timeout: 65000
+  validate_after_inactivity: 2000
+# 链接 minio TODO
+minio:
+  endpoint: http://45.204.4.56:9000
+  accessKey: minioadmin
+  secretKey: minioadmin123
+  bucketName: haibara-blog
