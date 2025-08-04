@@ -75,8 +75,8 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
     ElMessage.error('头像图片需要jpg或者png类型的图片！！')
     return false
-  } else if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error('头像图片大小不能超过2MB！')
+  } else if (rawFile.size / 1024 / 1024 > 5) {
+    ElMessage.error('头像图片大小不能超过5MB！')
     return false
   }
   return true
@@ -101,8 +101,8 @@ onMounted(() => {
 const validateUsername = (_: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('请输入用户昵称'))
-  } else if (!/[a-zA-Z0-9\u4e00-\u9fa5]+$/.test(value)) {
-    callback(new Error('用户名不能包含特殊字符，只能是中/英文'))
+  } else if (!/^[a-zA-Z0-9\u4e00-\u9fa5]{2,32}$/.test(value)) {
+    callback(new Error('用户名格式不正确，最少2字符，最多32字符，只能包含英文大小写，数字，以及中文字符'))
   } else {
     callback()
   }
@@ -114,7 +114,7 @@ const emailFormRef = ref()
 const nicknameRules = {
   nickname: [
     {validator: validateUsername, trigger: ['blur', 'change']},
-    {min: 2, max: 10, message: '用户昵称的长度必须在2-10个字符之间', trigger: ['blur', 'change']}
+    {min: 2, max: 32, message: '用户昵称的长度必须在2-32个字符之间', trigger: ['blur', 'change']}
   ]
 }
 
@@ -172,7 +172,7 @@ function thirdPartyLoginEmail(){
 }
 
 // 判断邮箱是否正确
-const isEmailValid = computed(() => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailForm.email))
+const isEmailValid = computed(() => /^(?!\.)[a-zA-Z0-9_.+-]+(?<!\.)@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/.test(emailForm.email))
 
 // 邮件发送验证码冷却时间
 const coldTime = ref(0)

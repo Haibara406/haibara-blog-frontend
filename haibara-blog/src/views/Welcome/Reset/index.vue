@@ -31,7 +31,7 @@ const validatePassword = (rule, value, callback) => {
 const rules = {
   password: [
     {required: true, message: '请输入密码', trigger: 'blur'},
-    {min: 6, max: 20, message: '密码的长度必须在 6-20 个字符之间', trigger: ['blur', 'change']}
+    {min: 8, max: 24, message: '密码的长度必须在 8-24 个字符之间', trigger: ['blur', 'change']}
   ],
   password_repeat: [
     {validator: validatePassword, trigger: ['blur', 'change']}
@@ -63,7 +63,7 @@ function askCode() {
 }
 
 // 判断邮箱是否正确
-const isEmailValid = computed(() => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(form.email))
+const isEmailValid = computed(() => /^(?!\.)[a-zA-Z0-9_.+-]+(?<!\.)@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/.test(form.email))
 
 function confirmReset() {
   formRef.value.validate((valid) => {

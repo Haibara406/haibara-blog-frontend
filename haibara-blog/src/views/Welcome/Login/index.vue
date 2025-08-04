@@ -48,7 +48,7 @@ function userLogin() {
   <div style="text-align: center;margin: 0 20px">
     <div style="margin-top: 150px">
       <div style="font-size: 25px;font-weight: bold">登录</div>
-      <div style="font-size: 14px;color: grey;margin-top: 1rem">用户密码使用键式哈希算法加密，请放心注册</div>
+      <div style="font-size: 14px;color: grey;margin-top: 1rem">用户密码使用键式哈希算法加密，所以请放心注册</div>
     </div>
     <div style="margin-top: 50px">
       <el-form :model="form" :rules="rule" ref="formRef">

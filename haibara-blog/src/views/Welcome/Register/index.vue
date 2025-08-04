@@ -26,8 +26,8 @@ const form = reactive({
 const validateUsername = (rule, value, callback) => {
   if (value === '') {
     callback(new Error('请输入用户名'))
-  } else if (!/[a-zA-Z0-9\u4e00-\u9fa5]+$/.test(value)) {
-    callback(new Error('用户名不能包含特殊字符，只能是中/英文'))
+  } else if (!/^[a-zA-Z0-9\u4e00-\u9fa5]{2,32}$/.test(value)) {
+    callback(new Error('用户名格式不正确，最少2字符，最多32字符，只能包含英文大小写，数字，以及中文字符'))
   } else {
     callback()
   }
@@ -50,7 +50,7 @@ const rules = {
   ],
   password: [
     {required: true, message: '请输入密码', trigger: 'blur'},
-    {min: 6, max: 20, message: '密码的长度必须在 6-20 个字符之间', trigger: ['blur', 'change']}
+    {min: 8, max: 24, message: '密码的长度必须在 8-24 个字符之间', trigger: ['blur', 'change']}
   ],
   password_repeat: [
     {validator: validatePassword, trigger: ['blur', 'change']}
@@ -88,14 +88,14 @@ function askCode() {
 }
 
 // 判断邮箱是否正确
-const isEmailValid = computed(() => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(form.email))
+const isEmailValid = computed(() => /^(?!\.)[a-zA-Z0-9_.+-]+(?<!\.)@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/.test(form.email))
 
 function registerBtn() {
   formRef.value.validate((valid) => {
     if (valid) {
       register(form).then(res => {
         if (res.code === 200) {
-          ElMessage.success('注册成功，欢迎加入我们')
+          ElMessage.success('注册成功，欢迎加入我')
           router.push('/login')
         } else {
           ElMessage.warning(res.msg)
@@ -113,7 +113,7 @@ function registerBtn() {
   <div style="text-align: center;margin: 0 20px">
     <div style="margin-top: 100px">
       <div style="font-size: 25px;font-weight: bold">注册新用户</div>
-      <div style="font-size: 14px;color: grey;margin-top: 1rem">欢迎注册我们的学习平台，请在下方填写相关信息</div>
+      <div style="font-size: 14px;color: grey;margin-top: 1rem">欢迎注册我的个人网站，请在下方填写相关信息</div>
     </div>
     <div style="margin-top: 50px">
       <el-form :model="form" :rules="rules" ref="formRef">

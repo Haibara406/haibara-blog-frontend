@@ -23,7 +23,7 @@
       </div>
       <div>
         <el-divider border-style="dashed" content-position="center">
-          <div style="font-weight: bold">~~到达底部啦~~</div>
+          <div style="font-weight: bold">~~不可以的哇，真的到底啦，狗修金，呀咩咯~~</div>
         </el-divider>
       </div>
     </template>

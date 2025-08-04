@@ -9,7 +9,7 @@ defineOptions({
     <div class="quote-container">
       <div class="quote-icon">✨</div>
       <div class="quote-text">
-        <span class="quote-content">刻下的话语浮上心头，将我的爱，弃置于此</span>
+        <span class="quote-content">刻下的话，浮上心头，将我的爱，弃置于此.</span>
         <div class="quote-decoration">
           <div class="decoration-line"></div>
           <div class="decoration-dot"></div>

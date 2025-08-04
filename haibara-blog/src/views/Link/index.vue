@@ -48,7 +48,7 @@ const rules = reactive<FormRules<any>>({
   ],
   background: [
     {required: true, message: '请填写友链背景图链接', trigger: 'blur'},
-    {min: 3, max: 100, message: '长度最小3，最大100', trigger: 'blur'},
+    {min: 3, max: 200, message: '长度最小3，最大200', trigger: 'blur'},
   ],
   email: [
     {required: true, message: '请填写电子邮件地址', trigger: 'blur'},
@@ -152,7 +152,7 @@ function applyLinkFunc() {
             <span style="font-size: 1rem;color: grey">欢迎访问友链板块！</span>
             <span>友链板块是一个旨在促进不同系统间相互协作和交流的平台。通过友链板块，您可以：</span>
             <span>1、分享自己系统的介绍和链接。</span>
-            <span>2、发现更多的优秀博客网站。</span>
+            <span>2、发现更多的优秀网站。</span>
             <span style="font-size: 1rem;color: grey">注意：</span>
             <span>1、友链申请前必须先登录本网站，申请通过后会通过邮件的形式通知你。</span>
             <span>2、点击网站的名称进行友链跳转。</span>

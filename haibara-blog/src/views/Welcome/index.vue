@@ -8,7 +8,7 @@
     <!-- 左边区域 -->
     <div class="left-card">
       <el-image style="width: 100%;height: 100%" fit="cover"
-                src="http://45.204.4.56:9001/browser/haibara-blog/websiteInfo%2Fbackground%2F%E5%AD%A6%E4%B9%A0%E7%9A%84%E5%8F%B2%E8%92%82%E5%A4%AB.jpg"/>
+                src="http://45.204.4.56:9000/haibara-blog/login%2F173762063300-547.jpg"/>
     </div>
     <div class="welcome-title">
       <div>欢迎来到我的个人博客</div>

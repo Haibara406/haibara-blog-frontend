@@ -10,7 +10,7 @@ export const constantRouter = [
                 component: () => import('@/views/Home/index.vue'),
                 name: 'home',
                 meta: {
-                    title: 'haibara-blog | 不断追求完美的开源博客',
+                    title: 'haibara-blog | 认真冷静专注集中',
                 }
             },
             // 时间轴
@@ -19,7 +19,7 @@ export const constantRouter = [
                 component: () => import('@/views/Pigeonhole/TimeLine/index.vue'),
                 name: 'timeline',
                 meta: {
-                    title: '时间轴',
+                    title: '时间旅行',
                 }
             },
             // 分类
