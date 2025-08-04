@@ -458,6 +458,8 @@ const isDark = useDark()
 }
 
 /* 深色模式样式 */
+
+
 .dark-mode .album-menu {
   background: rgba(30, 30, 30, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
@@ -507,6 +509,8 @@ const isDark = useDark()
 .dark-mode .home-item::before {
   color: rgba(255, 255, 255, 0.7);
 }
+
+
 
 /* 移动端深色模式适配 */
 @media (max-width: 768px) {
@@ -724,6 +728,36 @@ const isDark = useDark()
 
 /* 悬停状态 - 只有轻微位移和阴影效果 */
 .album-name:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(92, 106, 196, 0.15);
+}
+
+/* 主页按钮基础样式 */
+.home-item {
+  display: block;
+  padding: 10px 16px;
+  padding-left: 40px;
+  border-radius: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.8);
+  color: #5c6ac4;
+  margin-bottom: 12px;
+  cursor: pointer;
+  position: relative;
+  border: 1px solid rgba(92, 106, 196, 0.1);
+}
+
+
+
+/* 主页按钮选中状态 */
+.home-item.active {
+  background: #5c6ac4;
+  color: white;
+  box-shadow: 0 4px 12px rgba(92, 106, 196, 0.2);
+}
+
+/* 主页按钮悬浮状态 */
+.home-item:hover {
   transform: translateX(4px);
   box-shadow: 0 2px 8px rgba(92, 106, 196, 0.15);
 }
