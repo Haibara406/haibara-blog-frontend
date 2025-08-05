@@ -29,6 +29,21 @@ interface ClickParticle {
   scale?: number;
 }
 
+interface TextEffect {
+  x: number;
+  y: number;
+  text: string;
+  fontSize: number;
+  color: string;
+  opacity: number;
+  age: number;
+  maxAge: number;
+  velocityY: number;
+  scale: number;
+  rotation: number;
+  glowIntensity: number;
+}
+
 interface ChargeEffect {
   x: number;
   y: number;
@@ -40,10 +55,35 @@ interface ChargeEffect {
 }
 
 const particles: ClickParticle[] = [];
+const textEffects: TextEffect[] = [];
 let chargeEffect: ChargeEffect | null = null;
 let isCharging = false;
 let chargeStartTime = 0;
 const maxChargeTime = 2000; // 最大蓄力时间2秒
+
+// 彩蛋文字数组
+const easterEggTexts = [
+  '天天开心! 🌟',
+  '心想事成! ✨',
+  '好运连连! 🍀',
+  '万事如意! 🎉',
+  '幸福满满! 💖',
+  '注意休息! 😊',
+  '梦想成真! 🌈',
+  '步步高升! 🚀',
+  '笑口常开! 😄',
+  '健康平安! 🙏',
+  '财源滚滚! 💰',
+  '爱满人间! 💕',
+  '阳光灿烂! ☀️',
+  '花开富贵! 🌸',
+  '一帆风顺! ⛵',
+  '福如东海! 🌊',
+  '寿比南山! 🏔️',
+  '心情美美! 🎀',
+  '生活甜蜜! 🍯',
+  '前程似锦! 🌟'
+];
 
 // 更鲜艳的颜色配置
 const colors = [
@@ -174,6 +214,11 @@ const createExplosionEffect = (x: number, y: number, chargeLevel: number) => {
   const intensity = 0.3 + chargeLevel * 0.7; // 基础强度 + 蓄力强度
   const particleCount = Math.floor(15 + chargeLevel * 40); // 15-55个粒子
   
+  // 🎆 彩蛋：蓄力达到95%以上时显示文字特效
+  if (chargeLevel >= 0.95) {
+    createTextEffect(x, y);
+  }
+  
   // 主爆炸环 - 各种形状的粒子
   const ringCount = Math.floor(2 + chargeLevel * 3); // 2-5个环
   for (let ring = 0; ring < ringCount; ring++) {
@@ -282,6 +327,27 @@ const createExplosionEffect = (x: number, y: number, chargeLevel: number) => {
       shape: 'circle'
     });
   }
+};
+
+// 创建文字特效
+const createTextEffect = (x: number, y: number) => {
+  const randomText = easterEggTexts[Math.floor(Math.random() * easterEggTexts.length)];
+  const textColors = ['#FFD700', '#FF69B4', '#00FFFF', '#FF6347', '#32CD32', '#FF1493'];
+  
+  textEffects.push({
+    x,
+    y: y - 20, // 稍微向上偏移
+    text: randomText,
+    fontSize: 32,
+    color: textColors[Math.floor(Math.random() * textColors.length)],
+    opacity: 1,
+    age: 0,
+    maxAge: 180, // 3秒显示时间
+    velocityY: -1, // 向上浮动
+    scale: 0.5, // 从小开始
+    rotation: (Math.random() - 0.5) * 0.2,
+    glowIntensity: 20
+  });
 };
 
 const handleResize = () => {
@@ -486,6 +552,74 @@ const animate = () => {
       ctx.fillStyle = colors[i % colors.length];
       ctx.fill();
     }
+    
+    ctx.restore();
+  }
+  
+  // 更新和绘制文字特效
+  for (let i = textEffects.length - 1; i >= 0; i--) {
+    const textEffect = textEffects[i];
+    
+    // 更新文字特效
+    textEffect.age++;
+    
+    // 移除过期的文字特效
+    if (textEffect.age >= textEffect.maxAge) {
+      textEffects.splice(i, 1);
+      continue;
+    }
+    
+    const progress = textEffect.age / textEffect.maxAge;
+    
+    // 更新文字属性
+    textEffect.y += textEffect.velocityY;
+    
+    // 动态缩放：从小变大再变小
+    if (progress < 0.2) {
+      textEffect.scale = 0.5 + (progress / 0.2) * 0.8; // 0.5 -> 1.3
+    } else if (progress < 0.8) {
+      textEffect.scale = 1.3; // 保持最大
+    } else {
+      textEffect.scale = 1.3 - ((progress - 0.8) / 0.2) * 0.5; // 1.3 -> 0.8
+    }
+    
+    // 透明度：淡入-保持-淡出
+    if (progress < 0.1) {
+      textEffect.opacity = progress / 0.1;
+    } else if (progress < 0.7) {
+      textEffect.opacity = 1;
+    } else {
+      textEffect.opacity = 1 - ((progress - 0.7) / 0.3);
+    }
+    
+    // 发光强度变化
+    textEffect.glowIntensity = 20 + Math.sin(textEffect.age * 0.3) * 10;
+    
+    // 绘制文字特效
+    ctx.save();
+    ctx.globalAlpha = textEffect.opacity;
+    ctx.translate(textEffect.x, textEffect.y);
+    ctx.rotate(textEffect.rotation);
+    ctx.scale(textEffect.scale, textEffect.scale);
+    
+    // 设置字体和样式
+    ctx.font = `bold ${textEffect.fontSize}px Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // 多层发光效果
+    for (let glow = 0; glow < 3; glow++) {
+      ctx.shadowColor = textEffect.color;
+      ctx.shadowBlur = textEffect.glowIntensity + glow * 10;
+      ctx.fillStyle = textEffect.color;
+      ctx.fillText(textEffect.text, 0, 0);
+    }
+    
+    // 内层文字（更亮）
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.globalAlpha = textEffect.opacity * 0.8;
+    ctx.fillText(textEffect.text, 0, 0);
     
     ctx.restore();
   }
