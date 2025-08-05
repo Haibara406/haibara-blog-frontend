@@ -255,18 +255,18 @@ onUnmounted(() => {
             <el-avatar @click="handleLoginClick" style="margin-right: 3rem; cursor: pointer" class="login-btn">登录</el-avatar>
           </el-tooltip>
         </div>
-        <div v-else style="display: flex">
-          <div class="profile">
-            <div style="font-size: 15px;font-weight: bold;color: black">{{ userStore.userInfo?.username }}</div>
-            <div style="font-size: 14px;color: #363636;margin-top: 3px"
-                 v-if="userStore.userInfo?.registerType === 0">{{ userStore.userInfo?.email }}
+        <div v-else style="display: flex; align-items: center;">
+          <div class="profile-info">
+            <div class="username">{{ userStore.userInfo?.username }}</div>
+            <div class="user-detail" v-if="userStore.userInfo?.registerType === 0">
+              {{ userStore.userInfo?.email }}
             </div>
-            <div style="font-size: 14px;color: #363636;margin-top: 3px" v-else>
+            <div class="user-detail" v-else>
               {{ userStore.userInfo?.registerType === 1 ? 'Gitee登录' : 'Github登录' }}
             </div>
           </div>
           <el-dropdown>
-            <el-avatar style="margin-right: 3rem"
+            <el-avatar style="margin-right: 3rem; cursor: pointer;"
                        :src="userStore.userInfo?.avatar"></el-avatar>
             <template #dropdown>
               <el-dropdown-item @click="router.push('/setting')">
@@ -691,7 +691,11 @@ nav {
     }
 
     .user-info {
-      .profile {
+      display: flex;
+      align-items: center;
+      height: 100%;
+
+      .profile-info {
         margin-right: 15px;
         padding: 8px 12px;
         background: rgba(255, 255, 255, 0.1);
@@ -699,10 +703,30 @@ nav {
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         transition: all 0.3s ease;
+        text-align: right;
+        min-width: 120px;
 
         &:hover {
           background: rgba(255, 255, 255, 0.15);
           transform: translateY(-1px);
+        }
+
+        .username {
+          font-size: 15px;
+          font-weight: bold;
+          color: white;
+          line-height: 1.2;
+          margin-bottom: 2px;
+        }
+
+        .user-detail {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.8);
+          line-height: 1.2;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 150px;
         }
       }
 
@@ -710,6 +734,7 @@ nav {
         border: 2px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
+        vertical-align: middle;
 
         &:hover {
           transform: scale(1.1);
@@ -816,5 +841,7 @@ nav {
     transform: scale(0.95);
   }
 }
+
+
 
 </style>

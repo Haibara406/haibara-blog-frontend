@@ -137,31 +137,21 @@ const handleLoginClick = () => {
             <el-avatar @click="handleLoginClick" style="margin-right: 3rem; cursor: pointer" class="login-btn">登录</el-avatar>
           </el-tooltip>
         </div>
-        <div v-else style="display: flex">
-          <el-tooltip
-              class="box-item"
-              effect="light"
-              placement="right"
-          >
-            <template #content>
-              <div class="profile">
-                <div style="font-size: 15px;font-weight: bold;color: black">{{
-                    userStore.userInfo?.username
-                  }}
-                </div>
-                <div style="font-size: 14px;color: #363636;margin-top: 3px"
-                     v-if="userStore.userInfo?.registerType === 0">{{ userStore.userInfo?.email }}
-                </div>
-                <div style="font-size: 14px;color: #363636;margin-top: 3px" v-else>
-                  {{ userStore.userInfo?.registerType === 1 ? 'Gitee登录' : 'Github登录' }}
-                </div>
-              </div>
-            </template>
-            <el-dropdown>
-              <el-avatar style="margin-right: 3rem"
-                         :src="userStore.userInfo?.avatar"></el-avatar>
+        <div v-else style="display: flex; align-items: center;">
+          <el-dropdown>
+            <el-avatar style="margin-right: 3rem; cursor: pointer;"
+                       :src="userStore.userInfo?.avatar"></el-avatar>
               <template #dropdown>
-                <el-dropdown-item @click="router.push('/setting')">
+                <div class="mobile-user-info">
+                  <div class="mobile-username">{{ userStore.userInfo?.username }}</div>
+                  <div class="mobile-user-detail" v-if="userStore.userInfo?.registerType === 0">
+                    {{ userStore.userInfo?.email }}
+                  </div>
+                  <div class="mobile-user-detail" v-else>
+                    {{ userStore.userInfo?.registerType === 1 ? 'Gitee登录' : 'Github登录' }}
+                  </div>
+                </div>
+                <el-dropdown-item divided @click="router.push('/setting')">
                   <template #default>
                     <el-icon>
                       <Setting/>
@@ -187,7 +177,6 @@ const handleLoginClick = () => {
                 </el-dropdown-item>
               </template>
             </el-dropdown>
-          </el-tooltip>
         </div>
       </div>
     </div>
@@ -230,6 +219,19 @@ const handleLoginClick = () => {
 
   .right_nav {
     display: flex;
+    align-items: center;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    .el-tooltip {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
   }
 }
 
@@ -295,6 +297,30 @@ const handleLoginClick = () => {
 
   &:active {
     transform: scale(0.95);
+  }
+}
+
+// 移动端用户信息样式
+:deep(.el-dropdown-menu) {
+  .mobile-user-info {
+    padding: 12px 16px;
+    border-bottom: 1px solid #ebeef5;
+    margin-bottom: 4px;
+
+    .mobile-username {
+      font-size: 16px;
+      font-weight: bold;
+      color: #303133;
+      margin-bottom: 4px;
+      line-height: 1.2;
+    }
+
+    .mobile-user-detail {
+      font-size: 13px;
+      color: #909399;
+      line-height: 1.2;
+      word-break: break-all;
+    }
   }
 }
 </style>
