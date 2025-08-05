@@ -53,6 +53,13 @@ onUnmounted(() => {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId)
   }
+  
+  // 清理事件监听器
+  try {
+    document.removeEventListener('click', handleClickOutside)
+  } catch (e) {
+    console.warn('清理事件监听器失败:', e)
+  }
 })
 
 // 鼠标跟踪器 - 仅用于粒子交互
@@ -239,15 +246,22 @@ function addTreeHoleBtn() {
 function getTreeHole() {
   getTreeHoleList().then(res => {
     if (res.code === 200) {
-      // 简化弹幕数据结构，确保组件正常工作
+      // 修正弹幕数据结构，确保vue3-danmaku组件正常工作
       treeHoleList.value = res.data.map((item, index) => {
         return {
-          ...item,
-          // 保持原有字段，只添加必要的样式控制
+          id: item.id || index, // 确保有id字段
+          text: item.content || item.text || '', // 确保有text字段，这是弹幕组件必需的
+          content: item.content, // 保留原内容字段
+          nickname: item.nickname,
+          avatar: item.avatar,
+          time: item.time,
+          // 样式控制字段
           colorTheme: index % 6,
           opacity: 0.8 + Math.random() * 0.2
         };
       });
+      
+      console.log('弹幕数据加载成功:', treeHoleList.value.length, '条');
     }
   }).catch(error => {
     console.error('获取树洞数据失败:', error);
@@ -259,11 +273,13 @@ function getTreeHole() {
 function handleInputFocus() {
   isInputFocused.value = true;
   showInputTip.value = true;
+  
   // 恢复之前缓存的内容
   try {
     const savedContent = sessionStorage.getItem('treehole-draft')
     if (savedContent && !content.value) {
       content.value = savedContent
+      console.log('恢复草稿内容:', savedContent)
     }
   } catch (e) {
     console.warn('无法恢复草稿:', e)
@@ -271,7 +287,7 @@ function handleInputFocus() {
 }
 
 function handleInputBlur() {
-  // 如果有内容，则缓存起来
+  // 总是保存草稿，不管有没有内容
   if (content.value && content.value.trim()) {
     try {
       sessionStorage.setItem('treehole-draft', content.value)
@@ -284,16 +300,43 @@ function handleInputBlur() {
     } catch (e) {
       console.warn('无法清除草稿:', e)
     }
-    isInputFocused.value = false;
-    showInputTip.value = false;
   }
+  
+  // 注意：不在blur时立即收回输入框，让点击空白区域处理
 }
 
-// 回车发送
+// 键盘事件处理
 function handleKeyPress(event) {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
     addTreeHoleBtn()
+  } else if (event.key === 'Escape') {
+    // ESC键收回输入框
+    event.preventDefault()
+    if (isInputFocused.value) {
+      isInputFocused.value = false
+      showInputTip.value = false
+      if (inputRef.value) {
+        inputRef.value.blur()
+      }
+    }
+  }
+}
+
+// 点击空白区域收回输入框
+function handleClickOutside(event) {
+  if (!isInputFocused.value) return
+  
+  const inputContainer = document.querySelector('.input-container')
+  if (inputContainer && !inputContainer.contains(event.target)) {
+    // 收回输入框
+    isInputFocused.value = false
+    showInputTip.value = false
+    
+    // 移除输入框的focus（如果还有的话）
+    if (inputRef.value) {
+      inputRef.value.blur()
+    }
   }
 }
 
@@ -317,6 +360,9 @@ function initStorageAndEvents() {
         console.warn('无法清除草稿:', e)
       }
     })
+    
+    // 监听点击空白区域收回输入框
+    document.addEventListener('click', handleClickOutside)
   } catch (e) {
     console.warn('无法初始化存储事件:', e)
   }
@@ -496,7 +542,7 @@ function createSuccessAnimation() {
               v-model="content" 
               @focus="handleInputFocus"
               @blur="handleInputBlur"
-              @keypress="handleKeyPress"
+              @keydown="handleKeyPress"
               type="text" 
               placeholder="在这里留下自己的足迹吧..."
               class="modern-input"
@@ -519,15 +565,16 @@ function createSuccessAnimation() {
     <!-- 弹幕区域 -->
     <vue-danmaku 
       ref="danmakuRef"
-      :debounce="500"
-      :random-channel="true"
-      :speeds="80"
-      :channels="25"
+      :debounce="100"
+      :random-channel="false"
+      :speeds="120"
+      :channels="8"
       is-suspend
       v-model:danmus="treeHoleList"
       use-slot 
       loop
-      :top="0"
+      :top="10"
+      :right="0"
       :extraStyle="'pointer-events: none;'"
       style="height:100vh; width:100vw; position: fixed; top: 0px; left: 0; z-index: 5;"
     >
@@ -544,8 +591,8 @@ function createSuccessAnimation() {
             <div class="avatar-glow"></div>
           </div>
           <div class="barrage-content">
-            <span class="barrage-nickname">{{ danmu.nickname }}</span>
-            <span class="barrage-text">{{ danmu.content }}</span>
+            <span class="barrage-nickname">{{ danmu.nickname || '匿名' }}</span>
+            <span class="barrage-text">{{ danmu.text || danmu.content || '' }}</span>
           </div>
           <div class="barrage-trail"></div>
           <div class="barrage-sparkle"></div>
