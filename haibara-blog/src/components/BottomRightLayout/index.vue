@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SettingsPanel from '@/components/SettingsPanel/index.vue';
+
 defineProps({
   toTop: {
     type: Boolean,
@@ -20,10 +22,16 @@ defineProps({
   },
 })
 
-const isContainerVisible = ref(false);
+const isSettingsPanelVisible = ref(false);
 
-const toggleContainer = () => {
-  isContainerVisible.value = !isContainerVisible.value;
+// 显示设置面板
+const showSettingsPanel = () => {
+  isSettingsPanelVisible.value = true;
+};
+
+// 关闭设置面板
+const closeSettingsPanel = () => {
+  isSettingsPanelVisible.value = false;
 };
 
 // 自定义事件
@@ -34,25 +42,36 @@ const emit = defineEmits(['ReadingMode'])
 
 <template>
   <div class="container_div">
-    <div class="hide" :class="{ visible: isContainerVisible }">
-      <div v-if="readingMode" @click="emit('ReadingMode', true)">
-        <ReadingMode/>
-      </div>
-
-      <Fullscreen/>
+    <!-- 阅读模式 -->
+    <div v-if="readingMode" class="mb-4" @click="emit('ReadingMode', true)">
+      <ReadingMode/>
     </div>
-    <div class="my-4" @click="toggleContainer">
+    
+    <!-- 更多功能按钮 -->
+    <div class="mb-4" @click="showSettingsPanel">
       <BottomRightMore/>
     </div>
+    
+    <!-- 回到顶部 -->
     <div class="mb-4">
       <ToTop v-if="toTop"/>
     </div>
+    
+    <!-- 跳转到评论 -->
     <div v-if="toComment" class="mb-4">
       <GoBottom/>
     </div>
+    
+    <!-- 滚动百分比 -->
     <div class="scroll_percentage" v-if="scrollPercentage">
       <slot name="scroll_percentage"/>
     </div>
+    
+    <!-- 设置面板 -->
+    <SettingsPanel 
+      v-if="isSettingsPanelVisible" 
+      @close="closeSettingsPanel"
+    />
   </div>
 </template>
 

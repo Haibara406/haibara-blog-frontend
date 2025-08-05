@@ -5,11 +5,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useSettings } from '@/composables/useSettings';
 
 const effectCanvas = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
 let animationFrameId: number | null = null;
+
+// 获取设置管理
+const { clickEffectEnabled } = useSettings();
+
+// 是否已经初始化过
+let isInitialized = false;
 
 interface ClickParticle {
   x: number;
@@ -136,12 +143,6 @@ const initCanvas = () => {
   ctx = effectCanvas.value.getContext('2d');
   if (!ctx) return;
   
-  // 添加鼠标事件监听器
-  document.addEventListener('mousedown', handleMouseDown);
-  document.addEventListener('mouseup', handleMouseUp);
-  document.addEventListener('mouseleave', handleMouseLeave); // 防止鼠标离开窗口时卡住
-  window.addEventListener('resize', handleResize);
-  
   // 开始动画循环
   animate();
 };
@@ -149,6 +150,9 @@ const initCanvas = () => {
 const handleMouseDown = (e: MouseEvent) => {
   // 只处理左键
   if (e.button !== 0) return;
+  
+  // 如果点击特效被禁用，直接返回
+  if (!clickEffectEnabled.value) return;
   
   const x = e.clientX;
   const y = e.clientY;
@@ -710,15 +714,52 @@ const animate = () => {
   animationFrameId = requestAnimationFrame(animate);
 };
 
+// 添加事件监听器
+const addEventListeners = () => {
+  if (!isInitialized) {
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('resize', handleResize);
+    isInitialized = true;
+  }
+};
+
+// 移除事件监听器
+const removeEventListeners = () => {
+  if (isInitialized) {
+    document.removeEventListener('mousedown', handleMouseDown);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('mouseleave', handleMouseLeave);
+    window.removeEventListener('resize', handleResize);
+    isInitialized = false;
+  }
+};
+
+// 监听设置变化
+watch(clickEffectEnabled, (enabled) => {
+  if (enabled) {
+    addEventListeners();
+  } else {
+    removeEventListeners();
+    // 清理当前的特效
+    particles.length = 0;
+    textEffects.length = 0;
+    chargeEffect = null;
+    isCharging = false;
+  }
+}, { immediate: true });
+
 onMounted(() => {
   initCanvas();
+  // 根据设置决定是否添加事件监听器
+  if (clickEffectEnabled.value) {
+    addEventListeners();
+  }
 });
 
 onUnmounted(() => {
-  document.removeEventListener('mousedown', handleMouseDown);
-  document.removeEventListener('mouseup', handleMouseUp);
-  document.removeEventListener('mouseleave', handleMouseLeave);
-  window.removeEventListener('resize', handleResize);
+  removeEventListeners();
   
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId);
