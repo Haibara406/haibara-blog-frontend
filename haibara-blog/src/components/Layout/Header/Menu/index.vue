@@ -290,23 +290,74 @@ nav {
   position: fixed;
   top: 0;
   display: flex;
-  height: 50px;
-  width: 100%;
+  height: 60px;
+  width: calc(100% - 40px);
+  left: 20px;
   z-index: 999;
-  background-color: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(6px);
-  transition: top 0.3s ease-in-out, background-color 0.3s ease-in-out;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(25px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  margin-top: 10px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible !important;
+
+  // 深色模式适配
+  @media (prefers-color-scheme: dark) {
+    background: linear-gradient(135deg, 
+      rgba(30, 27, 45, 0.8),
+      rgba(30, 27, 45, 0.6)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
 
   &.hidden {
-    top: -50px; // 隐藏菜单
+    top: -80px;
+    opacity: 0;
+    transform: translateY(-20px);
   }
 
   &.transparent {
-    background-color: transparent; // 顶部时透明
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.02)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  // 添加微妙的动画效果
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
   }
 
   #menu-left {
     flex: 2;
+    overflow: visible !important;
 
     #menus {
       display: flex;
@@ -315,6 +366,7 @@ nav {
       height: 100%;
       width: 100%;
       font-weight: bold;
+      overflow: visible !important;
 
       #blog-info {
         width: 120px;
@@ -326,6 +378,7 @@ nav {
         height: 100%;
         display: flex;
         justify-content: left;
+        overflow: visible !important;
 
         .menus_item {
           position: relative;
@@ -334,41 +387,76 @@ nav {
           display: flex;
           justify-content: space-evenly;
           align-items: center;
+          border-radius: 12px;
+          margin: 0 2px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: visible !important;
+
+          // 添加渐变背景
+          &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(64, 158, 255, 0.1), rgba(204, 93, 232, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 12px;
+          }
 
           span .arrow {
             margin-left: 5px;
-            transition: all 0.5s;
-            transform: rotate(0deg);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform: rotate(0deg) scale(1);
             color: #409EFF;
+            filter: drop-shadow(0 0 0 transparent);
           }
 
           &::before {
             content: '';
             position: absolute;
-            bottom: 5px;
-            left: 0;
-            height: 2px;
+            bottom: 8px;
+            left: 50%;
+            height: 3px;
             width: 0;
-            background-color: #409EFF;
-            transition: width 0.3s; // 添加过渡效果
+            background: linear-gradient(90deg, #409EFF, #cc5de8);
+            border-radius: 2px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(64, 158, 255, 0);
           }
 
           &:hover {
             cursor: pointer;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+
+            &::after {
+              opacity: 1;
+            }
 
             span .arrow {
-              // 悬浮时旋转180度
-              transition: all 0.5s;
-              transform: rotate(180deg);
+              transform: rotate(180deg) scale(1.1);
               color: #cc5de8;
+              filter: drop-shadow(0 0 8px rgba(204, 93, 232, 0.5));
             }
 
             .menus_item_child {
-              display: block;
+              display: block !important;
+              opacity: 1 !important;
+              transform: translateY(0) scale(1) !important;
+
+              li {
+                opacity: 1 !important;
+                transform: translateX(0) !important;
+              }
             }
 
             &::before {
-              width: 100%; // 在悬浮时展开进度条
+              width: 80%;
+              box-shadow: 0 0 15px rgba(64, 158, 255, 0.6);
             }
           }
 
@@ -376,46 +464,145 @@ nav {
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+            
             span{
               margin-left: 5px;
+              transition: all 0.3s ease;
             }
+          }
+
+          &:hover span {
+            color: #cc5de8;
+            text-shadow: 0 0 8px rgba(204, 93, 232, 0.3);
           }
         }
 
         .menus_item_child {
-          display: none;
-          position: absolute;
-          top: 50px;
-          background: var(--el-bg-color);
-          // 阴影
-          box-shadow: 0 2px 12px 0 var(--shadow-color);
-          border-radius: 5px;
+          display: none !important;
+          position: absolute !important;
+          top: 55px !important;
+          left: -10px !important;
+          min-width: 180px !important;
+          background: rgba(255, 255, 255, 0.95) !important;
+          backdrop-filter: blur(20px) saturate(1.8) !important;
+          border: 1px solid rgba(255, 255, 255, 0.3) !important;
+          border-radius: 16px !important;
+          padding: 12px 0 !important;
+          z-index: 9999 !important;
+          box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.1),
+            0 0 0 1px rgba(255, 255, 255, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+          opacity: 0 !important;
+          transform: translateY(-10px) scale(0.95) !important;
+          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+
+          // 深色模式适配
+          @media (prefers-color-scheme: dark) {
+            background: rgba(30, 27, 45, 0.95) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+          }
+
+          // 添加箭头指示器
+          &::before {
+            content: '' !important;
+            position: absolute !important;
+            top: -8px !important;
+            left: 25px !important;
+            width: 16px !important;
+            height: 16px !important;
+            background: inherit !important;
+            border: inherit !important;
+            border-bottom: none !important;
+            border-right: none !important;
+            transform: rotate(45deg) !important;
+            border-radius: 3px !important;
+          }
 
           li {
-            display: flex;
-            justify-content: left;
-            padding: 10px;
-            border-radius: 5px;
+            display: flex !important;
+            align-items: center !important;
+            padding: 12px 20px !important;
+            margin: 4px 8px !important;
+            border-radius: 12px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            cursor: pointer !important;
+            position: relative !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            transform: translateX(-20px) !important;
+
+            &:nth-child(1) { transition-delay: 0.1s !important; }
+            &:nth-child(2) { transition-delay: 0.15s !important; }
+            &:nth-child(3) { transition-delay: 0.2s !important; }
+            &:nth-child(4) { transition-delay: 0.25s !important; }
+
+            // 左侧渐变边条
+            &::before {
+              content: '' !important;
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              bottom: 0 !important;
+              width: 0 !important;
+              background: linear-gradient(90deg, #409EFF, #cc5de8) !important;
+              transition: width 0.3s ease !important;
+              border-radius: 12px 0 0 12px !important;
+            }
+
+            span {
+              display: flex !important;
+              align-items: center !important;
+              color: #333 !important;
+              font-weight: 500 !important;
+              position: relative !important;
+              z-index: 1 !important;
+              transition: all 0.3s ease !important;
+
+              .el-icon {
+                margin-right: 12px !important;
+                font-size: 18px !important;
+                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+              }
+            }
 
             &:hover {
-              cursor: pointer;
-              background: #91a7ff;
+              background: linear-gradient(135deg, rgba(64, 158, 255, 0.1), rgba(204, 93, 232, 0.1)) !important;
+              transform: translateX(5px) !important;
+              box-shadow: 0 8px 25px rgba(64, 158, 255, 0.15) !important;
+
+              &::before {
+                width: 4px !important;
+              }
+
+              span {
+                color: #cc5de8 !important;
+                text-shadow: 0 0 8px rgba(204, 93, 232, 0.3) !important;
+
+                .el-icon {
+                  transform: scale(1.2) rotate(5deg) !important;
+                  color: #409EFF !important;
+                  filter: drop-shadow(0 0 5px rgba(64, 158, 255, 0.5)) !important;
+                }
+              }
+            }
+
+            // 深色模式下的文字颜色
+            @media (prefers-color-scheme: dark) {
+              span {
+                color: #e0e0e0 !important;
+              }
+
+              &:hover span {
+                color: #cc5de8 !important;
+              }
             }
           }
 
-          // 子菜单出现动画
-          @keyframes slide-down {
-            0% {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-            100% {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
 
-          animation: slide-down 0.3s ease-out;
         }
       }
     }
@@ -427,18 +614,110 @@ nav {
     display: flex;
     justify-content: right;
     align-items: center;
+    padding-right: 10px;
 
     .search {
       display: flex;
       justify-content: center;
       align-items: center;
       margin-right: 20px;
-      transition: transform 0.3s linear;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
 
       &:hover {
-        transform: scale(1.1);
+        transform: translateY(-2px) scale(1.05);
+        background: rgba(64, 158, 255, 0.15);
+        border-color: rgba(64, 158, 255, 0.3);
+        box-shadow: 
+          0 8px 25px rgba(64, 158, 255, 0.2),
+          0 0 0 1px rgba(64, 158, 255, 0.1);
+
+        .icon {
+          filter: drop-shadow(0 0 8px rgba(64, 158, 255, 0.6));
+        }
       }
+
+      .icon {
+        transition: all 0.3s ease;
+      }
+    }
+
+    .user-info {
+      .profile {
+        margin-right: 15px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-1px);
+        }
+      }
+
+      .el-avatar {
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+
+        &:hover {
+          transform: scale(1.1);
+          border-color: rgba(64, 158, 255, 0.5);
+          box-shadow: 0 0 20px rgba(64, 158, 255, 0.3);
+        }
+      }
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 1200px) {
+    width: calc(100% - 20px);
+    left: 10px;
+    border-radius: 15px;
+  }
+
+  @media (max-width: 768px) {
+    width: calc(100% - 10px);
+    left: 5px;
+    height: 50px;
+    border-radius: 12px;
+    margin-top: 5px;
+
+    #menu-left {
+      #menus {
+        .menus_items {
+          .menus_item {
+            width: 80px;
+            font-size: 14px;
+
+            span span {
+              display: none; // 在小屏幕上隐藏文字，只显示图标
+            }
+          }
+        }
+      }
+    }
+
+    #menu-right {
+      .search {
+        margin-right: 10px;
+        padding: 6px;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .menus_item_child {
+      left: -50px;
+      min-width: 160px;
     }
   }
 }
