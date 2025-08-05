@@ -302,24 +302,40 @@ const handleLoginClick = () => {
 
 // 移动端用户信息样式
 :deep(.el-dropdown-menu) {
+  min-width: 200px;
+  max-width: 300px;
+
   .mobile-user-info {
-    padding: 12px 16px;
+    padding: 16px 20px;
     border-bottom: 1px solid #ebeef5;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 8px;
+    margin-bottom: 12px;
 
     .mobile-username {
       font-size: 16px;
       font-weight: bold;
       color: #303133;
-      margin-bottom: 4px;
-      line-height: 1.2;
+      margin-bottom: 6px;
+      line-height: 1.3;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     .mobile-user-detail {
       font-size: 13px;
       color: #909399;
-      line-height: 1.2;
+      line-height: 1.3;
       word-break: break-all;
+      overflow-wrap: break-word;
+
+      // 如果内容太长，最多显示3行
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
   }
 }

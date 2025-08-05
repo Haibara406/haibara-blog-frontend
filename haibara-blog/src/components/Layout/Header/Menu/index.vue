@@ -655,15 +655,15 @@ nav {
     flex: 1;
     width: 100%;
     display: flex;
-    justify-content: right;
+    justify-content: flex-end;
     align-items: center;
-    padding-right: 10px;
+    padding-right: 20px;
+    gap: 15px;
 
     .search {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-right: 20px;
       padding: 8px;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.1);
@@ -671,6 +671,7 @@ nav {
       border: 1px solid rgba(255, 255, 255, 0.2);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
+      flex-shrink: 0;
 
       &:hover {
         transform: translateY(-2px) scale(1.05);
@@ -696,37 +697,47 @@ nav {
       height: 100%;
 
       .profile-info {
-        margin-right: 15px;
-        padding: 8px 12px;
+        padding: 10px 16px;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 12px;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         transition: all 0.3s ease;
         text-align: right;
-        min-width: 120px;
+        min-width: 160px;
+        max-width: 280px;
+        flex-shrink: 0;
 
         &:hover {
           background: rgba(255, 255, 255, 0.15);
           transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .username {
           font-size: 15px;
           font-weight: bold;
           color: white;
-          line-height: 1.2;
-          margin-bottom: 2px;
+          line-height: 1.3;
+          margin-bottom: 4px;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          hyphens: auto;
         }
 
         .user-detail {
           font-size: 12px;
           color: rgba(255, 255, 255, 0.8);
-          line-height: 1.2;
+          line-height: 1.3;
+          word-break: break-all;
+          overflow-wrap: break-word;
+          hyphens: auto;
+
+          // 如果内容太长，显示省略号
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 150px;
         }
       }
 
@@ -750,6 +761,43 @@ nav {
     width: calc(100% - 20px);
     left: 10px;
     border-radius: 15px;
+
+    #menu-right {
+      .user-info {
+        .profile-info {
+          max-width: 220px;
+          min-width: 140px;
+
+          .username {
+            font-size: 14px;
+          }
+
+          .user-detail {
+            font-size: 11px;
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 1000px) {
+    #menu-right {
+      .user-info {
+        .profile-info {
+          max-width: 180px;
+          min-width: 120px;
+          padding: 8px 12px;
+
+          .username {
+            font-size: 13px;
+          }
+
+          .user-detail {
+            font-size: 10px;
+          }
+        }
+      }
+    }
   }
 
   @media (max-width: 768px) {
@@ -775,9 +823,17 @@ nav {
     }
 
     #menu-right {
+      gap: 8px;
+      padding-right: 10px;
+
       .search {
-        margin-right: 10px;
         padding: 6px;
+      }
+
+      .user-info {
+        .profile-info {
+          display: none; // 在移动端隐藏用户信息框，只保留头像
+        }
       }
     }
   }
