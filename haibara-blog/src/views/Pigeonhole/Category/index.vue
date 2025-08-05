@@ -12,6 +12,22 @@ const articleList = ref([])
 const isQueryArticle = ref(false)
 // 分类标题
 const title = ref('')
+const loading = ref(false)
+// 简单缓存机制，避免重复请求
+const articleCache = ref(new Map())
+
+// 现代化滚动条相关状态
+const navItemsWrapper = ref<HTMLElement | null>(null)
+const scrollbarTrack = ref<HTMLElement | null>(null)
+const scrollbarThumb = ref<HTMLElement | null>(null)
+const showLeftFade = ref(false)
+const showRightFade = ref(false)
+const scrollbarVisible = ref(false)
+const thumbWidth = ref(20)
+const thumbPosition = ref(0)
+const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragStartScrollLeft = ref(0)
 
 onMounted(async () => {
   await categoryList().then(res => {
@@ -39,12 +55,8 @@ onMounted(async () => {
 // 地址栏是否有分类id
 watch(() => route.params.id, (id, oldId) => {
   if (id) {
-    // 如果是不同的分类，先清空文章列表
-    if (id !== oldId) {
-      articleList.value = []
-    }
-
     isQueryArticle.value = true
+    // 设置分类状态
     categorys.value.forEach(item => {
       if (item.id === Number(id)) {
         item.isActive = true
@@ -53,18 +65,29 @@ watch(() => route.params.id, (id, oldId) => {
         item.isActive = false
       }
     })
-    getArticle(id)
+    
+    // 检查缓存
+    if (articleCache.value.has(id)) {
+      articleList.value = articleCache.value.get(id)
+      loading.value = false
+    } else {
+      // 如果是不同的分类且没有缓存，设置加载状态
+      if (id !== oldId) {
+        loading.value = true
+      }
+      getArticle(id)
+    }
   } else {
     isQueryArticle.value = false
     articleList.value = []
+    loading.value = false
   }
 })
 
 // 文章
 async function getArticle(id: string) {
   try {
-    // 确保文章列表为空，避免显示旧数据
-    articleList.value = []
+    loading.value = true
 
     const res = await whereArticleList(1, id)
     if (res.code === 200 && res.data !== undefined) {
@@ -74,12 +97,16 @@ async function getArticle(id: string) {
       // 使用nextTick确保DOM更新后再设置数据
       await nextTick()
       articleList.value = res.data
+      // 缓存结果
+      articleCache.value.set(id, res.data)
     } else {
       articleList.value = []
     }
   } catch (error) {
     console.error('获取文章失败:', error)
     articleList.value = []
+  } finally {
+    loading.value = false
   }
 }
 
@@ -116,9 +143,6 @@ function getCurrentCategoryIcon() {
 
 // 处理分类切换
 function handleCategoryChange(categoryId: number) {
-  // 立即清空文章列表，避免显示上一个分类的文章
-  articleList.value = []
-
   // 更新分类状态
   categorys.value.forEach(item => {
     if (item.id === categoryId) {
@@ -128,6 +152,11 @@ function handleCategoryChange(categoryId: number) {
       item.isActive = false
     }
   })
+
+  // 检查缓存，如果没有缓存则设置加载状态
+  if (!articleCache.value.has(String(categoryId))) {
+    loading.value = true
+  }
 
   // 跳转到新分类
   router.push(`/category/${categoryId}`)
@@ -194,6 +223,165 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', debouncedAdjustLayout)
+  // 清理事件监听器
+  if (navItemsWrapper.value) {
+    navItemsWrapper.value.removeEventListener('scroll', handleNavScroll)
+    navItemsWrapper.value.removeEventListener('mouseenter', () => scrollbarVisible.value = true)
+    navItemsWrapper.value.removeEventListener('mouseleave', () => {
+      if (!isDragging.value) {
+        scrollbarVisible.value = false
+      }
+    })
+  }
+  // 清理全局拖拽事件
+  document.removeEventListener('mousemove', handleThumbMouseMove)
+  document.removeEventListener('mouseup', handleThumbMouseUp)
+})
+
+// 处理导航滚动
+function handleNavScroll() {
+  const wrapper = navItemsWrapper.value
+  if (!wrapper) return
+  
+  const { scrollLeft, scrollWidth, clientWidth } = wrapper
+  
+  // 更新渐变阴影显示
+  showLeftFade.value = scrollLeft > 0
+  showRightFade.value = scrollLeft < scrollWidth - clientWidth - 1
+  
+  // 更新滚动条位置
+  updateThumbPosition()
+}
+
+// 更新滚动条位置
+function updateThumbPosition() {
+  const wrapper = navItemsWrapper.value
+  const track = scrollbarTrack.value
+  if (!wrapper || !track) return
+  
+  const { scrollLeft, scrollWidth, clientWidth } = wrapper
+  const trackWidth = track.clientWidth
+  
+  // 计算thumb宽度
+  thumbWidth.value = Math.max(20, (clientWidth / scrollWidth) * 100)
+  
+  // 计算thumb位置
+  if (scrollWidth > clientWidth) {
+    const maxScrollLeft = scrollWidth - clientWidth
+    const thumbWidthPx = trackWidth * thumbWidth.value / 100
+    const maxThumbPosition = trackWidth - thumbWidthPx
+    thumbPosition.value = (scrollLeft / maxScrollLeft) * maxThumbPosition
+  } else {
+    thumbPosition.value = 0
+  }
+}
+
+// 点击滚动条轨道
+function handleTrackClick(event: MouseEvent) {
+  const track = scrollbarTrack.value
+  const wrapper = navItemsWrapper.value
+  if (!track || !wrapper) return
+  
+  const rect = track.getBoundingClientRect()
+  const clickX = event.clientX - rect.left
+  const trackWidth = rect.width
+  
+  const { scrollWidth, clientWidth } = wrapper
+  const maxScrollLeft = scrollWidth - clientWidth
+  
+  const targetScrollLeft = (clickX / trackWidth) * maxScrollLeft
+  wrapper.scrollTo({ left: targetScrollLeft, behavior: 'smooth' })
+}
+
+// 开始拖拽滚动条thumb
+function handleThumbMouseDown(event: MouseEvent) {
+  event.preventDefault()
+  
+  isDragging.value = true
+  scrollbarVisible.value = true
+  dragStartX.value = event.clientX
+  dragStartScrollLeft.value = navItemsWrapper.value?.scrollLeft || 0
+  
+  // 添加全局事件监听
+  document.addEventListener('mousemove', handleThumbMouseMove)
+  document.addEventListener('mouseup', handleThumbMouseUp)
+  
+  // 添加用户选择禁用
+  document.body.style.userSelect = 'none'
+}
+
+// 拖拽滚动条thumb移动
+function handleThumbMouseMove(event: MouseEvent) {
+  if (!isDragging.value) return
+  
+  const wrapper = navItemsWrapper.value
+  const track = scrollbarTrack.value
+  if (!wrapper || !track) return
+  
+  const deltaX = event.clientX - dragStartX.value
+  const trackWidth = track.clientWidth
+  const { scrollWidth, clientWidth } = wrapper
+  
+  const maxScrollLeft = scrollWidth - clientWidth
+  const thumbWidthPx = trackWidth * thumbWidth.value / 100
+  const maxThumbPosition = trackWidth - thumbWidthPx
+  
+  const scrollRatio = maxThumbPosition > 0 ? deltaX / maxThumbPosition : 0
+  const targetScrollLeft = dragStartScrollLeft.value + (scrollRatio * maxScrollLeft)
+  
+  wrapper.scrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft))
+}
+
+// 结束拖拽滚动条thumb
+function handleThumbMouseUp() {
+  isDragging.value = false
+  
+  // 延迟隐藏滚动条
+  setTimeout(() => {
+    if (!isDragging.value) {
+      scrollbarVisible.value = false
+    }
+  }, 1000)
+  
+  // 移除全局事件监听
+  document.removeEventListener('mousemove', handleThumbMouseMove)
+  document.removeEventListener('mouseup', handleThumbMouseUp)
+  
+  // 恢复用户选择
+  document.body.style.userSelect = ''
+}
+
+// 初始化滚动条状态
+function initScrollbar() {
+  nextTick(() => {
+    updateThumbPosition()
+    handleNavScroll()
+    
+    // 绑定事件监听器
+    if (navItemsWrapper.value) {
+      navItemsWrapper.value.addEventListener('scroll', handleNavScroll)
+      navItemsWrapper.value.addEventListener('mouseenter', () => scrollbarVisible.value = true)
+      navItemsWrapper.value.addEventListener('mouseleave', () => {
+        if (!isDragging.value) {
+          scrollbarVisible.value = false
+        }
+      })
+    }
+  })
+}
+
+// 监听路由变化时重新初始化滚动条
+watch(() => route.params.id, () => {
+  nextTick(() => {
+    initScrollbar()
+  })
+})
+
+// 组件挂载后初始化滚动条
+watch(categorys, () => {
+  nextTick(() => {
+    initScrollbar()
+  })
 })
 </script>
 
@@ -236,8 +424,41 @@ onUnmounted(() => {
           </div>
 
           <div class="category_container">
-            <div class="title">
-              文章分类
+            <!-- 美观的页面标题 -->
+            <div class="page-title">
+              <!-- 装饰性背景元素 -->
+              <div class="title-decoration">
+                <div class="decoration-circle circle-1"></div>
+                <div class="decoration-circle circle-2"></div>
+                <div class="decoration-circle circle-3"></div>
+                <div class="decoration-line line-1"></div>
+                <div class="decoration-line line-2"></div>
+              </div>
+
+              <!-- 左侧装饰图标 -->
+              <div class="title-icon left">
+                <SvgIcon name="directory" width="32" height="32"/>
+              </div>
+
+              <div class="title-content">
+                <h1>分类云</h1>
+                <p>探索不同领域下的精彩内容</p>
+                <div class="title-stats">
+                  <span class="stat-item">
+                    <SvgIcon name="statistics" width="16" height="16"/>
+                    {{ categorys.length }} 个分类
+                  </span>
+                  <span class="stat-item">
+                    <SvgIcon name="essay_icon" width="16" height="16"/>
+                    {{ categorys.reduce((sum, cat) => sum + (cat.articleCount || 0), 0) }} 篇文章
+                  </span>
+                </div>
+              </div>
+
+              <!-- 右侧装饰图标 -->
+              <div class="title-icon right">
+                <SvgIcon name="collection" width="32" height="32"/>
+              </div>
             </div>
             <div class="category-cards-container">
               <template v-for="(category, index) in categorys" :key="category.id">
@@ -307,26 +528,66 @@ onUnmounted(() => {
 
             <!-- 分类导航 -->
             <div class="category-nav">
-              <el-scrollbar>
-                <div class="nav-items">
-                  <template v-for="(category, index) in categorys" :key="category.id">
-                    <div
-                      @click="handleCategoryChange(category.id)"
-                      class="nav-item"
-                      :class="{ 'active': category.isActive }"
-                      :style="{ '--nav-index': index }"
-                    >
-                      <SvgIcon :name="getCategoryIcon(categorys.indexOf(category))" width="16" height="16"/>
-                      <span>{{ category.categoryName }}</span>
-                    </div>
-                  </template>
+              <div class="modern-scrollbar-container">
+                <!-- 左侧渐变阴影 -->
+                <div class="scroll-fade scroll-fade-left" :class="{ 'visible': showLeftFade }"></div>
+                
+                <!-- 导航项容器 -->
+                <div class="nav-items-wrapper" ref="navItemsWrapper">
+                  <div class="nav-items">
+                    <template v-for="(category, index) in categorys" :key="category.id">
+                      <div
+                        @click="handleCategoryChange(category.id)"
+                        class="nav-item"
+                        :class="{ 'active': category.isActive }"
+                        :style="{ '--nav-index': index }"
+                      >
+                        <SvgIcon :name="getCategoryIcon(categorys.indexOf(category))" width="16" height="16"/>
+                        <span>{{ category.categoryName }}</span>
+                      </div>
+                    </template>
+                  </div>
                 </div>
-              </el-scrollbar>
+                
+                <!-- 右侧渐变阴影 -->
+                <div class="scroll-fade scroll-fade-right" :class="{ 'visible': showRightFade }"></div>
+                
+                <!-- 自定义滚动条 -->
+                <div class="custom-scrollbar" :class="{ 'scrollbar-visible': scrollbarVisible }">
+                  <div 
+                    class="scrollbar-track"
+                    @mousedown="handleTrackClick"
+                    ref="scrollbarTrack"
+                  >
+                    <div 
+                      class="scrollbar-thumb"
+                      :style="{ 
+                        width: thumbWidth + '%', 
+                        transform: `translateX(${thumbPosition}px)` 
+                      }"
+                      @mousedown="handleThumbMouseDown"
+                      ref="scrollbarThumb"
+                    ></div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- 文章列表 -->
             <div class="articles-container">
-              <template v-if="articleList.length > 0">
+              <!-- 加载状态 -->
+              <template v-if="loading">
+                <div class="loading-state">
+                  <div class="loading-spinner">
+                    <div class="spinner"></div>
+                  </div>
+                  <h3>正在加载文章...</h3>
+                  <p>请稍候，正在获取 {{ title }} 分类下的文章</p>
+                </div>
+              </template>
+              
+              <!-- 文章列表 -->
+              <template v-else-if="articleList.length > 0">
                 <div class="articles-grid">
                   <template v-for="(article, index) in articleList" :key="article.id">
                     <div
@@ -719,9 +980,295 @@ onUnmounted(() => {
     }
   }
 
-  .title {
-    font-size: 1.72rem;
-    padding: 1rem;
+  // 美观的页面标题
+  .page-title {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg,
+      rgba(64, 158, 255, 0.02) 0%,
+      rgba(103, 194, 58, 0.02) 50%,
+      rgba(255, 99, 132, 0.02) 100%);
+    border-radius: 20px;
+    margin: 2rem auto;
+    max-width: 1000px;
+    overflow: hidden;
+
+    // 装饰性背景元素
+    .title-decoration {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+
+      .decoration-circle {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(135deg,
+          rgba(64, 158, 255, 0.05),
+          rgba(103, 194, 58, 0.05));
+        animation: float 6s ease-in-out infinite;
+
+        &.circle-1 {
+          width: 80px;
+          height: 80px;
+          top: 10%;
+          left: 10%;
+          animation-delay: 0s;
+        }
+
+        &.circle-2 {
+          width: 120px;
+          height: 120px;
+          top: 60%;
+          right: 15%;
+          animation-delay: 2s;
+        }
+
+        &.circle-3 {
+          width: 60px;
+          height: 60px;
+          bottom: 20%;
+          left: 20%;
+          animation-delay: 4s;
+        }
+      }
+
+      .decoration-line {
+        position: absolute;
+        background: linear-gradient(45deg,
+          rgba(64, 158, 255, 0.1),
+          transparent);
+        animation: slideRotate 8s linear infinite;
+
+        &.line-1 {
+          width: 2px;
+          height: 100px;
+          top: 20%;
+          right: 20%;
+          transform-origin: bottom;
+        }
+
+        &.line-2 {
+          width: 150px;
+          height: 2px;
+          bottom: 30%;
+          left: 15%;
+          transform-origin: left;
+          animation-delay: 4s;
+        }
+      }
+
+      @keyframes float {
+        0%, 100% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        33% {
+          transform: translate(10px, -10px) rotate(120deg);
+        }
+        66% {
+          transform: translate(-5px, 5px) rotate(240deg);
+        }
+      }
+
+      @keyframes slideRotate {
+        0%, 100% {
+          transform: rotate(0deg) scale(1);
+          opacity: 0.3;
+        }
+        50% {
+          transform: rotate(180deg) scale(1.1);
+          opacity: 0.6;
+        }
+      }
+    }
+
+    // 左右装饰图标
+    .title-icon {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,
+        rgba(64, 158, 255, 0.1),
+        rgba(103, 194, 58, 0.1));
+      backdrop-filter: blur(10px);
+      animation: iconPulse 3s ease-in-out infinite;
+
+      svg {
+        color: var(--el-color-primary);
+        transition: all 0.3s ease;
+      }
+
+      &:hover svg {
+        transform: scale(1.2) rotate(15deg);
+        color: var(--el-color-success);
+      }
+
+      &.left {
+        margin-right: 2rem;
+        animation-delay: 0s;
+      }
+
+      &.right {
+        margin-left: 2rem;
+        animation-delay: 1.5s;
+      }
+
+      @keyframes iconPulse {
+        0%, 100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.3);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 10px rgba(64, 158, 255, 0);
+        }
+      }
+    }
+
+    // 标题内容
+    .title-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      flex: 1;
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg,
+          var(--el-color-primary),
+          var(--el-color-success),
+          var(--el-color-warning));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.8rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        animation: titleGlow 4s ease-in-out infinite;
+      }
+
+      p {
+        font-size: 1.1rem;
+        color: var(--el-text-color-regular);
+        margin-bottom: 1.5rem;
+        opacity: 0.8;
+        animation: subtitleSlide 1s ease-out;
+      }
+
+      .title-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+
+        .stat-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border-radius: 25px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          font-size: 0.9rem;
+          color: var(--el-text-color-primary);
+          transition: all 0.3s ease;
+          animation: statFadeIn 1.2s ease-out;
+
+          &:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+
+          svg {
+            color: var(--el-color-primary);
+          }
+        }
+      }
+
+      @keyframes titleGlow {
+        0%, 100% {
+          filter: brightness(1);
+        }
+        50% {
+          filter: brightness(1.2);
+        }
+      }
+
+      @keyframes subtitleSlide {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        100% {
+          opacity: 0.8;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes statFadeIn {
+        0% {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+
+    // 响应式设计
+    @media (max-width: 768px) {
+      flex-direction: column;
+      padding: 2rem 1rem;
+
+      .title-icon {
+        width: 50px;
+        height: 50px;
+        margin: 0 0 1rem 0;
+
+        &.left {
+          margin-right: 0;
+          margin-bottom: 1rem;
+        }
+
+        &.right {
+          margin-left: 0;
+          margin-top: 1rem;
+        }
+      }
+
+      .title-content {
+        h1 {
+          font-size: 2rem;
+        }
+
+        p {
+          font-size: 1rem;
+        }
+
+        .title-stats {
+          gap: 1rem;
+
+          .stat-item {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+          }
+        }
+      }
+    }
   }
 
   // 分类卡牌容器 - 防止溢出的响应式设计
@@ -1419,7 +1966,7 @@ onUnmounted(() => {
     }
   }
 
-  // 分类导航
+  // 分类导航 - 现代化滚动条
   .category-nav {
     margin-bottom: 1.5rem;
     padding: 0 2rem;
@@ -1441,83 +1988,227 @@ onUnmounted(() => {
       }
     }
 
-    .nav-items {
-      display: flex;
-      gap: 0.8rem;
-      padding: 0.5rem 0;
-      max-width: 1200px;
-      margin: 0 auto;
-
-      .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.5rem 1rem;
-        background: var(--el-bg-color);
-        border: 1px solid var(--el-border-color-lighter);
-        border-radius: 18px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        white-space: nowrap;
-        font-size: 0.85rem;
-
-        // 导航项进入动画 - 淡入效果
+    .modern-scrollbar-container {
+      position: relative;
+      background: linear-gradient(135deg, 
+        rgba(64, 158, 255, 0.03) 0%, 
+        rgba(103, 194, 58, 0.03) 100%);
+      border-radius: 15px;
+      box-shadow: 
+        0 2px 10px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      
+      // 渐变阴影效果
+      .scroll-fade {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+        z-index: 3;
+        pointer-events: none;
         opacity: 0;
-        transform: scale(0.9);
-        filter: blur(2px);
-        animation: navItemFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        animation-delay: calc(var(--nav-index) * 0.04s + 0.3s);
+        transition: opacity 0.3s ease;
 
-        @keyframes navItemFadeIn {
-          0% {
+        &.visible {
+          opacity: 1;
+        }
+
+        &.scroll-fade-left {
+          left: 0;
+          background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.8) 0%,
+            transparent 100%
+          );
+        }
+
+        &.scroll-fade-right {
+          right: 0;
+          background: linear-gradient(
+            to left,
+            rgba(255, 255, 255, 0.8) 0%,
+            transparent 100%
+          );
+        }
+      }
+
+      .nav-items-wrapper {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        position: relative;
+        
+        &::-webkit-scrollbar {
+          display: none;
+        }
+
+        .nav-items {
+          display: flex;
+          gap: 0.8rem;
+          padding: 1rem 1.5rem;
+          min-width: fit-content;
+
+          .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            font-size: 0.85rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+
+            // 导航项进入动画 - 淡入效果
             opacity: 0;
-            transform: scale(0.9);
+            transform: scale(0.9) translateY(10px);
             filter: blur(2px);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-            filter: blur(0);
+            animation: navItemFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: calc(var(--nav-index) * 0.06s + 0.3s);
+
+            @keyframes navItemFadeIn {
+              0% {
+                opacity: 0;
+                transform: scale(0.9) translateY(10px);
+                filter: blur(2px);
+              }
+              100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: blur(0);
+              }
+            }
+
+            // 背景光效
+            &::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+              );
+              transition: left 0.5s ease;
+            }
+
+            svg {
+              color: var(--el-color-primary);
+              width: 16px;
+              height: 16px;
+              transition: all 0.3s ease;
+              z-index: 1;
+            }
+
+            span {
+              font-weight: 500;
+              color: var(--el-text-color-primary);
+              transition: all 0.3s ease;
+              z-index: 1;
+            }
+
+            &:hover {
+              transform: translateY(-2px) scale(1.02);
+              box-shadow: 
+                0 6px 20px rgba(64, 158, 255, 0.15),
+                0 2px 6px rgba(0, 0, 0, 0.1);
+              border-color: rgba(64, 158, 255, 0.3);
+              background: rgba(255, 255, 255, 0.9);
+
+              &::before {
+                left: 100%;
+              }
+
+              svg {
+                transform: scale(1.1);
+                color: var(--el-color-success);
+              }
+
+              span {
+                color: var(--el-text-color-primary);
+              }
+            }
+
+            &.active {
+              background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+              color: white;
+              border-color: transparent;
+              box-shadow: 
+                0 6px 20px rgba(64, 158, 255, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.15);
+              transform: translateY(-1px) scale(1.05);
+
+              svg, span {
+                color: white;
+              }
+
+              svg {
+                transform: scale(1.1);
+              }
+
+              &::before {
+                display: none;
+              }
+            }
           }
         }
+      }
 
-        svg {
-          color: var(--el-color-primary);
-          width: 14px;
-          height: 14px;
-          transition: transform 0.3s ease;
+      // 自定义滚动条
+      .custom-scrollbar {
+        position: absolute;
+        bottom: 4px;
+        left: 1.5rem;
+        right: 1.5rem;
+        height: 4px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+
+        &.scrollbar-visible {
+          opacity: 1;
         }
 
-        span {
-          font-weight: 500;
-          color: var(--el-text-color-regular);
-          transition: color 0.3s ease;
-        }
+        .scrollbar-track {
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.1);
+          border-radius: 2px;
+          cursor: pointer;
+          position: relative;
 
-        &:hover {
-          transform: translateY(-1px) scale(1);
-          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-          border-color: var(--el-color-primary);
-          background: var(--el-color-primary-light-9);
+          .scrollbar-thumb {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--el-color-primary), var(--el-color-success));
+            border-radius: 2px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 
-          svg {
-            transform: scale(1.1);
-          }
-        }
+            &:hover {
+              transform: scaleY(1.5);
+              box-shadow: 0 2px 6px rgba(64, 158, 255, 0.4);
+            }
 
-        &.active {
-          background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
-          color: white;
-          border-color: transparent;
-          box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
-          transform: translateY(0) scale(1.05);
-
-          svg, span {
-            color: white;
-          }
-
-          svg {
-            transform: scale(1.1);
+            &:active {
+              cursor: grabbing;
+              transform: scaleY(2);
+            }
           }
         }
       }
@@ -1705,6 +2396,81 @@ onUnmounted(() => {
       }
     }
 
+    // 加载状态
+    .loading-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+
+      // 加载状态进入动画
+      opacity: 0;
+      transform: scale(0.95);
+      animation: loadingStateFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+      @keyframes loadingStateFadeIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .loading-spinner {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(64, 158, 255, 0.1);
+          border-top: 3px solid var(--el-color-primary);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      }
+
+      h3 {
+        color: var(--el-text-color-primary);
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+        opacity: 0;
+        animation: textSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: 0.2s;
+      }
+
+      p {
+        color: var(--el-text-color-regular);
+        font-size: 1rem;
+        line-height: 1.6;
+        opacity: 0;
+        animation: textSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: 0.4s;
+      }
+
+      @keyframes textSlideUp {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+
     // 空状态
     .empty-state {
       text-align: center;
@@ -1885,15 +2651,63 @@ onUnmounted(() => {
       }
 
       .category-nav {
-        padding: 0 1.5rem;
+        padding: 0 1rem;
 
-        .nav-items {
-          gap: 0.6rem;
+        .modern-scrollbar-container {
+          border-radius: 12px;
 
-          .nav-item {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-            border-radius: 15px;
+          .scroll-fade {
+            width: 24px;
+          }
+
+          .nav-items-wrapper {
+            .nav-items {
+              padding: 0.8rem 1rem;
+              gap: 0.5rem;
+
+              .nav-item {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+                border-radius: 15px;
+                gap: 0.3rem;
+
+                svg {
+                  width: 14px;
+                  height: 14px;
+                }
+
+                &:hover {
+                  transform: translateY(-1px) scale(1.01);
+                }
+
+                &.active {
+                  transform: translateY(0) scale(1.02);
+
+                  &:hover {
+                    transform: translateY(-1px) scale(1.02);
+                  }
+                }
+              }
+            }
+          }
+
+          .custom-scrollbar {
+            height: 3px;
+            bottom: 3px;
+            left: 1rem;
+            right: 1rem;
+
+            .scrollbar-track {
+              .scrollbar-thumb {
+                &:hover {
+                  transform: scaleY(1.2);
+                }
+
+                &:active {
+                  transform: scaleY(1.5);
+                }
+              }
+            }
           }
         }
       }
