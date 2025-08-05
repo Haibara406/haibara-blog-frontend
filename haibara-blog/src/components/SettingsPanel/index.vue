@@ -51,7 +51,7 @@
             </div>
             <div class="feature-info">
               <h3 class="feature-title">点击特效</h3>
-              <p class="feature-desc">华丽的鼠标点击动画</p>
+              <p class="feature-desc">华丽的鼠标点击动画(有彩蛋哟~)</p>
             </div>
             <div class="feature-toggle">
               <el-switch 
@@ -506,5 +506,16 @@ const handleReset = async () => {
     flex-direction: column-reverse;
     gap: 12px;
   }
+}
+</style>
+
+<!-- 全局样式，确保消息通知显示在最上层 -->
+<style>
+.el-message {
+  z-index: 10000 !important;
+}
+
+.el-message-box {
+  z-index: 10001 !important;
 }
 </style>
