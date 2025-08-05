@@ -7,6 +7,8 @@
   <Music />
   <DevToolsBlocker :enableDevToolsBlocker="true" />
   <ContextMenu />
+  <!-- 鼠标点击特效 -->
+  <ClickEffect />
 </template>
 
 <script setup lang="ts">
@@ -14,6 +16,7 @@ import {useDark, useToggle} from "@vueuse/core";
 import useWebsiteStore from "@/store/modules/website.ts";
 import DevToolsBlocker from "@/components/DevToolsBlocker/index.vue";
 import ContextMenu from "@/components/ContextMenu/index.vue";
+import ClickEffect from "@/components/ClickEffect/index.vue";
 
 const useWebsite = useWebsiteStore()
 
