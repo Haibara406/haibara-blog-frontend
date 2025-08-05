@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ArticleList from "../ArticleList/index.vue"
 import {tagList} from "@/apis/tag";
 import {whereArticleList} from "@/apis/article";
 import {getWebsiteInfo} from "@/apis/website";
@@ -13,6 +12,19 @@ const tags = ref([])
 const articleList = ref([])
 const title = ref('')
 const totalArticleCount = ref(0)
+
+// 现代化滚动条相关状态
+const navItemsWrapper = ref<HTMLElement | null>(null)
+const scrollbarTrack = ref<HTMLElement | null>(null)
+const scrollbarThumb = ref<HTMLElement | null>(null)
+const showLeftFade = ref(false)
+const showRightFade = ref(false)
+const scrollbarVisible = ref(false)
+const thumbWidth = ref(20)
+const thumbPosition = ref(0)
+const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragStartScrollLeft = ref(0)
 
 // 标签图标数组，为不同标签设置不同图标
 const tagIcons = [
@@ -69,7 +81,7 @@ function adjustTagLayout() {
 
 // 防抖函数
 function debounce(func: Function, wait: number) {
-  let timeout: NodeJS.Timeout
+  let timeout: any
   return function executedFunction(...args: any[]) {
     const later = () => {
       clearTimeout(timeout)
@@ -99,26 +111,30 @@ onMounted(async () => {
   // 获取网站信息
   await getWebsiteData()
 
-  await tagList().then(res => {
+  await tagList().then((res: any) => {
     if (res.code === 200) {
       tags.value = res.data
     }
   })
   if (route.params.id) {
     isQueryArticle.value = true
-    tags.value.forEach(item => {
+    tags.value.forEach((item: any) => {
       if (item.id === Number(route.params.id)) {
         title.value = item.tagName
       }
     })
-    getArticle(route.params.id)
+    getArticle(String(route.params.id))
   }
 
   // 初始化布局调整
   nextTick(() => {
     adjustTagLayout()
+    initScrollbar()
   })
   window.addEventListener('resize', debouncedAdjustTagLayout)
+  window.addEventListener('resize', () => {
+    setTimeout(initScrollbar, 100)
+  })
 })
 
 onUnmounted(() => {
@@ -133,16 +149,21 @@ watch(() => route.params.id, (id, oldId) => {
     }
 
     isQueryArticle.value = true
-    tags.value.forEach(item => {
+    tags.value.forEach((item: any) => {
       if (item.id === Number(id)) {
         title.value = item.tagName
       }
     })
-    getArticle(id)
+    getArticle(String(id))
   } else {
     isQueryArticle.value = false
     articleList.value = []
   }
+  
+  // 路由变化时重新初始化滚动条
+  nextTick(() => {
+    initScrollbar()
+  })
 })
 
 // 文章
@@ -151,9 +172,9 @@ async function getArticle(id: string) {
     // 确保文章列表为空，避免显示旧数据
     articleList.value = []
 
-    const res = await whereArticleList(2, id)
+    const res: any = await whereArticleList(2, id)
     if (res.code === 200 && res.data !== undefined) {
-      res.data.forEach(item => {
+      res.data.forEach((item: any) => {
         item.createTime = dayjs(item.createTime).format('YYYY-MM-DD')
       })
       // 使用nextTick确保DOM更新后再设置数据
@@ -174,7 +195,7 @@ function handleTagChange(tagId: number) {
   articleList.value = []
 
   // 更新标签状态
-  tags.value.forEach(item => {
+  tags.value.forEach((item: any) => {
     if (item.id === tagId) {
       title.value = item.tagName
     }
@@ -186,12 +207,141 @@ function handleTagChange(tagId: number) {
 
 // 获取当前标签的图标
 function getCurrentTagIcon() {
-  const currentTag = tags.value.find(tag => tag.tagName === title.value)
+  const currentTag = tags.value.find((tag: any) => tag.tagName === title.value)
   if (currentTag) {
     const index = tags.value.indexOf(currentTag)
     return getTagIcon(index)
   }
   return 'tag' // 默认图标
+}
+
+// 现代化滚动条功能
+// 处理导航滚动
+function handleNavScroll() {
+  const wrapper = navItemsWrapper.value
+  if (!wrapper) return
+  
+  const { scrollLeft, scrollWidth, clientWidth } = wrapper
+  
+  // 更新渐变阴影显示状态
+  showLeftFade.value = scrollLeft > 10
+  showRightFade.value = scrollLeft < scrollWidth - clientWidth - 10
+  
+  // 计算滚动条thumb位置
+  updateThumbPosition()
+}
+
+// 更新滚动条thumb位置
+function updateThumbPosition() {
+  const wrapper = navItemsWrapper.value
+  const track = scrollbarTrack.value
+  if (!wrapper || !track) return
+  
+  const { scrollLeft, scrollWidth, clientWidth } = wrapper
+  const trackWidth = track.clientWidth
+  
+  // 计算thumb宽度百分比
+  thumbWidth.value = Math.max((clientWidth / scrollWidth) * 100, 8)
+  
+  // 计算thumb位置
+  const maxScrollLeft = scrollWidth - clientWidth
+  const scrollRatio = maxScrollLeft > 0 ? scrollLeft / maxScrollLeft : 0
+  const maxThumbPosition = trackWidth - (trackWidth * thumbWidth.value / 100)
+  thumbPosition.value = scrollRatio * maxThumbPosition
+}
+
+// 处理滚动条悬停
+function handleScrollbarHover(isHovering: boolean) {
+  scrollbarVisible.value = isHovering || isDragging.value
+}
+
+// 点击滚动条轨道
+function handleTrackClick(event: MouseEvent) {
+  const wrapper = navItemsWrapper.value
+  const track = scrollbarTrack.value
+  if (!wrapper || !track) return
+  
+  const rect = track.getBoundingClientRect()
+  const clickX = event.clientX - rect.left
+  const trackWidth = track.clientWidth
+  const clickRatio = clickX / trackWidth
+  
+  const { scrollWidth, clientWidth } = wrapper
+  const maxScrollLeft = scrollWidth - clientWidth
+  const targetScrollLeft = clickRatio * maxScrollLeft
+  
+  // 平滑滚动到目标位置
+  wrapper.scrollTo({
+    left: targetScrollLeft,
+    behavior: 'smooth'
+  })
+}
+
+// 开始拖拽滚动条thumb
+function handleThumbMouseDown(event: MouseEvent) {
+  event.preventDefault()
+  event.stopPropagation()
+  
+  isDragging.value = true
+  scrollbarVisible.value = true
+  dragStartX.value = event.clientX
+  dragStartScrollLeft.value = navItemsWrapper.value?.scrollLeft || 0
+  
+  // 添加全局事件监听
+  document.addEventListener('mousemove', handleThumbMouseMove)
+  document.addEventListener('mouseup', handleThumbMouseUp)
+  
+  // 添加用户选择禁用
+  document.body.style.userSelect = 'none'
+}
+
+// 拖拽滚动条thumb移动
+function handleThumbMouseMove(event: MouseEvent) {
+  if (!isDragging.value) return
+  
+  const wrapper = navItemsWrapper.value
+  const track = scrollbarTrack.value
+  if (!wrapper || !track) return
+  
+  const deltaX = event.clientX - dragStartX.value
+  const trackWidth = track.clientWidth
+  const { scrollWidth, clientWidth } = wrapper
+  
+  const maxScrollLeft = scrollWidth - clientWidth
+  const thumbWidthPx = trackWidth * thumbWidth.value / 100
+  const maxThumbPosition = trackWidth - thumbWidthPx
+  
+  const scrollRatio = maxThumbPosition > 0 ? deltaX / maxThumbPosition : 0
+  const targetScrollLeft = dragStartScrollLeft.value + (scrollRatio * maxScrollLeft)
+  
+  wrapper.scrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft))
+}
+
+// 结束拖拽滚动条thumb
+function handleThumbMouseUp() {
+  isDragging.value = false
+  
+  // 延迟隐藏滚动条
+  setTimeout(() => {
+    if (!isDragging.value) {
+      scrollbarVisible.value = false
+    }
+  }, 1000)
+  
+  // 移除全局事件监听
+  document.removeEventListener('mousemove', handleThumbMouseMove)
+  document.removeEventListener('mouseup', handleThumbMouseUp)
+  
+  // 恢复用户选择
+  document.body.style.userSelect = ''
+}
+
+// 初始化滚动条状态
+function initScrollbar() {
+  nextTick(() => {
+    updateThumbPosition()
+    handleNavScroll()
+  })
 }
 
 </script>
@@ -268,13 +418,13 @@ function getCurrentTagIcon() {
 
           <template v-if="!isQueryArticle">
             <div class="tags-grid-container">
-              <template v-for="(tag, index) in tags" :key="tag.id">
+              <template v-for="(tag, index) in tags" :key="(tag as any).id">
                 <div
                   v-slide-in
                   class="tag-card"
                   :class="`tag-${index % 12}`"
                   :style="{ '--tag-index': index, '--total-tags': tags.length }"
-                  @click="router.push(`/tags/${tag.id}`)"
+                  @click="router.push(`/tags/${(tag as any).id}`)"
                   @mouseenter="handleTagHover(index, true)"
                   @mouseleave="handleTagHover(index, false)"
                 >
@@ -298,12 +448,12 @@ function getCurrentTagIcon() {
                     </div>
 
                     <div class="tag-info">
-                      <div class="tag-name"># {{ tag.tagName }}</div>
-                      <div class="article-count">{{ tag.articleCount || 0 }} 篇文章</div>
+                      <div class="tag-name"># {{ (tag as any).tagName }}</div>
+                      <div class="article-count">{{ (tag as any).articleCount || 0 }} 篇文章</div>
                     </div>
 
                     <!-- 数字动画效果 -->
-                    <div class="count-animation">{{ tag.articleCount || 0 }}</div>
+                    <div class="count-animation">{{ (tag as any).articleCount || 0 }}</div>
                   </div>
 
                   <!-- 悬浮时的波纹效果 -->
@@ -315,7 +465,7 @@ function getCurrentTagIcon() {
 
           <template v-if="isQueryArticle">
             <transition name="page-slide" appear>
-              <div class="tag-detail-page" :key="$route.params.id">
+              <div class="tag-detail-page" :key="String($route.params.id)">
                 <!-- 优化的页面头部 -->
                 <div class="detail-header">
                   <div class="header-content">
@@ -338,24 +488,58 @@ function getCurrentTagIcon() {
                   </div>
                 </div>
 
-                <!-- 标签导航 -->
-                <div class="tag-nav">
-                  <el-scrollbar>
-                    <div class="nav-items">
-                      <template v-for="(tag, index) in tags" :key="tag.id">
+                            <!-- 标签导航 -->
+            <div class="tag-nav">
+              <div class="modern-scrollbar-container">
+                <!-- 左侧渐变阴影 -->
+                <div class="scroll-fade scroll-fade-left" :class="{ 'visible': showLeftFade }"></div>
+                
+                <!-- 滚动容器 -->
+                <div 
+                  class="nav-items-wrapper" 
+                  ref="navItemsWrapper"
+                  @scroll="handleNavScroll"
+                  @mouseenter="handleScrollbarHover(true)"
+                  @mouseleave="handleScrollbarHover(false)"
+                >
+                  <div class="nav-items">
+                                          <template v-for="(tag, index) in tags" :key="(tag as any).id">
                         <div
-                          @click="handleTagChange(tag.id)"
+                          @click="handleTagChange((tag as any).id)"
                           class="nav-item"
-                          :class="{ 'active': tag.tagName === title }"
+                          :class="{ 'active': (tag as any).tagName === title }"
                           :style="{ '--nav-index': index }"
                         >
                           <SvgIcon :name="getTagIcon(index)" width="16" height="16"/>
-                          <span>{{ tag.tagName }}</span>
+                          <span>{{ (tag as any).tagName }}</span>
                         </div>
                       </template>
-                    </div>
-                  </el-scrollbar>
+                  </div>
                 </div>
+                
+                <!-- 右侧渐变阴影 -->
+                <div class="scroll-fade scroll-fade-right" :class="{ 'visible': showRightFade }"></div>
+                
+                <!-- 自定义滚动条 -->
+                <div class="custom-scrollbar" :class="{ 'scrollbar-visible': scrollbarVisible }">
+                  <div 
+                    class="scrollbar-track"
+                    @mousedown="handleTrackClick"
+                    ref="scrollbarTrack"
+                  >
+                    <div 
+                      class="scrollbar-thumb"
+                      :style="{ 
+                        width: thumbWidth + '%', 
+                        transform: `translateX(${thumbPosition}px)` 
+                      }"
+                      @mousedown="handleThumbMouseDown"
+                      ref="scrollbarThumb"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
                 <!-- 文章列表 -->
                 <div class="articles-container">
@@ -365,10 +549,10 @@ function getCurrentTagIcon() {
                         <div
                           class="modern-article-card"
                           :style="{ '--card-index': index }"
-                          @click="router.push(`/article/${article.id}`)"
+                          @click="router.push(`/article/${(article as any).id}`)"
                         >
                           <div class="article-image">
-                            <img :src="article.articleCover" :alt="article.articleTitle">
+                            <img :src="(article as any).articleCover" :alt="(article as any).articleTitle">
                             <div class="image-overlay">
                               <div class="read-btn">
                                 <SvgIcon name="reading" width="20" height="20"/>
@@ -377,14 +561,14 @@ function getCurrentTagIcon() {
                             </div>
                             <div class="view-count">
                               <SvgIcon name="heat" width="12" height="12"/>
-                              <span>{{ article.viewCount || 0 }}</span>
+                              <span>{{ (article as any).viewCount || 0 }}</span>
                             </div>
                           </div>
                           <div class="article-content">
-                            <div class="article-date">{{ article.createTime }}</div>
-                            <h3 class="article-title">{{ article.articleTitle }}</h3>
+                            <div class="article-date">{{ (article as any).createTime }}</div>
+                            <h3 class="article-title">{{ (article as any).articleTitle }}</h3>
                             <div class="article-tags">
-                              <span class="tag" v-for="tag in article.tagNameList" :key="tag">{{ tag }}</span>
+                              <span class="tag" v-for="tag in (article as any).tagNameList" :key="tag">{{ tag }}</span>
                             </div>
                           </div>
                         </div>
@@ -1634,7 +1818,7 @@ function getCurrentTagIcon() {
     }
   }
 
-  // 标签导航
+  // 现代化标签导航
   .tag-nav {
     margin-bottom: 1.5rem;
     padding: 0 2rem;
@@ -1656,83 +1840,354 @@ function getCurrentTagIcon() {
       }
     }
 
-    .nav-items {
-      display: flex;
-      gap: 0.8rem;
-      padding: 0.5rem 0;
+    .modern-scrollbar-container {
+      position: relative;
       max-width: 1200px;
       margin: 0 auto;
+      overflow: hidden;
+      border-radius: 16px;
+      background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.03) 0%, 
+        rgba(255, 255, 255, 0.08) 50%, 
+        rgba(255, 255, 255, 0.03) 100%);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
-      .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.5rem 1rem;
-        background: var(--el-bg-color);
-        border: 1px solid var(--el-border-color-lighter);
-        border-radius: 18px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        white-space: nowrap;
-        font-size: 0.85rem;
-
-        // 导航项进入动画 - 淡入效果
+      // 左右渐变阴影
+      .scroll-fade {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 32px;
+        z-index: 10;
+        pointer-events: none;
         opacity: 0;
-        transform: scale(0.9);
-        filter: blur(2px);
-        animation: navItemFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        animation-delay: calc(var(--nav-index) * 0.04s + 0.3s);
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-        @keyframes navItemFadeIn {
-          0% {
+        &.visible {
+          opacity: 1;
+        }
+
+        &.scroll-fade-left {
+          left: 0;
+          background: linear-gradient(90deg, 
+            rgba(255, 255, 255, 0.2) 0%, 
+            rgba(255, 255, 255, 0.1) 40%,
+            transparent 100%);
+        }
+
+        &.scroll-fade-right {
+          right: 0;
+          background: linear-gradient(270deg, 
+            rgba(255, 255, 255, 0.2) 0%, 
+            rgba(255, 255, 255, 0.1) 40%,
+            transparent 100%);
+        }
+      }
+
+      // 滚动容器
+      .nav-items-wrapper {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none; // Firefox
+        -ms-overflow-style: none; // IE 10+
+        scroll-behavior: smooth;
+        padding: 1rem 0;
+
+        // 隐藏默认滚动条
+        &::-webkit-scrollbar {
+          display: none;
+        }
+
+        .nav-items {
+          display: flex;
+          gap: 0.8rem;
+          padding: 0 1rem;
+          min-width: fit-content;
+
+          .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            font-size: 0.85rem;
+            position: relative;
+            overflow: hidden;
+
+            // 导航项进入动画 - 淡入效果
             opacity: 0;
             transform: scale(0.9);
             filter: blur(2px);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-            filter: blur(0);
+            animation: navItemFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: calc(var(--nav-index) * 0.04s + 0.3s);
+
+            @keyframes navItemFadeIn {
+              0% {
+                opacity: 0;
+                transform: scale(0.9);
+                filter: blur(2px);
+              }
+              100% {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+              }
+            }
+
+            // 背景光晕效果
+            &::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.1), 
+                transparent);
+              transition: left 0.6s ease;
+            }
+
+            // 悬浮光波效果
+            &::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 0;
+              height: 0;
+              background: radial-gradient(circle, 
+                rgba(64, 158, 255, 0.15) 0%, 
+                transparent 70%);
+              border-radius: 50%;
+              transform: translate(-50%, -50%);
+              transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+              pointer-events: none;
+            }
+
+            svg {
+              color: var(--el-color-primary);
+              width: 14px;
+              height: 14px;
+              transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+              filter: drop-shadow(0 1px 3px rgba(64, 158, 255, 0.3));
+              z-index: 2;
+              position: relative;
+            }
+
+            span {
+              font-weight: 500;
+              color: var(--el-text-color-regular);
+              transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+              z-index: 2;
+              position: relative;
+            }
+
+            &:hover {
+              transform: translateY(-2px) scale(1.02);
+              box-shadow: 
+                0 8px 25px rgba(64, 158, 255, 0.15),
+                0 4px 12px rgba(0, 0, 0, 0.08);
+              border-color: rgba(64, 158, 255, 0.3);
+              background: rgba(255, 255, 255, 0.15);
+
+              &::before {
+                left: 100%;
+              }
+
+              &::after {
+                width: 100px;
+                height: 100px;
+              }
+
+              svg {
+                transform: scale(1.15) rotateY(180deg);
+                color: var(--el-color-primary);
+                filter: drop-shadow(0 2px 8px rgba(64, 158, 255, 0.4));
+              }
+
+              span {
+                color: var(--el-text-color-primary);
+              }
+            }
+
+            &.active {
+              background: linear-gradient(135deg, 
+                rgba(64, 158, 255, 0.9) 0%, 
+                rgba(103, 194, 58, 0.9) 100%);
+              color: white;
+              border-color: transparent;
+              box-shadow: 
+                0 6px 20px rgba(64, 158, 255, 0.35),
+                0 2px 8px rgba(103, 194, 58, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+              transform: translateY(-1px) scale(1.05);
+
+              &::before {
+                background: linear-gradient(90deg, 
+                  transparent, 
+                  rgba(255, 255, 255, 0.2), 
+                  transparent);
+                animation: activeShimmer 2s ease-in-out infinite;
+              }
+
+              @keyframes activeShimmer {
+                0% { left: -100%; }
+                50% { left: 100%; }
+                100% { left: 100%; }
+              }
+
+              svg, span {
+                color: white;
+                filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+              }
+
+              svg {
+                transform: scale(1.1);
+                animation: activeIconPulse 2s ease-in-out infinite;
+              }
+
+              @keyframes activeIconPulse {
+                0%, 100% { transform: scale(1.1); }
+                50% { transform: scale(1.2); }
+              }
+
+              &:hover {
+                transform: translateY(-2px) scale(1.05);
+                box-shadow: 
+                  0 8px 30px rgba(64, 158, 255, 0.4),
+                  0 4px 15px rgba(103, 194, 58, 0.3);
+              }
+            }
           }
         }
+      }
 
-        svg {
-          color: var(--el-color-primary);
-          width: 14px;
-          height: 14px;
-          transition: transform 0.3s ease;
+      // 自定义滚动条
+      .custom-scrollbar {
+        position: absolute;
+        bottom: 4px;
+        left: 1rem;
+        right: 1rem;
+        height: 4px;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 20;
+
+        &.scrollbar-visible {
+          opacity: 1;
         }
 
-        span {
-          font-weight: 500;
-          color: var(--el-text-color-regular);
-          transition: color 0.3s ease;
-        }
+        .scrollbar-track {
+          width: 100%;
+          height: 100%;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 2px;
+          cursor: pointer;
+          position: relative;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.05);
 
-        &:hover {
-          transform: translateY(-1px) scale(1);
-          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-          border-color: var(--el-color-primary);
-          background: var(--el-color-primary-light-9);
-
-          svg {
-            transform: scale(1.1);
-          }
-        }
-
-        &.active {
-          background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
-          color: white;
-          border-color: transparent;
-          box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
-          transform: translateY(0) scale(1.05);
-
-          svg, span {
-            color: white;
+          &:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
 
-          svg {
-            transform: scale(1.1);
+          .scrollbar-thumb {
+            height: 100%;
+            background: linear-gradient(90deg, 
+              rgba(64, 158, 255, 0.8) 0%, 
+              rgba(103, 194, 58, 0.8) 100%);
+            border-radius: 2px;
+            cursor: grab;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 
+              0 1px 3px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+            // 光晕效果
+            &::before {
+              content: '';
+              position: absolute;
+              top: -2px;
+              left: -2px;
+              right: -2px;
+              bottom: -2px;
+              background: linear-gradient(90deg, 
+                rgba(64, 158, 255, 0.4) 0%, 
+                rgba(103, 194, 58, 0.4) 100%);
+              border-radius: 4px;
+              opacity: 0;
+              transition: opacity 0.3s ease;
+              z-index: -1;
+            }
+
+            // 内部光点效果
+            &::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 20%;
+              width: 60%;
+              height: 1px;
+              background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.6), 
+                transparent);
+              transform: translateY(-50%);
+              opacity: 0.7;
+              animation: thumbShimmer 3s ease-in-out infinite;
+            }
+
+            @keyframes thumbShimmer {
+              0%, 100% { 
+                left: 10%; 
+                width: 40%; 
+                opacity: 0.5; 
+              }
+              50% { 
+                left: 50%; 
+                width: 30%; 
+                opacity: 0.9; 
+              }
+            }
+
+            &:hover {
+              background: linear-gradient(90deg, 
+                rgba(64, 158, 255, 1) 0%, 
+                rgba(103, 194, 58, 1) 100%);
+              transform: scaleY(1.5);
+              box-shadow: 
+                0 2px 8px rgba(64, 158, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+              &::before {
+                opacity: 1;
+              }
+            }
+
+            &:active {
+              cursor: grabbing;
+              transform: scaleY(1.8);
+              background: linear-gradient(90deg, 
+                rgba(64, 158, 255, 1) 0%, 
+                rgba(103, 194, 58, 1) 100%);
+              box-shadow: 
+                0 3px 12px rgba(64, 158, 255, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            }
           }
         }
       }
@@ -1886,6 +2341,7 @@ function getCurrentTagIcon() {
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             transition: color 0.3s ease;
@@ -2121,13 +2577,29 @@ function getCurrentTagIcon() {
       .tag-nav {
         padding: 0 1.5rem;
 
-        .nav-items {
-          gap: 0.6rem;
+        .modern-scrollbar-container {
+          border-radius: 12px;
 
-          .nav-item {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-            border-radius: 15px;
+          .nav-items-wrapper {
+            padding: 0.8rem 0;
+
+            .nav-items {
+              gap: 0.6rem;
+              padding: 0 0.8rem;
+
+              .nav-item {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                border-radius: 15px;
+              }
+            }
+          }
+
+          .custom-scrollbar {
+            height: 3px;
+            bottom: 3px;
+            left: 0.8rem;
+            right: 0.8rem;
           }
         }
       }
@@ -2216,6 +2688,66 @@ function getCurrentTagIcon() {
 
       .tag-nav {
         padding: 0 1rem;
+
+        .modern-scrollbar-container {
+          border-radius: 10px;
+
+          .scroll-fade {
+            width: 24px;
+          }
+
+          .nav-items-wrapper {
+            padding: 0.6rem 0;
+
+            .nav-items {
+              gap: 0.5rem;
+              padding: 0 0.6rem;
+
+              .nav-item {
+                padding: 0.35rem 0.7rem;
+                font-size: 0.75rem;
+                border-radius: 12px;
+                gap: 0.3rem;
+
+                svg {
+                  width: 12px;
+                  height: 12px;
+                }
+
+                &:hover {
+                  transform: translateY(-1px) scale(1.01);
+                }
+
+                &.active {
+                  transform: translateY(0) scale(1.02);
+
+                  &:hover {
+                    transform: translateY(-1px) scale(1.02);
+                  }
+                }
+              }
+            }
+          }
+
+          .custom-scrollbar {
+            height: 2px;
+            bottom: 2px;
+            left: 0.6rem;
+            right: 0.6rem;
+
+            .scrollbar-track {
+              .scrollbar-thumb {
+                &:hover {
+                  transform: scaleY(1.2);
+                }
+
+                &:active {
+                  transform: scaleY(1.5);
+                }
+              }
+            }
+          }
+        }
       }
 
       .articles-container {
