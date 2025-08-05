@@ -749,16 +749,35 @@ function createSuccessAnimation() {
   font-weight: 800;
   margin: 0;
   letter-spacing: 0.1em;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 75%, #f5576c 100%);
+  background: linear-gradient(
+    90deg,
+    #ff6b6b 0%,    /* 珊瑚红 */
+    #ff9f43 6.25%, /* 橙色 */
+    #feca57 12.5%, /* 金黄色 */
+    #10ac84 18.75%, /* 翠绿色 */
+    #96ceb4 25%,   /* 薄荷绿 */
+    #4ecdc4 31.25%, /* 青绿色 */
+    #00d2d3 37.5%, /* 青色 */
+    #45b7d1 43.75%, /* 天蓝色 */
+    #54a0ff 50%,   /* 蓝色 */
+    #487eb0 56.25%, /* 海蓝色 */
+    #5f27cd 62.5%, /* 深紫色 */
+    #c44569 68.75%, /* 紫红色 */
+    #ff9ff3 75%,   /* 粉紫色 */
+    #ee5a6f 81.25%, /* 玫瑰红 */
+    #ff6b6b 87.5%, /* 珊瑚红 */
+    #ff9f43 93.75%, /* 橙色 */
+    #feca57 100%   /* 金黄色 */
+  );
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  background-size: 200% 200%;
-  animation: gradient-flow 3s ease-in-out infinite;
+  animation: rainbow-gradient 25s linear infinite;
   position: relative;
-  text-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-  
-  // 添加多重效果确保文字可见
+  filter: drop-shadow(0 4px 20px rgba(255, 107, 107, 0.3));
+
+  // 添加发光效果
   &::before {
     content: '心灵树洞';
     position: absolute;
@@ -766,14 +785,18 @@ function createSuccessAnimation() {
     left: 0;
     right: 0;
     bottom: 0;
-    color: rgba(102, 126, 234, 0.8);
-    filter: blur(2px);
-    opacity: 0.3;
+    background: inherit;
+    background-size: inherit;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: blur(3px);
+    opacity: 0.6;
     z-index: -1;
-    text-shadow: 0 0 20px rgba(102, 126, 234, 1);
+    animation: rainbow-gradient 25s linear infinite;
   }
-  
-  // 额外的文字轮廓效果
+
+  // 额外的外发光效果
   &::after {
     content: '心灵树洞';
     position: absolute;
@@ -781,28 +804,45 @@ function createSuccessAnimation() {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 75%, #f5576c 100%);
+    background: inherit;
+    background-size: inherit;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    opacity: 0.8;
-    z-index: -1;
-    text-shadow: 
-      0 0 10px rgba(102, 126, 234, 0.8),
-      0 0 20px rgba(118, 75, 162, 0.6),
-      0 0 30px rgba(240, 147, 251, 0.4);
+    filter: blur(8px);
+    opacity: 0.4;
+    z-index: -2;
+    animation: rainbow-gradient 30s linear infinite reverse;
   }
 }
 
 .title-char {
   display: inline-block;
-  animation: float 3s ease-in-out infinite;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 75%, #f5576c 100%);
+  background: linear-gradient(
+    90deg,
+    #ff6b6b 0%,    /* 珊瑚红 */
+    #ff9f43 6.25%, /* 橙色 */
+    #feca57 12.5%, /* 金黄色 */
+    #10ac84 18.75%, /* 翠绿色 */
+    #96ceb4 25%,   /* 薄荷绿 */
+    #4ecdc4 31.25%, /* 青绿色 */
+    #00d2d3 37.5%, /* 青色 */
+    #45b7d1 43.75%, /* 天蓝色 */
+    #54a0ff 50%,   /* 蓝色 */
+    #487eb0 56.25%, /* 海蓝色 */
+    #5f27cd 62.5%, /* 深紫色 */
+    #c44569 68.75%, /* 紫红色 */
+    #ff9ff3 75%,   /* 粉紫色 */
+    #ee5a6f 81.25%, /* 玫瑰红 */
+    #ff6b6b 87.5%, /* 珊瑚红 */
+    #ff9f43 93.75%, /* 橙色 */
+    #feca57 100%   /* 金黄色 */
+  );
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  background-size: 200% 200%;
-  animation: float 3s ease-in-out infinite, gradient-flow 4s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite, rainbow-gradient 25s linear infinite;
   text-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
   
   // 确保文字可见的备用方案
@@ -814,20 +854,24 @@ function createSuccessAnimation() {
     filter: blur(1px);
   }
   
-  &:nth-child(1) { 
-    animation-delay: 0s, 0s; 
+  &:nth-child(1) {
+    animation: float 3s ease-in-out infinite, rainbow-gradient 25s linear infinite;
+    animation-delay: 0s, 0s;
     &::before { content: '心'; }
   }
-  &:nth-child(2) { 
-    animation-delay: 0.3s, 0.5s; 
+  &:nth-child(2) {
+    animation: float 3s ease-in-out infinite, rainbow-gradient 27s linear infinite;
+    animation-delay: 0.3s, 3s;
     &::before { content: '灵'; }
   }
-  &:nth-child(3) { 
-    animation-delay: 0.6s, 1s; 
+  &:nth-child(3) {
+    animation: float 3s ease-in-out infinite, rainbow-gradient 29s linear infinite;
+    animation-delay: 0.6s, 6s;
     &::before { content: '树'; }
   }
-  &:nth-child(4) { 
-    animation-delay: 0.9s, 1.5s; 
+  &:nth-child(4) {
+    animation: float 3s ease-in-out infinite, rainbow-gradient 31s linear infinite;
+    animation-delay: 0.9s, 9s;
     &::before { content: '洞'; }
   }
 }
@@ -873,6 +917,16 @@ function createSuccessAnimation() {
   }
   50% {
     background-position: 100% 50%;
+  }
+}
+
+// 超流畅彩虹渐变动画 - 纯background-position移动
+@keyframes rainbow-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
   }
 }
 
