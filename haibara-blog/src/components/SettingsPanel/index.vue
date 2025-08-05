@@ -1,5 +1,5 @@
 <template>
-  <div class="settings-panel" @click.self="$emit('close')">
+  <div class="settings-panel" :class="{ closing: isClosing }" @click.self="handleClose">
     <!-- 华丽的设置面板 -->
     <div class="settings-container">
       <!-- 标题区域 -->
@@ -14,7 +14,7 @@
           <el-button 
             type="text" 
             :icon="Close" 
-            @click="$emit('close')"
+            @click="handleClose"
             class="close-btn"
           />
         </div>
@@ -41,17 +41,7 @@
                 @change="handleFullscreenToggle"
               />
             </div>
-            <!-- 全屏功能集成按钮 -->
-            <div v-if="fullscreenEnabled" class="feature-action">
-              <el-button 
-                type="primary" 
-                size="small"
-                @click="triggerFullscreen"
-                :icon="FullScreen"
-              >
-                {{ isFullscreen ? '退出全屏' : '进入全屏' }}
-              </el-button>
-            </div>
+
           </div>
           
           <!-- 点击特效 -->
@@ -89,7 +79,7 @@
           </el-button>
           <el-button 
             type="primary"
-            @click="$emit('close')"
+            @click="handleClose"
             :icon="Check"
           >
             完成设置
@@ -108,51 +98,46 @@ import { useSettings } from '@/composables/useSettings';
 import screenfull from 'screenfull';
 
 // 定义事件
-defineEmits(['close']);
+const emit = defineEmits(['close']);
 
 // 获取设置管理
 const { clickEffectEnabled, fullscreenEnabled, resetSettings } = useSettings();
 
-// 全屏状态
-const isFullscreen = ref(false);
+// 关闭动画状态
+const isClosing = ref(false);
 
-// 更新全屏状态
-const updateFullscreenStatus = () => {
-  if (screenfull.isEnabled) {
-    isFullscreen.value = screenfull.isFullscreen;
-  }
-};
-
-// 监听全屏状态变化
-if (screenfull.isEnabled) {
-  screenfull.on('change', updateFullscreenStatus);
-  updateFullscreenStatus();
-}
-
-// 触发全屏
-const triggerFullscreen = () => {
-  if (screenfull.isEnabled) {
-    if (screenfull.isFullscreen) {
-      screenfull.exit();
-      ElMessage.success('已退出全屏模式');
-    } else {
-      screenfull.toggle();
-      ElMessage.success('已进入全屏模式');
-    }
-  } else {
-    ElMessage.warning('浏览器不支持全屏功能');
-  }
+// 处理关闭
+const handleClose = () => {
+  isClosing.value = true;
+  // 等待动画完成后再触发关闭事件
+  setTimeout(() => {
+    emit('close');
+  }, 300);
 };
 
 // 处理全屏功能开关
 const handleFullscreenToggle = (value: boolean) => {
   if (value) {
-    ElMessage.success('✅ 全屏功能已开启');
+    // 开启全屏功能时直接进入全屏
+    if (screenfull.isEnabled) {
+      if (!screenfull.isFullscreen) {
+        screenfull.toggle();
+        ElMessage.success('✅ 全屏功能已开启，已进入全屏模式');
+      } else {
+        ElMessage.success('✅ 全屏功能已开启');
+      }
+    } else {
+      ElMessage.warning('⚠️ 浏览器不支持全屏功能');
+      // 如果浏览器不支持，自动关闭开关
+      fullscreenEnabled.value = false;
+    }
   } else {
-    ElMessage.info('❌ 全屏功能已关闭');
-    // 如果当前是全屏状态，则退出全屏
+    // 关闭全屏功能时退出全屏
     if (screenfull.isEnabled && screenfull.isFullscreen) {
       screenfull.exit();
+      ElMessage.info('❌ 全屏功能已关闭，已退出全屏模式');
+    } else {
+      ElMessage.info('❌ 全屏功能已关闭');
     }
   }
 };
@@ -198,9 +183,13 @@ const handleReset = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000;
+  z-index: 9999; /* 降低z-index，让消息通知能显示在上方 */
   backdrop-filter: blur(8px);
   animation: fadeIn 0.3s ease-out;
+  
+  &.closing {
+    animation: fadeOut 0.3s ease-out;
+  }
 }
 
 @keyframes fadeIn {
@@ -211,6 +200,17 @@ const handleReset = async () => {
   to {
     opacity: 1;
     backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
   }
 }
 
@@ -228,6 +228,10 @@ const handleReset = async () => {
     0 0 0 1px rgba(255, 255, 255, 0.2) inset;
   animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
+  
+  .closing & {
+    animation: slideOut 0.3s cubic-bezier(0.4, 0, 1, 1);
+  }
 }
 
 @keyframes slideIn {
@@ -238,6 +242,17 @@ const handleReset = async () => {
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateY(-30px);
   }
 }
 
@@ -362,10 +377,7 @@ const handleReset = async () => {
   
   display: grid;
   grid-template-columns: auto 1fr auto;
-  grid-template-rows: auto auto;
-  grid-template-areas: 
-    "icon info toggle"
-    "action action action";
+  grid-template-areas: "icon info toggle";
   align-items: center;
   gap: 16px;
 }
@@ -406,24 +418,7 @@ const handleReset = async () => {
   grid-area: toggle;
 }
 
-.feature-action {
-  grid-area: action;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  animation: slideDown 0.3s ease-out;
-}
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 // 底部区域
 .footer-section {
@@ -494,8 +489,7 @@ const handleReset = async () => {
     padding: 20px;
     grid-template-areas: 
       "icon info"
-      "toggle toggle"
-      "action action";
+      "toggle toggle";
     grid-template-columns: auto 1fr;
     
     .feature-toggle {
