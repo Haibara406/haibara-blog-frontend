@@ -492,7 +492,7 @@ function createSuccessAnimation() {
             <div class="loader-circle"></div>
             <div class="loader-circle"></div>
           </div>
-          <p class="loader-text">心灵树洞加载中...</p>
+          <p class="loader-text">正在抵达心灵树洞...</p>
         </div>
       </div>
     </transition>
@@ -524,7 +524,8 @@ function createSuccessAnimation() {
             <!-- 温馨提示 -->
             <transition name="tip-fade">
               <div v-if="showInputTip" class="input-tip">
-                输入完想说的话后，按Enter即可发送
+                通过按下回车来向星星诉说你的心声吧~
+                <span class="char-count">{{ content.length }}/100</span>
               </div>
             </transition>
 
@@ -538,6 +539,7 @@ function createSuccessAnimation() {
               placeholder="在这里留下自己的足迹吧..."
               class="modern-input"
               :disabled="isSubmitting"
+              maxlength="100"
             >
             <div class="input-glow"></div>
 
@@ -545,7 +547,7 @@ function createSuccessAnimation() {
             <transition name="loading-fade">
               <div v-if="isSubmitting" class="input-loading">
                 <div class="loading-spinner"></div>
-                发送中...
+                正在送往星空...
               </div>
             </transition>
           </div>
@@ -1016,6 +1018,18 @@ function createSuccessAnimation() {
   white-space: nowrap;
   box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);
   backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  
+  .char-count {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+  }
   
   &::after {
     content: '';
@@ -1148,8 +1162,8 @@ function createSuccessAnimation() {
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
   // 移除固定宽度限制，让弹幕根据内容自适应
-  min-width: 100px;
-  max-width: 450px; // 增加最大宽度限制
+  min-width: 120px;
+  max-width: 600px; // 根据varchar(100)调整最大宽度，支持更长文本
   width: auto; // 自动宽度
 
   // 悬停效果
@@ -1179,13 +1193,13 @@ function createSuccessAnimation() {
     box-shadow: 0 0 15px rgba(167, 139, 250, 0.3);
   }
 
-  // 文字内容容器 - 允许自然换行
+  // 文字内容容器 - 支持长文本自适应
   & div:last-child {
     flex: 1;
     min-width: 0; // 允许收缩
-    white-space: nowrap; // 保持单行显示
     overflow: visible; // 允许内容可见
-
+    line-height: 1.4; // 增加行高
+    
     // 昵称样式
     span:first-child {
       margin-left: 0.5rem;
@@ -1199,14 +1213,17 @@ function createSuccessAnimation() {
       white-space: nowrap;
     }
 
-    // 内容样式
+    // 内容样式 - 支持长文本
     span:last-child {
       font-size: 0.95rem;
       color: rgba(255, 255, 255, 0.95);
       font-weight: 400;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-      white-space: nowrap;
-      // 移除文字截断，让弹幕框适应文字长度
+      display: inline-block;
+      max-width: 100%;
+      word-wrap: break-word; // 长单词自动换行
+      word-break: break-all; // 强制换行
+      white-space: normal; // 允许换行
     }
   }
 }
