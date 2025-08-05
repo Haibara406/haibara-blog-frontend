@@ -37,17 +37,20 @@ interface Particle {
 }
 
 onMounted(() => {
+  // 获取弹幕数据 - 使用你的工作逻辑
   getTreeHole()
   initMouseTracker()
   initParticleSystem()
   initClickEffects()
   initStorageAndEvents()
-  
+
   // 页面加载动画
   setTimeout(() => {
     isPageLoaded.value = true
   }, 500)
 })
+
+
 
 onUnmounted(() => {
   if (animationFrameId) {
@@ -208,20 +211,22 @@ function animateParticles() {
   animationFrameId = requestAnimationFrame(animateParticles)
 }
 
+
+
 function addTreeHoleBtn() {
-  if (content.value.trim() === '') {
+  if (content.value === '') {
     ElMessage.warning('请输入内容')
     return
   }
 
   isSubmitting.value = true
-  
+
   // 添加粒子爆发效果
   createSubmitParticles()
 
-  addTreeHole(content.value.trim()).then(res => {
+  addTreeHole(content.value).then(res => {
     if (res.code === 200) {
-      ElMessage.success('发送成功！')
+      ElMessage.success('添加成功')
       getTreeHole()
       content.value = ''
       isInputFocused.value = false
@@ -232,11 +237,11 @@ function addTreeHoleBtn() {
       } catch (e) {
         console.warn('无法清除草稿:', e)
       }
-      
+
       // 成功动画
       createSuccessAnimation()
     } else {
-      ElMessage.error(res.msg || '发送失败，请重试')
+      ElMessage.error(res.msg)
     }
   }).finally(() => {
     isSubmitting.value = false
@@ -246,27 +251,9 @@ function addTreeHoleBtn() {
 function getTreeHole() {
   getTreeHoleList().then(res => {
     if (res.code === 200) {
-      // 修正弹幕数据结构，确保vue3-danmaku组件正常工作
-      treeHoleList.value = res.data.map((item, index) => {
-        return {
-          id: item.id || index, // 确保有id字段
-          text: item.content || item.text || '', // 确保有text字段，这是弹幕组件必需的
-          content: item.content, // 保留原内容字段
-          nickname: item.nickname,
-          avatar: item.avatar,
-          time: item.time,
-          // 样式控制字段
-          colorTheme: index % 6,
-          opacity: 0.8 + Math.random() * 0.2
-        };
-      });
-      
-      console.log('弹幕数据加载成功:', treeHoleList.value.length, '条');
+      treeHoleList.value = res.data
     }
-  }).catch(error => {
-    console.error('获取树洞数据失败:', error);
-    ElMessage.error('获取数据失败，请刷新页面重试');
-  });
+  })
 }
 
 
@@ -450,6 +437,38 @@ function createSuccessAnimation() {
     });
   }
 }
+
+
+
+// 调试函数：手动添加测试弹幕
+function addDebugDanmu() {
+  const debugDanmu = {
+    id: Date.now(),
+    content: `测试弹幕 ${new Date().toLocaleTimeString()} 🚀`,
+    nickname: '调试员',
+    avatar: '',
+    time: Date.now()
+  };
+
+  // 直接添加到弹幕列表
+  treeHoleList.value.push(debugDanmu);
+  console.log('调试弹幕已添加:', debugDanmu);
+  console.log('当前弹幕总数:', treeHoleList.value.length);
+}
+
+// 调试函数：检查弹幕状态
+function checkDanmakuStatus() {
+  console.log('=== 弹幕状态检查 ===');
+  console.log('弹幕列表长度:', treeHoleList.value.length);
+  console.log('弹幕列表内容:', treeHoleList.value);
+  
+  if (treeHoleList.value.length > 0) {
+    console.log('第一条弹幕示例:', treeHoleList.value[0]);
+  } else {
+    console.log('弹幕列表为空，请先获取数据或添加测试弹幕');
+  }
+  console.log('===================');
+}
 </script>
 <template>
   <div class="modern-tree-hole">
@@ -536,20 +555,20 @@ function createSuccessAnimation() {
                 输入完想说的话后，按Enter即可发送
               </div>
             </transition>
-            
-            <input 
+
+            <input
               ref="inputRef"
-              v-model="content" 
+              v-model="content"
               @focus="handleInputFocus"
               @blur="handleInputBlur"
               @keydown="handleKeyPress"
-              type="text" 
+              type="text"
               placeholder="在这里留下自己的足迹吧..."
               class="modern-input"
               :disabled="isSubmitting"
             >
             <div class="input-glow"></div>
-            
+
             <!-- 加载状态显示 -->
             <transition name="loading-fade">
               <div v-if="isSubmitting" class="input-loading">
@@ -559,43 +578,33 @@ function createSuccessAnimation() {
             </transition>
           </div>
         </div>
+
+        <!-- 调试按钮 -->
+        <div class="debug-buttons" style="margin-top: 20px; text-align: center;">
+          <button @click="addDebugDanmu" class="debug-btn">添加测试弹幕</button>
+          <button @click="checkDanmakuStatus" class="debug-btn">检查弹幕状态</button>
+        </div>
       </div>
     </div>
 
-    <!-- 弹幕区域 -->
-    <vue-danmaku 
-      ref="danmakuRef"
-      :debounce="100"
-      :random-channel="false"
-      :speeds="120"
-      :channels="8"
-      is-suspend
-      v-model:danmus="treeHoleList"
-      use-slot 
-      loop
-      :top="10"
-      :right="0"
-      :extraStyle="'pointer-events: none;'"
-      style="height:100vh; width:100vw; position: fixed; top: 0px; left: 0; z-index: 5;"
-    >
+         <!-- 弹幕区域 -->
+     <vue-danmaku
+       :debounce="3000"
+       random-channel
+       :speeds="80"
+       :channels="5"
+       is-suspend
+       v-model:danmus="treeHoleList"
+       use-slot
+       loop
+       style="height: calc(100vh - 80px); width: 100vw; position: fixed; top: 80px; left: 0; z-index: 998; pointer-events: none;"
+     >
       <template v-slot:dm="{ danmu }">
-        <div 
-          class="modern-barrage"
-          :class="`theme-${danmu.colorTheme || 0}`"
-          :style="{ 
-            opacity: danmu.opacity || 0.8
-          }"
-        >
-          <div class="barrage-avatar">
-            <el-avatar :src="danmu.avatar" :size="24"/>
-            <div class="avatar-glow"></div>
+        <div class="barrage_container">
+          <div>
+            <el-avatar :src="danmu.avatar"/>
           </div>
-          <div class="barrage-content">
-            <span class="barrage-nickname">{{ danmu.nickname || '匿名' }}</span>
-            <span class="barrage-text">{{ danmu.text || danmu.content || '' }}</span>
-          </div>
-          <div class="barrage-trail"></div>
-          <div class="barrage-sparkle"></div>
+          <div><span>{{ danmu.nickname }}：</span><span>{{ danmu.content }}</span></div>
         </div>
       </template>
     </vue-danmaku>
@@ -1117,7 +1126,25 @@ function createSuccessAnimation() {
   transform: translateY(-50%) scale(1);
 }
 
-// 移除提交按钮相关样式，改为回车发送
+// 调试按钮样式
+.debug-buttons {
+  .debug-btn {
+    margin: 0 10px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+  }
+}
 
 // 输入框聚焦动画
 @keyframes focus-pulse {
@@ -1156,190 +1183,52 @@ function createSuccessAnimation() {
 
 // 移除不再需要的按钮动画样式
 
-// 现代化弹幕样式 - 增强毛玻璃质感
-.modern-barrage {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(25px) saturate(2.2) brightness(1.1);
-  border-radius: 20px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: absolute;
-  overflow: hidden;
-  font-size: 0.9rem;
-  max-width: 320px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: barrage-entrance 0.6s ease-out;
-  
-  &:hover {
-    transform: translateY(-1px) scale(1.02);
-    box-shadow: 
-      0 8px 25px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      
-    .barrage-trail {
-      width: 100%;
-    }
-    
-    .barrage-sparkle {
-      opacity: 1;
-    }
-  }
-  
-  // 多种增强毛玻璃颜色主题
-  &.theme-0 {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08));
-    border-color: rgba(99, 102, 241, 0.25);
-    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(139, 92, 246, 0.3);
-  }
-  
-  &.theme-1 {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(219, 39, 119, 0.08));
-    border-color: rgba(236, 72, 153, 0.25);
-    box-shadow: 0 8px 32px rgba(236, 72, 153, 0.15), inset 0 1px 0 rgba(219, 39, 119, 0.3);
-  }
-  
-  &.theme-2 {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(16, 185, 129, 0.08));
-    border-color: rgba(34, 197, 94, 0.25);
-    box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(16, 185, 129, 0.3);
-  }
-  
-  &.theme-3 {
-    background: linear-gradient(135deg, rgba(251, 146, 60, 0.12), rgba(245, 101, 101, 0.08));
-    border-color: rgba(251, 146, 60, 0.25);
-    box-shadow: 0 8px 32px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(245, 101, 101, 0.3);
-  }
-  
-  &.theme-4 {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(59, 130, 246, 0.08));
-    border-color: rgba(14, 165, 233, 0.25);
-    box-shadow: 0 8px 32px rgba(14, 165, 233, 0.15), inset 0 1px 0 rgba(59, 130, 246, 0.3);
-  }
-  
-  &.theme-5 {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.08));
-    border-color: rgba(168, 85, 247, 0.25);
-    box-shadow: 0 8px 32px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(124, 58, 237, 0.3);
-  }
-}
+ // 弹幕样式 - 使用你的工作代码样式
+ .barrage_container {
+   display: flex;
+   align-items: center;
+   position: relative;
+   pointer-events: auto; // 允许弹幕悬停交互
 
-.barrage-avatar {
-  position: relative;
-  margin-right: 0.6rem;
-  flex-shrink: 0;
-  
-  .avatar-glow {
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border-radius: 50%;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -1;
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-  
-  &:hover .avatar-glow {
-    opacity: 0.7;
-  }
-}
+   // 下边框动画
+   &::after {
+     content: '';
+     position: absolute;
+     left: 0;
+     bottom: 0;
+     width: 0;
+     height: 0.2em;
+     border-radius: 0.1em;
+     // 蓝紫色渐变色背景
+     background: linear-gradient(to right, #00c6ff, #0072ff);
+     transition: width 0.3s ease; /* 过渡动画效果 */
+   }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.1); }
-}
+   &:hover::after {
+     width: 100%;
+   }
 
-.barrage-content {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  flex: 1;
-  min-width: 0;
-}
+   & div:last-child span:first-child {
+     margin-left: 0.5rem;
+     color: white;
+     font-weight: bold;
+   }
 
-.barrage-nickname {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  flex-shrink: 0;
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+   & div:last-child span:last-child {
+     font-size: 1.2rem;
+     color: rgba(255, 255, 255, 0.95); // 确保文字可见
+   }
 
-.barrage-text {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.95);
-  font-weight: 400;
-  line-height: 1.3;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.barrage-trail {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  width: 0;
-  background: linear-gradient(90deg, currentColor 0%, transparent 100%);
-  border-radius: 1px;
-  transition: width 0.4s ease;
-}
-
-.barrage-sparkle {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 10px;
-  height: 10px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
-  border-radius: 50%;
-  opacity: 0;
-  animation: sparkle-twinkle 3s ease-in-out infinite;
-}
-
-@keyframes sparkle-twinkle {
-  0%, 100% { 
-    opacity: 0; 
-    transform: scale(0.5) rotate(0deg);
-  }
-  50% { 
-    opacity: 1; 
-    transform: scale(1) rotate(180deg);
-  }
-}
-
-// 弹幕入场动画
-@keyframes barrage-entrance {
-  0% {
-    opacity: 0;
-    transform: translateX(-50px) scale(0.8);
-    filter: blur(5px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0);
-  }
-}
+   & div:last-child {
+     // 悬浮动态移动下边框
+     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+     padding: 0.5rem;
+     margin-left: 0.5rem;
+     border-radius: 8px;
+     background-color: rgba(255, 255, 255, 0.2);
+     backdrop-filter: blur(10px); // 添加毛玻璃效果
+   }
+ }
 
 // 装饰性浮动元素
 .decorative-elements {
