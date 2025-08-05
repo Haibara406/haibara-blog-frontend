@@ -632,3 +632,367 @@
     pointer-events: none;
   }
 }
+
+// 浅色渐变毛玻璃按钮（水平长垂直窄设计）
+.ios-dynamic-island-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.2rem; // 调整为更窄的垂直padding
+  min-width: 120px; // 确保水平长度
+  width: auto; // 自动宽度适应内容
+  height: 36px; // 固定垂直高度，保持窄的设计
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(240, 248, 255, 0.8) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 18px; // 调整圆角适应新高度
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  overflow: visible; // 改为visible确保文字不被裁剪
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  white-space: nowrap; // 防止文字换行
+  
+  // 默认文字渐变色
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  .btn-text, .ios-btn-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block; // 确保水平显示
+    line-height: 1; // 统一行高
+    position: relative;
+    z-index: 1; // 确保文字在光波效果之上
+  }
+  
+  // 图标动画效果
+  .ios-btn-icon {
+    font-size: 1em;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &.arrow-left {
+      animation: arrowBounce 2s ease-in-out infinite;
+    }
+    
+    &.arrow-right {
+      animation: arrowSlide 2s ease-in-out infinite;
+    }
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.4) 0%, 
+      rgba(255, 255, 255, 0.2) 50%, 
+      rgba(255, 255, 255, 0.1) 100%);
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  // 鼠标悬停光波效果
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.6s ease;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 0; // 确保光波在文字下方
+  }
+  
+  &:hover {
+    transform: translateY(-3px) scale(1.02);
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.9) 0%, 
+      rgba(248, 250, 255, 0.9) 100%);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    
+    &::before {
+      opacity: 1;
+    }
+    
+    &::after {
+      width: 120px;
+      height: 120px;
+      opacity: 1;
+    }
+    
+    .ios-btn-icon {
+      &.arrow-left {
+        transform: translateX(-3px);
+        animation: none;
+      }
+      
+      &.arrow-right {
+        transform: translateX(3px);
+        animation: none;
+      }
+    }
+  }
+  
+  &:active {
+    transform: translateY(-1px) scale(0.98);
+    
+    &::after {
+      width: 150px;
+      height: 150px;
+      opacity: 0.8;
+      transition: all 0.2s ease;
+    }
+  }
+  
+  // 主要按钮变体 - 蓝紫渐变
+  &.primary {
+    background: linear-gradient(135deg, 
+      rgba(102, 126, 234, 0.15) 0%, 
+      rgba(118, 75, 162, 0.15) 100%);
+    border-color: rgba(102, 126, 234, 0.3);
+    
+    .btn-text, .ios-btn-icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, 
+        rgba(102, 126, 234, 0.2) 0%, 
+        rgba(118, 75, 162, 0.2) 100%);
+      border-color: rgba(102, 126, 234, 0.4);
+    }
+  }
+  
+  // 成功按钮变体 - 绿色渐变
+  &.success {
+    background: linear-gradient(135deg, 
+      rgba(76, 175, 80, 0.15) 0%, 
+      rgba(129, 199, 132, 0.15) 100%);
+    border-color: rgba(76, 175, 80, 0.3);
+    
+    .btn-text, .ios-btn-icon {
+      background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, 
+        rgba(76, 175, 80, 0.2) 0%, 
+        rgba(129, 199, 132, 0.2) 100%);
+      border-color: rgba(76, 175, 80, 0.4);
+    }
+  }
+  
+  // 警告按钮变体 - 橙黄渐变
+  &.warning {
+    background: linear-gradient(135deg, 
+      rgba(255, 193, 7, 0.15) 0%, 
+      rgba(255, 224, 130, 0.15) 100%);
+    border-color: rgba(255, 193, 7, 0.3);
+    
+    .btn-text, .ios-btn-icon {
+      background: linear-gradient(135deg, #FFC107 0%, #FFE082 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, 
+        rgba(255, 193, 7, 0.2) 0%, 
+        rgba(255, 224, 130, 0.2) 100%);
+      border-color: rgba(255, 193, 7, 0.4);
+    }
+  }
+  
+  // 危险按钮变体 - 红色渐变
+  &.danger {
+    background: linear-gradient(135deg, 
+      rgba(244, 67, 54, 0.15) 0%, 
+      rgba(239, 154, 154, 0.15) 100%);
+    border-color: rgba(244, 67, 54, 0.3);
+    
+    .btn-text, .ios-btn-icon {
+      background: linear-gradient(135deg, #F44336 0%, #EF9A9A 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, 
+        rgba(244, 67, 54, 0.2) 0%, 
+        rgba(239, 154, 154, 0.2) 100%);
+      border-color: rgba(244, 67, 54, 0.4);
+    }
+  }
+  
+  // 灰色按钮变体（用于取消等）
+  &.secondary {
+    background: linear-gradient(135deg, 
+      rgba(158, 158, 158, 0.15) 0%, 
+      rgba(189, 189, 189, 0.15) 100%);
+    border-color: rgba(158, 158, 158, 0.3);
+    
+    .btn-text, .ios-btn-icon {
+      background: linear-gradient(135deg, #9E9E9E 0%, #BDBDBD 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, 
+        rgba(158, 158, 158, 0.2) 0%, 
+        rgba(189, 189, 189, 0.2) 100%);
+      border-color: rgba(158, 158, 158, 0.4);
+    }
+  }
+  
+  // 小尺寸按钮
+  &.small {
+    padding: 0.3rem 1rem;
+    min-width: 100px;
+    width: auto;
+    height: 32px;
+    font-size: 0.8rem;
+    border-radius: 16px;
+    gap: 0.3rem;
+  }
+  
+  // 中等尺寸按钮（默认稍大一点）
+  &.medium {
+    padding: 0.4rem 1.4rem;
+    min-width: 140px;
+    width: auto;
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 20px;
+  }
+  
+  // 大尺寸按钮
+  &.large {
+    padding: 0.5rem 1.8rem;
+    min-width: 160px;
+    width: auto;
+    height: 44px;
+    font-size: 1rem;
+    border-radius: 22px;
+    gap: 0.6rem;
+  }
+  
+  // 超长文字按钮（用于"返回留言列表"等）
+  &.extra-wide {
+    padding: 0.4rem 1.6rem;
+    min-width: 180px;
+    width: auto;
+    height: 36px;
+    font-size: 0.85rem;
+    border-radius: 18px;
+    gap: 0.5rem;
+  }
+  
+  // 禁用状态
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    
+    &:hover {
+      transform: none !important;
+      
+      &::before {
+        opacity: 0;
+      }
+    }
+    
+    .btn-text, .ios-btn-icon {
+      background: linear-gradient(135deg, #BDBDBD 0%, #E0E0E0 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+}
+
+// 按钮图标样式
+.ios-btn-icon {
+  font-size: 1em;
+  transition: transform 0.3s ease;
+}
+
+// 按钮加载动画
+.ios-btn-loading {
+  .ios-btn-icon {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 箭头弹跳动画（左箭头）
+@keyframes arrowBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+}
+
+// 箭头滑动动画（右箭头）
+@keyframes arrowSlide {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(2px);
+  }
+}

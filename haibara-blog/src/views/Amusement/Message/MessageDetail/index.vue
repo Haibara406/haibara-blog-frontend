@@ -122,10 +122,9 @@ function cancelFavoriteFunc() {
   <div class="message-detail animate-page-slide-in">
     <!-- 返回导航 -->
     <div class="navigation-section animate-slide-in-down" v-slide-in>
-      <button class="back-btn hover-lift light-beam" @click="$router.push('/message')">
-        <ArrowLeftBold class="back-icon"/>
-        <span class="back-text">回到留言列表</span>
-        <div class="btn-ripple"></div>
+      <button class="ios-dynamic-island-btn secondary extra-wide" @click="$router.push('/message')">
+        <ArrowLeftBold class="ios-btn-icon arrow-left"/>
+        <span class="btn-text">返回留言列表</span>
       </button>
     </div>
 
@@ -142,7 +141,7 @@ function cancelFavoriteFunc() {
             <div class="online-indicator animate-heartbeat"></div>
           </div>
           <div class="user-info">
-            <h2 class="username animate-slide-in-left animate-neon-glow">{{ leaveWord.nickname }}</h2>
+            <h2 class="username animate-slide-in-left">{{ leaveWord.nickname }}</h2>
             <div class="user-meta">
               <span class="publish-time animate-slide-in-left" style="animation-delay: 0.2s">
                 <span class="time-icon animate-star-twinkle">🕒</span>
@@ -175,53 +174,36 @@ function cancelFavoriteFunc() {
       <!-- 互动统计和操作 -->
       <div class="interaction-section">
         <div class="stats-container">
-          <div class="stat-item comments-stat hover-lift animate-bounce-in" style="animation-delay: 0.1s">
-            <div class="stat-icon-wrapper">
-              <SvgIcon name="comments" class="stat-icon"/>
-            </div>
-            <div class="stat-info">
-              <span class="stat-number animate-zoom-in" style="animation-delay: 0.3s">{{ leaveWord.commentCount }}</span>
-              <span class="stat-label">评论</span>
-            </div>
-          </div>
+          <button class="ios-dynamic-island-btn secondary animate-bounce-in" style="animation-delay: 0.1s" disabled>
+            <SvgIcon name="comments" class="ios-btn-icon"/>
+            <span class="btn-text">{{ leaveWord.commentCount }} 评论</span>
+          </button>
           
-          <div 
-            class="stat-item likes-stat hover-lift animate-bounce-in" 
-            :class="{ active: like }"
+          <button 
+            class="ios-dynamic-island-btn animate-bounce-in" 
+            :class="{ success: like, primary: !like }"
             @click="likeFunc"
             style="animation-delay: 0.2s"
           >
-            <div class="stat-icon-wrapper">
-              <SvgIcon 
-                :name="like ? 'like-selected' : 'like'" 
-                class="stat-icon animate-heartbeat"
-              />
-            </div>
-            <div class="stat-info">
-              <span class="stat-number animate-zoom-in" style="animation-delay: 0.4s">{{ leaveWord.likeCount }}</span>
-              <span class="stat-label">点赞</span>
-            </div>
-            <div class="like-animation" v-if="like"></div>
-          </div>
+            <SvgIcon 
+              :name="like ? 'like-selected' : 'like'" 
+              class="ios-btn-icon"
+            />
+            <span class="btn-text">{{ leaveWord.likeCount }} 点赞</span>
+          </button>
           
-          <div 
-            class="stat-item favorites-stat hover-lift animate-bounce-in" 
-            :class="{ active: favorite }"
+          <button 
+            class="ios-dynamic-island-btn animate-bounce-in" 
+            :class="{ warning: favorite, primary: !favorite }"
             @click="favoriteFunc"
             style="animation-delay: 0.3s"
           >
-            <div class="stat-icon-wrapper">
-              <SvgIcon 
-                :name="favorite ? 'collection-selected' : 'collection'" 
-                class="stat-icon animate-star-twinkle"
-              />
-            </div>
-            <div class="stat-info">
-              <span class="stat-number animate-zoom-in" style="animation-delay: 0.5s">{{ leaveWord.favoriteCount }}</span>
-              <span class="stat-label">收藏</span>
-            </div>
-            <div class="favorite-animation" v-if="favorite"></div>
-          </div>
+            <SvgIcon 
+              :name="favorite ? 'collection-selected' : 'collection'" 
+              class="ios-btn-icon"
+            />
+            <span class="btn-text">{{ leaveWord.favoriteCount }} 收藏</span>
+          </button>
         </div>
       </div>
     </div>
@@ -267,60 +249,7 @@ function cancelFavoriteFunc() {
 .navigation-section {
   margin-bottom: 2rem;
   
-  .back-btn {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(102, 126, 234, 0.2);
-    border-radius: 50px;
-    padding: 0.8rem 1.5rem;
-    color: #667eea;
-    font-weight: 600;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.2);
-      background: rgba(102, 126, 234, 0.1);
-      
-      .btn-ripple {
-        transform: scale(1);
-        opacity: 0.3;
-      }
-      
-      .back-icon {
-        transform: translateX(-3px);
-      }
-    }
-    
-    .back-icon {
-      font-size: 1.2rem;
-      transition: transform 0.3s ease;
-    }
-    
-    .back-text {
-      font-size: 1rem;
-    }
-    
-    .btn-ripple {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
-      border-radius: 50%;
-      transform: translate(-50%, -50%) scale(0);
-      transition: transform 0.6s ease, opacity 0.6s ease;
-      opacity: 0;
-    }
-  }
+
 }
 
 // 留言卡片样式
@@ -518,111 +447,13 @@ function cancelFavoriteFunc() {
 .interaction-section {
   .stats-container {
     display: flex;
-    gap: 2rem;
+    gap: 1rem;
     justify-content: center;
     
     @media (max-width: 768px) {
-      gap: 1rem;
-    }
-    
-    .stat-item {
-      position: relative;
-      display: flex;
+      gap: 0.5rem;
       flex-direction: column;
       align-items: center;
-      gap: 0.8rem;
-      padding: 1.5rem;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
-      
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
-      }
-      
-      &.active {
-        background: rgba(102, 126, 234, 0.1);
-        border-color: #667eea;
-        
-        .stat-icon-wrapper {
-          background: #667eea;
-          color: white;
-          transform: scale(1.1);
-        }
-        
-        .stat-number {
-          color: #667eea;
-        }
-      }
-      
-      .stat-icon-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: #f5f5f5;
-        transition: all 0.3s ease;
-        
-        .stat-icon {
-          font-size: 1.5rem;
-          color: #666;
-          transition: color 0.3s ease;
-        }
-      }
-      
-      .stat-info {
-        text-align: center;
-        
-        .stat-number {
-          display: block;
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #333;
-          margin-bottom: 0.2rem;
-          transition: color 0.3s ease;
-        }
-        
-        .stat-label {
-          font-size: 0.9rem;
-          color: #666;
-          font-weight: 500;
-        }
-      }
-      
-      // 点赞动画
-      .like-animation {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100px;
-        height: 100px;
-        background: radial-gradient(circle, rgba(255, 107, 107, 0.3) 0%, transparent 70%);
-        border-radius: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        animation: likeExpand 0.6s ease-out;
-        pointer-events: none;
-      }
-      
-      // 收藏动画
-      .favorite-animation {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100px;
-        height: 100px;
-        background: radial-gradient(circle, rgba(255, 193, 7, 0.3) 0%, transparent 70%);
-        border-radius: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        animation: favoriteExpand 0.6s ease-out;
-        pointer-events: none;
-      }
     }
   }
 }

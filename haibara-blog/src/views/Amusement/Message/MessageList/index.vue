@@ -12,11 +12,14 @@ const mode = useColorMode()
 const isShow = ref(false);
 const text = ref('');
 const LeaveWordList = ref([]);
+const loading = ref(true);
+
 onMounted(() => {
   getLeaveWordListFunc()
 })
 
 function getLeaveWordListFunc() {
+  loading.value = true;
   getLeaveWordList().then(res => {
     // 过滤内容
     LeaveWordList.value = res.data.map((item: any) => {
@@ -26,6 +29,9 @@ function getLeaveWordListFunc() {
       }
       return item;
     });
+    loading.value = false;
+  }).catch(() => {
+    loading.value = false;
   })
 }
 
@@ -91,21 +97,25 @@ function mdContent(content: string) {
   <div class="message-board">
     <div class="occupancyHeight"></div>
     
-    <!-- 头部区域 -->
-    <div class="header-section animate-slide-in-down decorative-particles" v-slide-in>
+    <!-- 加载骨架屏 -->
+    <MessageSkeleton v-if="loading" />
+    
+    <!-- 主要内容 -->
+    <div v-else class="main-content">
+      <!-- 头部区域 -->
+      <div class="header-section animate-slide-in-down decorative-particles" v-slide-in>
       <div class="header-content">
         <div class="title-wrapper">
-          <h1 class="main-title animate-neon-glow">
+          <h1 class="main-title">
             <span class="title-icon animate-bounce-in">💬</span>
             <span class="title-text">留言板</span>
             <div class="title-decoration"></div>
           </h1>
           <p class="subtitle animate-slide-in-up">分享你的想法，与世界交流</p>
         </div>
-        <button class="write-btn hover-lift light-beam" @click="isShow = true">
-          <span class="btn-icon animate-star-twinkle">✍️</span>
+        <button class="ios-dynamic-island-btn primary medium" @click="isShow = true">
+          <span class="ios-btn-icon">✍️</span>
           <span class="btn-text">写留言</span>
-          <div class="btn-ripple"></div>
         </button>
       </div>
     </div>
@@ -170,8 +180,10 @@ function mdContent(content: string) {
             v-model="text" 
             :toolbars="toolbars" 
             no-upload-img
-            :preview="false"
+            :preview="true"
             :on-change="mdContent"
+            :debounce="300"
+            :scroll-auto="false"
           >
             <template #defFooters>
               <div class="editor-footer">
@@ -186,12 +198,12 @@ function mdContent(content: string) {
         </div>
         
         <div class="drawer-actions">
-          <button class="action-btn cancel-btn" @click="isShow = false">
-            <span class="btn-icon">❌</span>
+          <button class="ios-dynamic-island-btn secondary" @click="isShow = false">
+            <span class="ios-btn-icon">❌</span>
             <span class="btn-text">取消</span>
           </button>
-          <button class="action-btn submit-btn" @click="addLeaveWord">
-            <span class="btn-icon">🚀</span>
+          <button class="ios-dynamic-island-btn primary" @click="addLeaveWord">
+            <span class="ios-btn-icon">🚀</span>
             <span class="btn-text">发布留言</span>
           </button>
         </div>
@@ -221,7 +233,6 @@ function mdContent(content: string) {
           class="message-card hover-lift animate-card-float light-beam"
           :style="{ '--delay': index * 0.1 + 's', 'animation-delay': index * 0.15 + 's' }"
           v-slide-in
-          @click="$router.push(`/message/detail/${item.id}`)"
         >
           <div class="card-glow"></div>
           <div class="card-header">
@@ -261,19 +272,17 @@ function mdContent(content: string) {
                 <span class="stat-count">{{ item.favoriteCount }}</span>
               </div>
             </div>
-            <div class="read-more hover-glow">
-              <span class="read-more-text">查看详情</span>
-              <ArrowRightBold class="read-more-icon"/>
-            </div>
-          </div>
-          
-          <div class="card-overlay animate-gradient-shift">
-            <div class="overlay-content">
-              <span class="overlay-text animate-bounce-in">点击查看详情</span>
-            </div>
+            <button 
+              class="ios-dynamic-island-btn primary"
+              @click.stop="$router.push(`/message/detail/${item.id}`)"
+            >
+              <span class="btn-text">查看详情</span>
+              <ArrowRightBold class="ios-btn-icon arrow-right"/>
+            </button>
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>
@@ -313,46 +322,49 @@ function mdContent(content: string) {
   .title-wrapper {
     flex: 1;
     
-    .main-title {
-      position: relative;
-      font-size: 3rem;
-      font-weight: 800;
-      margin: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      
-      @media (max-width: 768px) {
-        font-size: 2.5rem;
-        justify-content: center;
-      }
-      
-      .title-icon {
-        font-size: 3rem;
-        animation: bounce 2s infinite;
-      }
-      
-      .title-text {
+          .main-title {
         position: relative;
-        z-index: 2;
+        font-size: 3rem;
+        font-weight: 800;
+        margin: 0;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        
+        @media (max-width: 768px) {
+          font-size: 2.5rem;
+          justify-content: center;
+        }
+        
+        .title-icon {
+          font-size: 3rem;
+          animation: bounce 2s infinite;
+        }
+        
+        .title-text {
+          position: relative;
+          z-index: 2;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        .title-decoration {
+          position: absolute;
+          bottom: -10px;
+          left: 0;
+          width: 100%;
+          height: 4px;
+          background: linear-gradient(90deg, #667eea, #764ba2);
+          border-radius: 2px;
+          transform: scaleX(0);
+          animation: expandWidth 1s ease-out 0.5s forwards;
+        }
       }
-      
-      .title-decoration {
-        position: absolute;
-        bottom: -10px;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #667eea, #764ba2);
-        border-radius: 2px;
-        transform: scaleX(0);
-        animation: expandWidth 1s ease-out 0.5s forwards;
-      }
-    }
     
     .subtitle {
       margin: 0.5rem 0 0 0;
@@ -364,52 +376,7 @@ function mdContent(content: string) {
     }
   }
   
-  .write-btn {
-    position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 50px;
-    padding: 1rem 2rem;
-    color: white;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-    
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-      
-      .btn-ripple {
-        transform: scale(1);
-        opacity: 0.3;
-      }
-    }
-    
-    &:active {
-      transform: translateY(-1px);
-    }
-    
-    .btn-icon {
-      margin-right: 0.5rem;
-      font-size: 1.2rem;
-    }
-    
-    .btn-ripple {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
-      border-radius: 50%;
-      transform: translate(-50%, -50%) scale(0);
-      transition: transform 0.6s ease, opacity 0.6s ease;
-      opacity: 0;
-    }
-  }
+
 }
 
 // 介绍区域样式
@@ -582,39 +549,6 @@ function mdContent(content: string) {
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
-    
-    .action-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.8rem 1.5rem;
-      border: none;
-      border-radius: 25px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      
-      &.cancel-btn {
-        background: #f5f5f5;
-        color: #666;
-        
-        &:hover {
-          background: #e0e0e0;
-          transform: translateY(-2px);
-        }
-      }
-      
-      &.submit-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-      }
-    }
   }
 }
 
@@ -698,25 +632,17 @@ function mdContent(content: string) {
   animation: slideInUp 0.6s ease-out var(--delay);
   
   &:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
     
     .card-glow {
       opacity: 1;
       transform: scale(1.1);
     }
     
-    .card-overlay {
-      opacity: 1;
-    }
-    
     .avatar-ring {
       transform: scale(1.2);
       opacity: 0.8;
-    }
-    
-    .read-more-icon {
-      transform: translateX(5px);
     }
   }
   
@@ -838,45 +764,10 @@ function mdContent(content: string) {
       }
     }
     
-    .read-more {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #667eea;
-      font-weight: 500;
-      font-size: 0.9rem;
-      
-      .read-more-icon {
-        font-size: 1rem;
-        transition: transform 0.3s ease;
-      }
-    }
+
   }
   
-  .card-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
-    border-radius: 20px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    .overlay-content {
-      text-align: center;
-      color: white;
-      
-      .overlay-text {
-        font-size: 1.1rem;
-        font-weight: 600;
-      }
-    }
-  }
+
 }
 
 // 动画定义

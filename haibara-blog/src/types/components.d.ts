@@ -65,6 +65,7 @@ declare module 'vue' {
     LyricBoard: typeof import('./../components/Music/list/components/lyric-board.vue')['default']
     Main: typeof import('./../components/Layout/Main/index.vue')['default']
     Menu: typeof import('./../components/Layout/Header/Menu/index.vue')['default']
+    MessageSkeleton: typeof import('./../components/MessageSkeleton/index.vue')['default']
     MouseTrail: typeof import('./../components/MouseTrail/index.vue')['default']
     MoveMenu: typeof import('./../components/Layout/Header/MoveMenu/index.vue')['default']
     Music: typeof import('./../components/Music/index.vue')['default']
