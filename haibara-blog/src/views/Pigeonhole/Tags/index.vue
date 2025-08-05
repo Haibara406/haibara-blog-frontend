@@ -12,6 +12,9 @@ const tags = ref([])
 const articleList = ref([])
 const title = ref('')
 const totalArticleCount = ref(0)
+const loading = ref(false)
+// 简单缓存机制，避免重复请求
+const articleCache = ref(new Map())
 
 // 现代化滚动条相关状态
 const navItemsWrapper = ref<HTMLElement | null>(null)
@@ -143,21 +146,29 @@ onUnmounted(() => {
 
 watch(() => route.params.id, (id, oldId) => {
   if (id) {
-    // 如果是不同的标签，先清空文章列表
-    if (id !== oldId) {
-      articleList.value = []
-    }
-
     isQueryArticle.value = true
+    // 设置标签标题
     tags.value.forEach((item: any) => {
       if (item.id === Number(id)) {
         title.value = item.tagName
       }
     })
-    getArticle(String(id))
+    
+    // 检查缓存
+    if (articleCache.value.has(id)) {
+      articleList.value = articleCache.value.get(id)
+      loading.value = false
+    } else {
+      // 如果是不同的标签且没有缓存，设置加载状态
+      if (id !== oldId) {
+        loading.value = true
+      }
+      getArticle(String(id))
+    }
   } else {
     isQueryArticle.value = false
     articleList.value = []
+    loading.value = false
   }
   
   // 路由变化时重新初始化滚动条
@@ -169,8 +180,7 @@ watch(() => route.params.id, (id, oldId) => {
 // 文章
 async function getArticle(id: string) {
   try {
-    // 确保文章列表为空，避免显示旧数据
-    articleList.value = []
+    loading.value = true
 
     const res: any = await whereArticleList(2, id)
     if (res.code === 200 && res.data !== undefined) {
@@ -180,26 +190,32 @@ async function getArticle(id: string) {
       // 使用nextTick确保DOM更新后再设置数据
       await nextTick()
       articleList.value = res.data
+      // 缓存结果
+      articleCache.value.set(id, res.data)
     } else {
       articleList.value = []
     }
   } catch (error) {
     console.error('获取文章失败:', error)
     articleList.value = []
+  } finally {
+    loading.value = false
   }
 }
 
 // 处理标签切换
 function handleTagChange(tagId: number) {
-  // 立即清空文章列表，避免显示上一个标签的文章
-  articleList.value = []
-
   // 更新标签状态
   tags.value.forEach((item: any) => {
     if (item.id === tagId) {
       title.value = item.tagName
     }
   })
+
+  // 检查缓存，如果没有缓存则设置加载状态
+  if (!articleCache.value.has(String(tagId))) {
+    loading.value = true
+  }
 
   // 跳转到新标签
   router.push(`/tags/${tagId}`)
@@ -543,7 +559,19 @@ function initScrollbar() {
 
                 <!-- 文章列表 -->
                 <div class="articles-container">
-                  <template v-if="articleList.length > 0">
+                  <!-- 加载状态 -->
+                  <template v-if="loading">
+                    <div class="loading-state">
+                      <div class="loading-spinner">
+                        <div class="spinner"></div>
+                      </div>
+                      <h3>正在加载文章...</h3>
+                      <p>请稍候，正在获取 {{ title }} 标签下的文章</p>
+                    </div>
+                  </template>
+                  
+                  <!-- 文章列表 -->
+                  <template v-else-if="articleList.length > 0">
                     <div class="articles-grid">
                       <template v-for="(article, index) in articleList" :key="article.id">
                         <div
@@ -2372,6 +2400,81 @@ function initScrollbar() {
               }
             }
           }
+        }
+      }
+    }
+
+    // 加载状态
+    .loading-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+
+      // 加载状态进入动画
+      opacity: 0;
+      transform: scale(0.95);
+      animation: loadingStateFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+      @keyframes loadingStateFadeIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .loading-spinner {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(64, 158, 255, 0.1);
+          border-top: 3px solid var(--el-color-primary);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      }
+
+      h3 {
+        color: var(--el-text-color-primary);
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+        opacity: 0;
+        animation: textSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: 0.2s;
+      }
+
+      p {
+        color: var(--el-text-color-regular);
+        font-size: 1rem;
+        line-height: 1.6;
+        opacity: 0;
+        animation: textSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: 0.4s;
+      }
+
+      @keyframes textSlideUp {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
     }
