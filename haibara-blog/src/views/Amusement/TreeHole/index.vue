@@ -15,7 +15,6 @@ const clickEffects = ref([])
 // 动画相关
 const mouseX = ref(0)
 const mouseY = ref(0)
-const cursorTrail = ref([])
 
 // 粒子系统
 let particles = []
@@ -52,37 +51,11 @@ onUnmounted(() => {
   }
 })
 
-// 鼠标跟踪器 - 简化为优雅的光影效果
+// 鼠标跟踪器 - 仅用于粒子交互
 function initMouseTracker() {
   document.addEventListener('mousemove', (e) => {
     mouseX.value = e.clientX
     mouseY.value = e.clientY
-    
-    // 创建简洁的光影拖尾
-    if (Math.random() > 0.7) { // 降低生成频率
-      cursorTrail.value.push({
-        x: e.clientX,
-        y: e.clientY,
-        id: Date.now() + Math.random(),
-        opacity: 0.8,
-        size: Math.random() * 6 + 4, // 更小的尺寸
-        life: 0,
-        maxLife: 30 // 更短的生命周期
-      })
-    }
-    
-    // 限制轨迹点数量
-    if (cursorTrail.value.length > 8) {
-      cursorTrail.value.splice(0, 2)
-    }
-    
-    // 更新轨迹点生命周期
-    cursorTrail.value = cursorTrail.value.map(point => {
-      point.life++
-      point.opacity = Math.max(0, 0.8 - point.life / point.maxLife)
-      point.size *= 0.98 // 逐渐缩小
-      return point
-    }).filter(point => point.opacity > 0.05)
   })
 }
 
@@ -256,32 +229,48 @@ function getTreeHole() {
   getTreeHoleList().then(res => {
     if (res.code === 200) {
       // 为每个弹幕添加随机Y轴位置
-      treeHoleList.value = res.data.map(item => ({
-        ...item,
-        // 随机Y轴位置，确保在header下方和页面内
-        top: Math.random() * (window.innerHeight - 160) + 80,
-        // 添加随机的颜色主题
-        colorTheme: Math.floor(Math.random() * 5)
-      }))
+      treeHoleList.value = res.data.map((item, index) => {
+        // 使用更均匀的分布算法，偏向上半部分
+        let topPosition;
+        const availableHeight = window.innerHeight - 200; // 减去header和底部空间
+        const baseTop = 100; // header下方起始位置
+
+        // 70%的弹幕分布在上半部分，30%在下半部分
+        if (Math.random() < 0.7) {
+          // 上半部分：header下方到中间偏上
+          topPosition = baseTop + Math.random() * (availableHeight * 0.6);
+        } else {
+          // 下半部分：中间偏下到底部
+          topPosition = baseTop + availableHeight * 0.6 + Math.random() * (availableHeight * 0.4);
+        }
+
+        return {
+          ...item,
+          top: topPosition,
+          // 添加随机的颜色主题
+          colorTheme: Math.floor(Math.random() * 5),
+        };
+      }); // <- 修复点：去掉多余的括号，加上分号
     }
-  })
+  });
 }
 
+
 function handleInputFocus() {
-  isInputFocused.value = true
+  isInputFocused.value = true;
 }
 
 function handleInputBlur() {
   if (!content.value) {
-    isInputFocused.value = false
+    isInputFocused.value = false;
   }
 }
 
 // 初始化点击效果
 function initClickEffects() {
   document.addEventListener('click', (e) => {
-    createClickRipple(e.clientX, e.clientY)
-  })
+    createClickRipple(e.clientX, e.clientY);
+  });
 }
 
 // 创建点击波纹效果
@@ -292,38 +281,38 @@ function createClickRipple(x: number, y: number) {
     size: 0,
     opacity: 1,
     id: Date.now()
-  }
+  };
   
-  clickEffects.value.push(ripple)
+  clickEffects.value.push(ripple);
   
   // 动画波纹
   const animateRipple = () => {
-    const effect = clickEffects.value.find(e => e.id === ripple.id)
-    if (!effect) return
+    const effect = clickEffects.value.find(e => e.id === ripple.id);
+    if (!effect) return;
     
-    effect.size += 5
-    effect.opacity *= 0.95
+    effect.size += 5;
+    effect.opacity *= 0.95;
     
     if (effect.opacity < 0.01) {
-      clickEffects.value = clickEffects.value.filter(e => e.id !== ripple.id)
+      clickEffects.value = clickEffects.value.filter(e => e.id !== ripple.id);
     } else {
-      requestAnimationFrame(animateRipple)
+      requestAnimationFrame(animateRipple);
     }
-  }
+  };
   
-  animateRipple()
+  animateRipple();
 }
 
 // 创建提交时的粒子爆发效果
 function createSubmitParticles() {
-  if (!ctx) return
+  if (!ctx) return;
   
-  const centerX = window.innerWidth / 2
-  const centerY = window.innerHeight / 2
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
   
   for (let i = 0; i < 30; i++) {
-    const angle = (Math.PI * 2 * i) / 30
-    const speed = Math.random() * 5 + 2
+    const angle = (Math.PI * 2 * i) / 30;
+    const speed = Math.random() * 5 + 2;
     
     particles.push({
       x: centerX,
@@ -335,7 +324,7 @@ function createSubmitParticles() {
       opacity: 1,
       life: 0,
       maxLife: 60
-    })
+    });
   }
 }
 
@@ -343,8 +332,8 @@ function createSubmitParticles() {
 function createSuccessAnimation() {
   // 创建庆祝粒子
   for (let i = 0; i < 50; i++) {
-    const x = Math.random() * window.innerWidth
-    const y = window.innerHeight
+    const x = Math.random() * window.innerWidth;
+    const y = window.innerHeight;
     
     particles.push({
       x,
@@ -356,7 +345,7 @@ function createSuccessAnimation() {
       opacity: 1,
       life: 0,
       maxLife: 120
-    })
+    });
   }
 }
 </script>
@@ -383,21 +372,7 @@ function createSuccessAnimation() {
       <div class="gradient-overlay"></div>
     </div>
 
-    <!-- 鼠标轨迹效果 -->
-    <div class="mouse-trail">
-      <div 
-        v-for="(point, index) in cursorTrail" 
-        :key="point.id"
-        class="trail-point light-trail"
-        :style="{
-          left: point.x + 'px',
-          top: point.y + 'px',
-          width: point.size + 'px',
-          height: point.size + 'px',
-          opacity: point.opacity
-        }"
-      ></div>
-    </div>
+
 
     <!-- 点击波纹效果 -->
     <div class="click-effects">
@@ -477,17 +452,17 @@ function createSuccessAnimation() {
 
     <!-- 弹幕区域 - 确保从header下方开始 -->
     <vue-danmaku 
-      :debounce="1500"
-      :random-channel="false"
-      :speeds="85"
-      :channels="1"
+      :debounce="1200"
+      :random-channel="true"
+      :speeds="75"
+      :channels="15"
       is-suspend
       v-model:danmus="treeHoleList"
       use-slot 
       loop
-      :top="80"
+      :top="0"
       :extraStyle="'pointer-events: none;'"
-      style="height:calc(100vh - 80px); width:100vw; position: fixed; top: 80px; left: 0; z-index: 5;"
+      style="height:100vh; width:100vw; position: fixed; top: 0px; left: 0; z-index: 5;"
     >
       <template v-slot:dm="{ danmu }">
         <div 
@@ -626,51 +601,7 @@ function createSuccessAnimation() {
   }
 }
 
-// 鼠标轨迹效果
-.mouse-trail {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 6;
-}
 
-.trail-point {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  
-  &.light-trail {
-    background: radial-gradient(circle, 
-      rgba(255, 255, 255, 0.6) 0%, 
-      rgba(167, 139, 250, 0.4) 30%, 
-      transparent 70%);
-    filter: blur(1px);
-    animation: light-trail-fade 1s ease-out forwards;
-    box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
-  }
-}
-
-@keyframes light-trail-fade {
-  0% { 
-    opacity: 0.8; 
-    transform: translate(-50%, -50%) scale(1);
-    filter: blur(0px);
-  }
-  50% { 
-    opacity: 0.6; 
-    transform: translate(-50%, -50%) scale(1.1);
-    filter: blur(1px);
-  }
-  100% { 
-    opacity: 0; 
-    transform: translate(-50%, -50%) scale(0.3);
-    filter: blur(3px);
-  }
-}
 
 // 主要内容区域
 .main-content {
@@ -746,7 +677,7 @@ function createSuccessAnimation() {
   box-shadow: 
     0 20px 40px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
   
@@ -759,30 +690,52 @@ function createSuccessAnimation() {
     height: 100%;
     background: linear-gradient(90deg, 
       transparent, 
-      rgba(255, 255, 255, 0.1), 
+      rgba(255, 255, 255, 0.15), 
       transparent);
-    transition: left 0.6s ease;
+    transition: left 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      rgba(167, 139, 250, 0.05), 
+      rgba(99, 102, 241, 0.05));
+    border-radius: 30px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: none;
   }
   
   &.focused {
     background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.12), 
-      rgba(255, 255, 255, 0.06));
-    border-color: rgba(167, 139, 250, 0.4);
+      rgba(255, 255, 255, 0.15), 
+      rgba(255, 255, 255, 0.08));
+    border-color: rgba(167, 139, 250, 0.5);
     box-shadow: 
-      0 25px 50px rgba(0, 0, 0, 0.15),
-      0 0 0 2px rgba(167, 139, 250, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      0 0 30px rgba(167, 139, 250, 0.15);
-    transform: translateY(-2px);
+      0 30px 60px rgba(0, 0, 0, 0.2),
+      0 0 0 3px rgba(167, 139, 250, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 0 40px rgba(167, 139, 250, 0.25);
+    transform: translateY(-3px) scale(1.02);
     
     &::before {
       left: 100%;
     }
+    
+    &::after {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
   
-  &:hover {
-    border-color: rgba(167, 139, 250, 0.2);
+  &:hover:not(.focused) {
+    border-color: rgba(167, 139, 250, 0.25);
     box-shadow: 
       0 25px 45px rgba(0, 0, 0, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.3),
