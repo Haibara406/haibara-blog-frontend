@@ -228,29 +228,38 @@ function addTreeHoleBtn() {
 function getTreeHole() {
   getTreeHoleList().then(res => {
     if (res.code === 200) {
-      // 为每个弹幕添加随机Y轴位置
+      // 为每个弹幕添加智能分布位置，避免遮挡主要内容
       treeHoleList.value = res.data.map((item, index) => {
-        // 使用更均匀的分布算法，偏向上半部分
         let topPosition;
-        const availableHeight = window.innerHeight - 200; // 减去header和底部空间
-        const baseTop = 100; // header下方起始位置
-
-        // 70%的弹幕分布在上半部分，30%在下半部分
-        if (Math.random() < 0.7) {
-          // 上半部分：header下方到中间偏上
-          topPosition = baseTop + Math.random() * (availableHeight * 0.6);
+        const windowHeight = window.innerHeight;
+        const headerHeight = 100;
+        const centerStart = windowHeight * 0.3; // 中央区域开始
+        const centerEnd = windowHeight * 0.7;   // 中央区域结束
+        
+        // 80%的弹幕分布在非中央区域，20%可以在中央区域但透明度较低
+        if (Math.random() < 0.8) {
+          // 非中央区域：上部分或下部分
+          if (Math.random() < 0.6) {
+            // 上部分：header下方到中央区域上方
+            topPosition = headerHeight + Math.random() * (centerStart - headerHeight);
+          } else {
+            // 下部分：中央区域下方到底部
+            topPosition = centerEnd + Math.random() * (windowHeight - centerEnd - 50);
+          }
         } else {
-          // 下半部分：中间偏下到底部
-          topPosition = baseTop + availableHeight * 0.6 + Math.random() * (availableHeight * 0.4);
+          // 中央区域：但会设置较低透明度
+          topPosition = centerStart + Math.random() * (centerEnd - centerStart);
         }
-
+        
         return {
           ...item,
-          top: topPosition,
+          top: Math.max(headerHeight, Math.min(windowHeight - 50, topPosition)),
           // 添加随机的颜色主题
           colorTheme: Math.floor(Math.random() * 5),
+          // 中央区域的弹幕透明度较低
+          isInCenter: topPosition >= centerStart && topPosition <= centerEnd
         };
-      }); // <- 修复点：去掉多余的括号，加上分号
+      });
     }
   });
 }
@@ -432,30 +441,32 @@ function createSuccessAnimation() {
             >
             <div class="input-glow"></div>
           </div>
-          <button 
-            v-show="isInputFocused" 
-            @click="addTreeHoleBtn"
-            :disabled="isSubmitting"
-            class="submit-btn"
-            :class="{ 'submitting': isSubmitting }"
-          >
-            <span v-if="!isSubmitting" class="btn-text">发送</span>
-            <span v-else class="btn-text">
-              <div class="btn-loader"></div>
-              发送中...
-            </span>
-            <div class="btn-ripple"></div>
-          </button>
+          <transition name="btn-fade" mode="out-in">
+            <button 
+              v-if="isInputFocused" 
+              @click="addTreeHoleBtn"
+              :disabled="isSubmitting"
+              class="submit-btn"
+              :class="{ 'submitting': isSubmitting }"
+            >
+              <span v-if="!isSubmitting" class="btn-text">发送</span>
+              <span v-else class="btn-text">
+                <div class="btn-loader"></div>
+                发送中...
+              </span>
+              <div class="btn-ripple"></div>
+            </button>
+          </transition>
         </div>
       </div>
     </div>
 
     <!-- 弹幕区域 - 确保从header下方开始 -->
     <vue-danmaku 
-      :debounce="1200"
+      :debounce="1000"
       :random-channel="true"
-      :speeds="75"
-      :channels="15"
+      :speeds="80"
+      :channels="25"
       is-suspend
       v-model:danmus="treeHoleList"
       use-slot 
@@ -467,7 +478,10 @@ function createSuccessAnimation() {
       <template v-slot:dm="{ danmu }">
         <div 
           class="modern-barrage"
-          :class="`theme-${danmu.colorTheme || 0}`"
+          :class="[
+            `theme-${danmu.colorTheme || 0}`,
+            { 'center-zone': danmu.isInCenter }
+          ]"
           :style="{ top: danmu.top + 'px' }"
         >
           <div class="barrage-avatar">
@@ -718,19 +732,24 @@ function createSuccessAnimation() {
       rgba(255, 255, 255, 0.08));
     border-color: rgba(167, 139, 250, 0.5);
     box-shadow: 
-      0 30px 60px rgba(0, 0, 0, 0.2),
-      0 0 0 3px rgba(167, 139, 250, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      0 0 40px rgba(167, 139, 250, 0.25);
-    transform: translateY(-3px) scale(1.02);
+      0 35px 70px rgba(0, 0, 0, 0.25),
+      0 0 0 3px rgba(167, 139, 250, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 50px rgba(167, 139, 250, 0.3);
+    transform: translateY(-4px) scale(1.03);
+    
+    // 聚焦时的额外动画效果
+    animation: focus-pulse 2s ease-in-out infinite;
     
     &::before {
       left: 100%;
+      animation: shimmer-loop 3s ease-in-out infinite;
     }
     
     &::after {
       opacity: 1;
       transform: scale(1);
+      animation: glow-pulse 1.5s ease-in-out infinite alternate;
     }
   }
   
@@ -893,6 +912,69 @@ function createSuccessAnimation() {
   100% { left: 100%; }
 }
 
+// 按钮渐入渐出动画
+.btn-fade-enter-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.btn-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.btn-fade-enter-from {
+  opacity: 0;
+  transform: translateX(20px) scale(0.8);
+  filter: blur(4px);
+}
+
+.btn-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-20px) scale(0.8);
+  filter: blur(4px);
+}
+
+.btn-fade-enter-to,
+.btn-fade-leave-from {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  filter: blur(0px);
+}
+
+// 输入框聚焦动画
+@keyframes focus-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 35px 70px rgba(0, 0, 0, 0.25),
+      0 0 0 3px rgba(167, 139, 250, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 50px rgba(167, 139, 250, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 40px 80px rgba(0, 0, 0, 0.3),
+      0 0 0 4px rgba(167, 139, 250, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 0 60px rgba(167, 139, 250, 0.4);
+  }
+}
+
+@keyframes shimmer-loop {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+@keyframes glow-pulse {
+  0% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% { 
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
 .btn-text {
   position: relative;
   z-index: 2;
@@ -977,6 +1059,19 @@ function createSuccessAnimation() {
   &.theme-4 {
     background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(59, 130, 246, 0.1));
     border-color: rgba(14, 165, 233, 0.3);
+  }
+  
+  // 中央区域的弹幕透明度较低，避免遮挡主要内容
+  &.center-zone {
+    opacity: 0.3;
+    transform: scale(0.9);
+    filter: blur(0.5px);
+    
+    &:hover {
+      opacity: 0.6;
+      transform: scale(0.95);
+      filter: blur(0px);
+    }
   }
 }
 
