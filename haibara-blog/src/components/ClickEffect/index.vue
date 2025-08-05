@@ -23,8 +23,10 @@ interface ClickParticle {
   velocityX: number;
   velocityY: number;
   type: 'expand' | 'burst' | 'sparkle' | 'ring';
+  shape: 'circle' | 'heart' | 'star' | 'triangle' | 'diamond' | 'square' | 'pentagon';
   rotation?: number;
   rotationSpeed?: number;
+  scale?: number;
 }
 
 interface ChargeEffect {
@@ -59,8 +61,30 @@ const colors = [
   '#00FF00', // 鲜艳的绿色
   '#FF6600', // 鲜艳的橙红
   '#6600FF', // 鲜艳的蓝紫
-  '#FF0099'  // 鲜艳的粉红
+  '#FF0099', // 鲜艳的粉红
+  '#FF3366', // 玫瑰红
+  '#33FF66', // 翠绿色
+  '#6633FF', // 深紫色
+  '#FF6633', // 橘色
+  '#33CCFF', // 天蓝色
+  '#FF33CC', // 紫红色
+  '#CCFF33', // 柠檬绿
+  '#FF9933', // 金橙色
+  '#3399FF', // 亮蓝色
+  '#FF3399'  // 热粉色
 ];
+
+// 形状配置
+const shapes = ['circle', 'heart', 'star', 'triangle', 'diamond', 'square', 'pentagon'] as const;
+
+// 粒子大小配置
+const particleSizes = {
+  tiny: { min: 2, max: 5 },
+  small: { min: 4, max: 8 },
+  medium: { min: 6, max: 12 },
+  large: { min: 10, max: 18 },
+  huge: { min: 15, max: 25 }
+};
 
 const initCanvas = () => {
   if (!effectCanvas.value) return;
@@ -127,21 +151,41 @@ const handleMouseLeave = () => {
   }
 };
 
+// 随机获取粒子大小
+const getRandomParticleSize = (chargeLevel: number) => {
+  const sizeTypes = Object.keys(particleSizes);
+  const weightedSizes = [];
+  
+  // 根据蓄力等级调整大小分布
+  if (chargeLevel < 0.3) {
+    weightedSizes.push('tiny', 'tiny', 'small', 'medium');
+  } else if (chargeLevel < 0.6) {
+    weightedSizes.push('tiny', 'small', 'small', 'medium', 'medium', 'large');
+  } else {
+    weightedSizes.push('small', 'medium', 'medium', 'large', 'large', 'huge');
+  }
+  
+  const selectedType = weightedSizes[Math.floor(Math.random() * weightedSizes.length)] as keyof typeof particleSizes;
+  const sizeRange = particleSizes[selectedType];
+  return sizeRange.min + Math.random() * (sizeRange.max - sizeRange.min);
+};
+
 const createExplosionEffect = (x: number, y: number, chargeLevel: number) => {
   const intensity = 0.3 + chargeLevel * 0.7; // 基础强度 + 蓄力强度
-  const particleCount = Math.floor(10 + chargeLevel * 30); // 10-40个粒子
+  const particleCount = Math.floor(15 + chargeLevel * 40); // 15-55个粒子
   
-  // 主爆炸环
+  // 主爆炸环 - 各种形状的粒子
   const ringCount = Math.floor(2 + chargeLevel * 3); // 2-5个环
   for (let ring = 0; ring < ringCount; ring++) {
     const ringRadius = 20 + ring * 15 + chargeLevel * 20;
-    const ringParticles = Math.floor(8 + chargeLevel * 12);
+    const ringParticles = Math.floor(8 + chargeLevel * 15);
     
     for (let i = 0; i < ringParticles; i++) {
       const angle = (Math.PI * 2 * i) / ringParticles + Math.random() * 0.3;
       const speed = (3 + chargeLevel * 4) * (1 + Math.random() * 0.5);
-      const size = (4 + chargeLevel * 8) * (0.8 + Math.random() * 0.4);
+      const size = getRandomParticleSize(chargeLevel);
       const color = colors[Math.floor(Math.random() * colors.length)];
+      const shape = shapes[Math.floor(Math.random() * shapes.length)];
       
       particles.push({
         x,
@@ -151,36 +195,72 @@ const createExplosionEffect = (x: number, y: number, chargeLevel: number) => {
         color,
         opacity: 1,
         age: 0,
-        maxAge: 30 + Math.floor(chargeLevel * 20),
+        maxAge: 30 + Math.floor(chargeLevel * 25),
         velocityX: Math.cos(angle) * speed,
         velocityY: Math.sin(angle) * speed,
-        type: 'burst'
+        type: 'burst',
+        shape,
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.2,
+        scale: 0.8 + Math.random() * 0.4
       });
     }
   }
   
-  // 闪光粒子
-  const sparkleCount = Math.floor(5 + chargeLevel * 15);
-  for (let i = 0; i < sparkleCount; i++) {
+  // 特殊形状粒子爆发
+  const specialCount = Math.floor(8 + chargeLevel * 20);
+  for (let i = 0; i < specialCount; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = (2 + chargeLevel * 6) * (0.5 + Math.random());
     const color = colors[Math.floor(Math.random() * colors.length)];
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    const size = getRandomParticleSize(chargeLevel);
     
     particles.push({
       x,
       y,
-      size: 2 + Math.random() * 4,
-      maxSize: 8 + chargeLevel * 6,
+      size,
+      maxSize: size * 1.2,
       color,
       opacity: 1,
       age: 0,
-      maxAge: 40 + Math.floor(chargeLevel * 30),
+      maxAge: 40 + Math.floor(chargeLevel * 35),
       velocityX: Math.cos(angle) * speed,
       velocityY: Math.sin(angle) * speed,
       type: 'sparkle',
+      shape,
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.3
+      rotationSpeed: (Math.random() - 0.5) * 0.3,
+      scale: 0.6 + Math.random() * 0.8
     });
+  }
+  
+  // 爱心特效（蓄力高时出现更多）
+  if (chargeLevel > 0.4) {
+    const heartCount = Math.floor(chargeLevel * 8);
+    for (let i = 0; i < heartCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (1 + chargeLevel * 3) * (0.7 + Math.random() * 0.6);
+      const color = ['#FF0080', '#FF1493', '#FF69B4', '#FF00FF'][Math.floor(Math.random() * 4)];
+      
+      particles.push({
+        x,
+        y,
+        size: particleSizes.medium.min + Math.random() * (particleSizes.large.max - particleSizes.medium.min),
+        maxSize: particleSizes.large.max,
+        color,
+        opacity: 1,
+        age: 0,
+        maxAge: 50 + Math.floor(chargeLevel * 30),
+        velocityX: Math.cos(angle) * speed,
+        velocityY: Math.sin(angle) * speed,
+        type: 'sparkle',
+        shape: 'heart',
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.15,
+        scale: 0.8 + Math.random() * 0.4
+      });
+    }
   }
   
   // 冲击波环
@@ -191,14 +271,15 @@ const createExplosionEffect = (x: number, y: number, chargeLevel: number) => {
       x,
       y,
       size: 5,
-      maxSize: 50 + chargeLevel * 100,
+      maxSize: 50 + chargeLevel * 120,
       color,
       opacity: 0.8,
       age: 0,
       maxAge: 25 + Math.floor(chargeLevel * 15),
       velocityX: 0,
       velocityY: 0,
-      type: 'ring'
+      type: 'ring',
+      shape: 'circle'
     });
   }
 };
@@ -208,6 +289,143 @@ const handleResize = () => {
   
   effectCanvas.value.width = window.innerWidth;
   effectCanvas.value.height = window.innerHeight;
+};
+
+// 绘制不同形状的函数
+const drawShape = (particle: ClickParticle) => {
+  if (!ctx) return;
+  
+  const size = particle.size * (particle.scale || 1);
+  
+  ctx.save();
+  ctx.translate(particle.x, particle.y);
+  if (particle.rotation !== undefined) {
+    ctx.rotate(particle.rotation);
+  }
+  
+  ctx.fillStyle = particle.color;
+  ctx.shadowColor = particle.color;
+  ctx.shadowBlur = size * 0.8;
+  
+  switch (particle.shape) {
+    case 'heart':
+      drawHeart(size);
+      break;
+    case 'star':
+      drawStar(size);
+      break;
+    case 'triangle':
+      drawTriangle(size);
+      break;
+    case 'diamond':
+      drawDiamond(size);
+      break;
+    case 'square':
+      drawSquare(size);
+      break;
+    case 'pentagon':
+      drawPentagon(size);
+      break;
+    default:
+      drawCircle(size);
+      break;
+  }
+  
+  ctx.restore();
+};
+
+const drawHeart = (size: number) => {
+  if (!ctx) return;
+  ctx.beginPath();
+  const x = 0, y = 0;
+  const width = size * 1.2;
+  const height = size;
+  
+  ctx.moveTo(x, y + height / 4);
+  ctx.bezierCurveTo(x, y, x - width / 2, y, x - width / 2, y + height / 4);
+  ctx.bezierCurveTo(x - width / 2, y + height / 2, x, y + height * 0.75, x, y + height);
+  ctx.bezierCurveTo(x, y + height * 0.75, x + width / 2, y + height / 2, x + width / 2, y + height / 4);
+  ctx.bezierCurveTo(x + width / 2, y, x, y, x, y + height / 4);
+  ctx.fill();
+};
+
+const drawStar = (size: number) => {
+  if (!ctx) return;
+  ctx.beginPath();
+  const spikes = 5;
+  const outerRadius = size;
+  const innerRadius = size * 0.4;
+  
+  for (let i = 0; i < spikes * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i * Math.PI) / spikes;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+  ctx.fill();
+};
+
+const drawTriangle = (size: number) => {
+  if (!ctx) return;
+  ctx.beginPath();
+  const height = size * Math.sqrt(3) / 2;
+  ctx.moveTo(0, -height * 0.66);
+  ctx.lineTo(-size * 0.5, height * 0.33);
+  ctx.lineTo(size * 0.5, height * 0.33);
+  ctx.closePath();
+  ctx.fill();
+};
+
+const drawDiamond = (size: number) => {
+  if (!ctx) return;
+  ctx.beginPath();
+  ctx.moveTo(0, -size);
+  ctx.lineTo(size * 0.6, 0);
+  ctx.lineTo(0, size);
+  ctx.lineTo(-size * 0.6, 0);
+  ctx.closePath();
+  ctx.fill();
+};
+
+const drawSquare = (size: number) => {
+  if (!ctx) return;
+  ctx.beginPath();
+  const halfSize = size * 0.7;
+  ctx.rect(-halfSize, -halfSize, halfSize * 2, halfSize * 2);
+  ctx.fill();
+};
+
+const drawPentagon = (size: number) => {
+  if (!ctx) return;
+  ctx.beginPath();
+  const sides = 5;
+  for (let i = 0; i < sides; i++) {
+    const angle = (i * 2 * Math.PI) / sides - Math.PI / 2;
+    const x = Math.cos(angle) * size;
+    const y = Math.sin(angle) * size;
+    
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+  ctx.fill();
+};
+
+const drawCircle = (size: number) => {
+  if (!ctx) return;
+  ctx.beginPath();
+  ctx.arc(0, 0, size, 0, Math.PI * 2);
+  ctx.fill();
 };
 
 const animate = () => {
@@ -295,6 +513,11 @@ const animate = () => {
       particle.velocityX *= 0.99; // 阻力
       particle.velocityY *= 0.99;
       particle.opacity = 1 - progress;
+      
+      // 更新旋转
+      if (particle.rotation !== undefined && particle.rotationSpeed !== undefined) {
+        particle.rotation += particle.rotationSpeed;
+      }
     } else if (particle.type === 'sparkle') {
       particle.x += particle.velocityX;
       particle.y += particle.velocityY;
@@ -302,8 +525,14 @@ const animate = () => {
       particle.velocityX *= 0.98;
       particle.velocityY *= 0.98;
       particle.opacity = 1 - progress;
+      
+      // 更新旋转和缩放
       if (particle.rotation !== undefined && particle.rotationSpeed !== undefined) {
         particle.rotation += particle.rotationSpeed;
+      }
+      // 粒子随时间缩放变化
+      if (particle.scale !== undefined) {
+        particle.scale = (0.6 + Math.random() * 0.8) * (1 - progress * 0.3);
       }
     } else if (particle.type === 'ring') {
       particle.size = particle.maxSize * progress;
@@ -317,63 +546,28 @@ const animate = () => {
     if (particle.type === 'ring') {
       // 绘制环形冲击波
       ctx.strokeStyle = particle.color;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3 + progress * 2;
       ctx.shadowColor = particle.color;
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 15 + progress * 10;
       ctx.beginPath();
       ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
       ctx.stroke();
-    } else if (particle.type === 'sparkle') {
-      // 绘制闪光粒子（星形）
-      ctx.fillStyle = particle.color;
-      ctx.shadowColor = particle.color;
-      ctx.shadowBlur = 10;
       
-      const spikes = 4;
-      const outerRadius = particle.size;
-      const innerRadius = particle.size * 0.5;
-      
-      ctx.translate(particle.x, particle.y);
-      if (particle.rotation !== undefined) {
-        ctx.rotate(particle.rotation);
-      }
-      
-      ctx.beginPath();
-      for (let j = 0; j < spikes * 2; j++) {
-        const radius = j % 2 === 0 ? outerRadius : innerRadius;
-        const angle = (j * Math.PI) / spikes;
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
-        
-        if (j === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      }
-      ctx.closePath();
-      ctx.fill();
+      // 添加内层发光
+      ctx.globalAlpha = particle.opacity * 0.5;
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = particle.color;
+      ctx.stroke();
     } else {
-      // 绘制普通圆形粒子
-      const gradient = ctx.createRadialGradient(
-        particle.x, particle.y, 0,
-        particle.x, particle.y, particle.size
-      );
-      gradient.addColorStop(0, particle.color);
-      gradient.addColorStop(1, particle.color + '00');
+      // 绘制各种形状的粒子
+      drawShape(particle);
       
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.fill();
-      
-      // 添加发光效果
-      ctx.shadowColor = particle.color;
-      ctx.shadowBlur = 15;
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particle.size * 0.6, 0, Math.PI * 2);
-      ctx.fillStyle = particle.color;
-      ctx.fill();
+      // 为特殊形状添加额外的发光效果
+      if (particle.shape === 'heart' || particle.shape === 'star') {
+        ctx.globalAlpha = particle.opacity * 0.3;
+        ctx.shadowBlur = particle.size * 1.5;
+        drawShape(particle);
+      }
     }
     
     ctx.restore();
