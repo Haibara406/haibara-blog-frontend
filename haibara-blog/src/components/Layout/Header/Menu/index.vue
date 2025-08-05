@@ -392,7 +392,7 @@ nav {
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: visible !important;
 
-          // 添加渐变背景
+          // 添加动态渐变背景
           &::after {
             content: '';
             position: absolute;
@@ -402,8 +402,9 @@ nav {
             bottom: 0;
             background: linear-gradient(135deg, rgba(64, 158, 255, 0.1), rgba(204, 93, 232, 0.1));
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: all 0.4s ease;
             border-radius: 12px;
+            transform: scale(0.8);
           }
 
           span .arrow {
@@ -430,33 +431,37 @@ nav {
 
           &:hover {
             cursor: pointer;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(64, 158, 255, 0.4);
 
             &::after {
               opacity: 1;
+              transform: scale(1);
+              background: linear-gradient(135deg, rgba(64, 158, 255, 0.15), rgba(204, 93, 232, 0.15));
             }
 
             span .arrow {
-              transform: rotate(180deg) scale(1.1);
+              transform: rotate(180deg) scale(1.2);
               color: #cc5de8;
-              filter: drop-shadow(0 0 8px rgba(204, 93, 232, 0.5));
+              filter: drop-shadow(0 0 12px rgba(204, 93, 232, 0.7));
             }
 
             .menus_item_child {
-              display: block !important;
+              visibility: visible !important;
               opacity: 1 !important;
-              transform: translateY(0) scale(1) !important;
+              transform: translateY(0) scale(1) rotateX(0deg) !important;
+              box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(64, 158, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+
+
 
               li {
+                display: flex !important;
                 opacity: 1 !important;
                 transform: translateX(0) !important;
-                animation: menuItemSlideIn 0.4s ease-out !important;
-
-                &:nth-child(1) { animation-delay: 0.1s !important; }
-                &:nth-child(2) { animation-delay: 0.2s !important; }
-                &:nth-child(3) { animation-delay: 0.3s !important; }
-                &:nth-child(4) { animation-delay: 0.4s !important; }
+                transition: all 0.3s ease !important;
               }
             }
 
@@ -487,7 +492,8 @@ nav {
         }
 
         .menus_item_child {
-          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
           position: absolute !important;
           top: 55px !important;
           left: -10px !important;
@@ -502,9 +508,9 @@ nav {
             0 20px 40px rgba(0, 0, 0, 0.1),
             0 0 0 1px rgba(255, 255, 255, 0.05),
             inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-          opacity: 0 !important;
-          transform: translateY(-10px) scale(0.95) !important;
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+          transform: translateY(-20px) scale(0.8) rotateX(-10deg) !important;
+          transform-origin: top center !important;
+          transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 
           // 深色模式适配
           &.dark-mode {
@@ -564,13 +570,14 @@ nav {
               color: #333 !important;
               font-weight: 500 !important;
               position: relative !important;
-              z-index: 1 !important;
+              z-index: 10 !important;
               transition: all 0.3s ease !important;
 
               .el-icon {
                 margin-right: 12px !important;
                 font-size: 18px !important;
                 transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+                color: #333 !important;
               }
             }
 
@@ -600,27 +607,27 @@ nav {
           }
 
           // 深色模式下的样式适配
-          &.dark-mode li {
-            span {
-              color: #e0e0e0 !important;
-            }
+          &.dark-mode {
+            li {
+              span {
+                color: #e0e0e0 !important;
 
-            &:hover span {
-              color: #cc5de8 !important;
+                .el-icon {
+                  color: #e0e0e0 !important;
+                }
+              }
+
+              &:hover span {
+                color: #cc5de8 !important;
+
+                .el-icon {
+                  color: #409EFF !important;
+                }
+              }
             }
           }
 
-          // 简单稳定的菜单项动画
-          @keyframes menuItemSlideIn {
-            0% {
-              opacity: 0;
-              transform: translateX(-20px);
-            }
-            100% {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
+
 
 
         }
