@@ -126,7 +126,7 @@ onUnmounted(() => {
                 <ArrowDownBold/>
               </el-icon>
             </span>
-            <ul class="menus_item_child">
+            <ul class="menus_item_child" :class="{ 'dark-mode': mode === 'dark' }">
               <li @click="router.push('/category')">
                 <span>
                   <el-icon>
@@ -163,7 +163,7 @@ onUnmounted(() => {
                 <ArrowDownBold/>
               </el-icon>
             </span>
-            <ul class="menus_item_child">
+            <ul class="menus_item_child" :class="{ 'dark-mode': mode === 'dark' }">
               <li @click="router.push('/tree-hole')">
                 <span>
                   <el-icon>
@@ -451,6 +451,12 @@ nav {
               li {
                 opacity: 1 !important;
                 transform: translateX(0) !important;
+                animation: menuItemSlideIn 0.4s ease-out !important;
+
+                &:nth-child(1) { animation-delay: 0.1s !important; }
+                &:nth-child(2) { animation-delay: 0.2s !important; }
+                &:nth-child(3) { animation-delay: 0.3s !important; }
+                &:nth-child(4) { animation-delay: 0.4s !important; }
               }
             }
 
@@ -501,9 +507,13 @@ nav {
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 
           // 深色模式适配
-          @media (prefers-color-scheme: dark) {
+          &.dark-mode {
             background: rgba(30, 27, 45, 0.95) !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 
+              0 20px 40px rgba(0, 0, 0, 0.4),
+              0 0 0 1px rgba(255, 255, 255, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
           }
 
           // 添加箭头指示器
@@ -532,13 +542,8 @@ nav {
             cursor: pointer !important;
             position: relative !important;
             overflow: hidden !important;
-            opacity: 0 !important;
-            transform: translateX(-20px) !important;
 
-            &:nth-child(1) { transition-delay: 0.1s !important; }
-            &:nth-child(2) { transition-delay: 0.15s !important; }
-            &:nth-child(3) { transition-delay: 0.2s !important; }
-            &:nth-child(4) { transition-delay: 0.25s !important; }
+
 
             // 左侧渐变边条
             &::before {
@@ -569,6 +574,8 @@ nav {
               }
             }
 
+
+
             &:hover {
               background: linear-gradient(135deg, rgba(64, 158, 255, 0.1), rgba(204, 93, 232, 0.1)) !important;
               transform: translateX(5px) !important;
@@ -590,15 +597,28 @@ nav {
               }
             }
 
-            // 深色模式下的文字颜色
-            @media (prefers-color-scheme: dark) {
-              span {
-                color: #e0e0e0 !important;
-              }
+          }
 
-              &:hover span {
-                color: #cc5de8 !important;
-              }
+          // 深色模式下的样式适配
+          &.dark-mode li {
+            span {
+              color: #e0e0e0 !important;
+            }
+
+            &:hover span {
+              color: #cc5de8 !important;
+            }
+          }
+
+          // 简单稳定的菜单项动画
+          @keyframes menuItemSlideIn {
+            0% {
+              opacity: 0;
+              transform: translateX(-20px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(0);
             }
           }
 
