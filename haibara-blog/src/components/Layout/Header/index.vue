@@ -23,7 +23,14 @@ onMounted(async () => {
     if (!customElements.get("toggle-button")) {
       customElements.define("toggle-button", DayNightToggleButton);
     }
-    await userStore.getInfo();
+
+    // 检查用户登录状态
+    if (userStore.token) {
+      await userStore.getInfo();
+    } else {
+      // 如果没有token，确保清除用户信息
+      userStore.clearUserInfo();
+    }
   } catch (error) {
     console.error("Error defining custom element or getting user info:", error);
   }
@@ -75,14 +82,21 @@ const handleLoginClick = () => {
   console.log('🔍 登录按钮被点击 (移动端)')
   console.log('📊 当前用户状态:', {
     userInfo: userStore.userInfo,
+    token: userStore.token,
     isUserInfoUndefined: userStore.userInfo == undefined
   })
+
+  // 清除可能存在的无效用户信息
+  if (!userStore.token) {
+    userStore.clearUserInfo()
+  }
 
   try {
     console.log('🚀 尝试跳转到 /welcome')
     router.push('/welcome')
   } catch (error) {
     console.error('❌ 路由跳转失败:', error)
+    ElMessage.error('跳转失败，请刷新页面重试')
   }
 }
 

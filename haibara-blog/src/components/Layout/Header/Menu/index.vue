@@ -19,6 +19,7 @@ import router from "@/router";
 import useWebsiteStore from "@/store/modules/website.ts";
 import SvgIcon from "@/components/SvgIcon/index.vue";
 import {ref} from "vue";
+import {ElMessage} from "element-plus";
 
 const userStore = useUserStore()
 const useWebsite = useWebsiteStore()
@@ -46,14 +47,21 @@ const handleLoginClick = () => {
   console.log('🔍 登录按钮被点击 (桌面端)')
   console.log('📊 当前用户状态:', {
     userInfo: userStore.userInfo,
+    token: userStore.token,
     isUserInfoUndefined: !userStore.userInfo
   })
+
+  // 清除可能存在的无效用户信息
+  if (!userStore.token) {
+    userStore.clearUserInfo()
+  }
 
   try {
     console.log('🚀 尝试跳转到 /welcome')
     router.push('/welcome')
   } catch (error) {
     console.error('❌ 路由跳转失败:', error)
+    ElMessage.error('跳转失败，请刷新页面重试')
   }
 }
 
