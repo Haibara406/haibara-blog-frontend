@@ -41,6 +41,22 @@ function changeToggle({detail}) {
   mode.value = detail
 }
 
+// 登录按钮点击处理
+const handleLoginClick = () => {
+  console.log('🔍 登录按钮被点击 (桌面端)')
+  console.log('📊 当前用户状态:', {
+    userInfo: userStore.userInfo,
+    isUserInfoUndefined: !userStore.userInfo
+  })
+
+  try {
+    console.log('🚀 尝试跳转到 /welcome')
+    router.push('/welcome')
+  } catch (error) {
+    console.error('❌ 路由跳转失败:', error)
+  }
+}
+
 // 是否显示音乐模块
 const env = import.meta.env
 
@@ -236,7 +252,7 @@ onUnmounted(() => {
               content="点击去登录"
               placement="right"
           >
-            <el-avatar @click="$router.push('/welcome')" style="margin-right: 3rem">登录</el-avatar>
+            <el-avatar @click="handleLoginClick" style="margin-right: 3rem; cursor: pointer" class="login-btn">登录</el-avatar>
           </el-tooltip>
         </div>
         <div v-else style="display: flex">
@@ -781,6 +797,23 @@ nav {
   }
   @media (max-width: 600px) {
     width: 90%;
+  }
+}
+
+// 登录按钮样式
+.login-btn {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 1000 !important;
+  position: relative !important;
+
+  &:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 }
 
