@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import vueDanmaku from 'vue3-danmaku'
 import {addTreeHole, getTreeHoleList} from "@/apis/treeHole";
 import {ElMessage} from "element-plus";
@@ -6,11 +7,13 @@ import {ElMessage} from "element-plus";
 const treeHoleList = ref([])
 const content = ref('')
 const inputRef = ref()
+const danmakuRef = ref()
 const isInputFocused = ref(false)
 const particlesCanvas = ref()
 const isPageLoaded = ref(false)
 const isSubmitting = ref(false)
 const clickEffects = ref([])
+const showInputTip = ref(false)
 
 // 动画相关
 const mouseX = ref(0)
@@ -38,6 +41,7 @@ onMounted(() => {
   initMouseTracker()
   initParticleSystem()
   initClickEffects()
+  initStorageAndEvents()
   
   // 页面加载动画
   setTimeout(() => {
@@ -198,7 +202,7 @@ function animateParticles() {
 }
 
 function addTreeHoleBtn() {
-  if (content.value === '') {
+  if (content.value.trim() === '') {
     ElMessage.warning('请输入内容')
     return
   }
@@ -208,17 +212,24 @@ function addTreeHoleBtn() {
   // 添加粒子爆发效果
   createSubmitParticles()
 
-  addTreeHole(content.value).then(res => {
+  addTreeHole(content.value.trim()).then(res => {
     if (res.code === 200) {
-      ElMessage.success('添加成功')
+      ElMessage.success('发送成功！')
       getTreeHole()
       content.value = ''
       isInputFocused.value = false
+      showInputTip.value = false
+      // 清除缓存
+      try {
+        sessionStorage.removeItem('treehole-draft')
+      } catch (e) {
+        console.warn('无法清除草稿:', e)
+      }
       
       // 成功动画
       createSuccessAnimation()
     } else {
-      ElMessage.error(res.msg)
+      ElMessage.error(res.msg || '发送失败，请重试')
     }
   }).finally(() => {
     isSubmitting.value = false
@@ -228,50 +239,86 @@ function addTreeHoleBtn() {
 function getTreeHole() {
   getTreeHoleList().then(res => {
     if (res.code === 200) {
-      // 为每个弹幕添加智能分布位置，避免遮挡主要内容
+      // 简化弹幕数据结构，确保组件正常工作
       treeHoleList.value = res.data.map((item, index) => {
-        let topPosition;
-        const windowHeight = window.innerHeight;
-        const headerHeight = 100;
-        const centerStart = windowHeight * 0.3; // 中央区域开始
-        const centerEnd = windowHeight * 0.7;   // 中央区域结束
-        
-        // 80%的弹幕分布在非中央区域，20%可以在中央区域但透明度较低
-        if (Math.random() < 0.8) {
-          // 非中央区域：上部分或下部分
-          if (Math.random() < 0.6) {
-            // 上部分：header下方到中央区域上方
-            topPosition = headerHeight + Math.random() * (centerStart - headerHeight);
-          } else {
-            // 下部分：中央区域下方到底部
-            topPosition = centerEnd + Math.random() * (windowHeight - centerEnd - 50);
-          }
-        } else {
-          // 中央区域：但会设置较低透明度
-          topPosition = centerStart + Math.random() * (centerEnd - centerStart);
-        }
-        
         return {
           ...item,
-          top: Math.max(headerHeight, Math.min(windowHeight - 50, topPosition)),
-          // 添加随机的颜色主题
-          colorTheme: Math.floor(Math.random() * 5),
-          // 中央区域的弹幕透明度较低
-          isInCenter: topPosition >= centerStart && topPosition <= centerEnd
+          // 保持原有字段，只添加必要的样式控制
+          colorTheme: index % 6,
+          opacity: 0.8 + Math.random() * 0.2
         };
       });
     }
+  }).catch(error => {
+    console.error('获取树洞数据失败:', error);
+    ElMessage.error('获取数据失败，请刷新页面重试');
   });
 }
 
 
 function handleInputFocus() {
   isInputFocused.value = true;
+  showInputTip.value = true;
+  // 恢复之前缓存的内容
+  try {
+    const savedContent = sessionStorage.getItem('treehole-draft')
+    if (savedContent && !content.value) {
+      content.value = savedContent
+    }
+  } catch (e) {
+    console.warn('无法恢复草稿:', e)
+  }
 }
 
 function handleInputBlur() {
-  if (!content.value) {
+  // 如果有内容，则缓存起来
+  if (content.value && content.value.trim()) {
+    try {
+      sessionStorage.setItem('treehole-draft', content.value)
+    } catch (e) {
+      console.warn('无法保存草稿:', e)
+    }
+  } else {
+    try {
+      sessionStorage.removeItem('treehole-draft')
+    } catch (e) {
+      console.warn('无法清除草稿:', e)
+    }
     isInputFocused.value = false;
+    showInputTip.value = false;
+  }
+}
+
+// 回车发送
+function handleKeyPress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    addTreeHoleBtn()
+  }
+}
+
+// 初始化缓存和事件监听
+function initStorageAndEvents() {
+  try {
+    // 监听页面离开，清除缓存
+    window.addEventListener('beforeunload', () => {
+      try {
+        sessionStorage.removeItem('treehole-draft')
+      } catch (e) {
+        console.warn('无法清除草稿:', e)
+      }
+    })
+    
+    // 监听路由变化，清除缓存
+    window.addEventListener('popstate', () => {
+      try {
+        sessionStorage.removeItem('treehole-draft')
+      } catch (e) {
+        console.warn('无法清除草稿:', e)
+      }
+    })
+  } catch (e) {
+    console.warn('无法初始化存储事件:', e)
   }
 }
 
@@ -423,47 +470,56 @@ function createSuccessAnimation() {
           <span class="title-char">树</span>
           <span class="title-char">洞</span>
         </h1>
-        <p class="subtitle">在这里倾诉你的心声，让文字在星空中飞舞</p>
+        <p class="subtitle">
+          <span class="subtitle-text">在这里倾诉你的心声，让文字在星空中飞舞</span>
+          <div class="subtitle-sparkles">
+            <span class="sparkle">✨</span>
+            <span class="sparkle">💫</span>
+            <span class="sparkle">⭐</span>
+          </div>
+        </p>
       </div>
 
       <!-- 现代化输入区域 -->
       <div class="input-section">
         <div class="input-container" :class="{ 'focused': isInputFocused }">
           <div class="input-wrapper">
+            <!-- 温馨提示 -->
+            <transition name="tip-fade">
+              <div v-if="showInputTip" class="input-tip">
+                输入完想说的话后，按Enter即可发送
+              </div>
+            </transition>
+            
             <input 
               ref="inputRef"
               v-model="content" 
               @focus="handleInputFocus"
               @blur="handleInputBlur"
+              @keypress="handleKeyPress"
               type="text" 
               placeholder="在这里留下自己的足迹吧..."
               class="modern-input"
+              :disabled="isSubmitting"
             >
             <div class="input-glow"></div>
-          </div>
-          <transition name="btn-fade" mode="out-in">
-            <button 
-              v-if="isInputFocused" 
-              @click="addTreeHoleBtn"
-              :disabled="isSubmitting"
-              class="submit-btn"
-              :class="{ 'submitting': isSubmitting }"
-            >
-              <span v-if="!isSubmitting" class="btn-text">发送</span>
-              <span v-else class="btn-text">
-                <div class="btn-loader"></div>
+            
+            <!-- 加载状态显示 -->
+            <transition name="loading-fade">
+              <div v-if="isSubmitting" class="input-loading">
+                <div class="loading-spinner"></div>
                 发送中...
-              </span>
-              <div class="btn-ripple"></div>
-            </button>
-          </transition>
+              </div>
+            </transition>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 弹幕区域 - 确保从header下方开始 -->
+    <!-- 弹幕区域 -->
     <vue-danmaku 
-      :debounce="1000"
+      ref="danmakuRef"
+      :debounce="500"
       :random-channel="true"
       :speeds="80"
       :channels="25"
@@ -478,11 +534,10 @@ function createSuccessAnimation() {
       <template v-slot:dm="{ danmu }">
         <div 
           class="modern-barrage"
-          :class="[
-            `theme-${danmu.colorTheme || 0}`,
-            { 'center-zone': danmu.isInCenter }
-          ]"
-          :style="{ top: danmu.top + 'px' }"
+          :class="`theme-${danmu.colorTheme || 0}`"
+          :style="{ 
+            opacity: danmu.opacity || 0.8
+          }"
         >
           <div class="barrage-avatar">
             <el-avatar :src="danmu.avatar" :size="24"/>
@@ -498,11 +553,41 @@ function createSuccessAnimation() {
       </template>
     </vue-danmaku>
 
-    <!-- 装饰性元素 -->
+    <!-- 装饰性元素 - 增加闪烁图案 -->
     <div class="decorative-elements">
       <div class="floating-orb orb1"></div>
       <div class="floating-orb orb2"></div>
       <div class="floating-orb orb3"></div>
+      
+      <!-- 自然渐变半透明装饰形状 -->
+      <div class="natural-shapes">
+        <!-- 爱心形状 -->
+        <div class="shape-heart shape-heart1"></div>
+        <div class="shape-heart shape-heart2"></div>
+        <div class="shape-heart shape-heart3"></div>
+        <div class="shape-heart shape-heart4"></div>
+        
+        <!-- 星形形状 -->
+        <div class="shape-star shape-star1"></div>
+        <div class="shape-star shape-star2"></div>
+        <div class="shape-star shape-star3"></div>
+        <div class="shape-star shape-star4"></div>
+        <div class="shape-star shape-star5"></div>
+        
+        <!-- 圆形装饰 -->
+        <div class="shape-circle shape-circle1"></div>
+        <div class="shape-circle shape-circle2"></div>
+        <div class="shape-circle shape-circle3"></div>
+        
+        <!-- 菱形装饰 -->
+        <div class="shape-diamond shape-diamond1"></div>
+        <div class="shape-diamond shape-diamond2"></div>
+        <div class="shape-diamond shape-diamond3"></div>
+        
+        <!-- 三角形装饰 -->
+        <div class="shape-triangle shape-triangle1"></div>
+        <div class="shape-triangle shape-triangle2"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -663,12 +748,75 @@ function createSuccessAnimation() {
 }
 
 .subtitle {
+  position: relative;
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.8);
   margin: 1rem 0;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   font-weight: 300;
   letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.subtitle-text {
+  background: linear-gradient(
+    45deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #f5576c 75%,
+    #4facfe 100%
+  );
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-flow 4s ease-in-out infinite;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.3));
+}
+
+@keyframes gradient-flow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.subtitle-sparkles {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.subtitle-sparkles .sparkle {
+  font-size: 1.2rem;
+  animation: sparkle-dance 2s ease-in-out infinite;
+  
+  &:nth-child(1) { animation-delay: 0s; }
+  &:nth-child(2) { animation-delay: 0.7s; }
+  &:nth-child(3) { animation-delay: 1.4s; }
+}
+
+@keyframes sparkle-dance {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: scale(1.3) rotate(90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8) rotate(180deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: scale(1.1) rotate(270deg);
+    opacity: 0.9;
+  }
 }
 
 // 现代化输入区域
@@ -681,7 +829,7 @@ function createSuccessAnimation() {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.5rem 2rem;
+  padding: 1.2rem 1.8rem;
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.08), 
     rgba(255, 255, 255, 0.03));
@@ -691,9 +839,10 @@ function createSuccessAnimation() {
   box-shadow: 
     0 20px 40px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
   overflow: hidden;
+  min-width: 320px;
   
   &::before {
     content: '';
@@ -736,7 +885,9 @@ function createSuccessAnimation() {
       0 0 0 3px rgba(167, 139, 250, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.6),
       0 0 50px rgba(167, 139, 250, 0.3);
-    transform: translateY(-4px) scale(1.03);
+    transform: translateY(-6px) scale(1.08);
+    padding: 1.8rem 2.4rem;
+    min-width: 420px;
     
     // 聚焦时的额外动画效果
     animation: focus-pulse 2s ease-in-out infinite;
@@ -771,6 +922,7 @@ function createSuccessAnimation() {
 .modern-input {
   width: 100%;
   padding: 1rem 1.5rem;
+  padding-right: 6rem; // 为加载状态预留空间
   font-size: 1.1rem;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.95);
@@ -780,6 +932,11 @@ function createSuccessAnimation() {
   border-radius: 20px;
   transition: all 0.3s ease;
   min-width: 320px;
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
   
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
@@ -820,125 +977,100 @@ function createSuccessAnimation() {
   z-index: -1;
 }
 
-.submit-btn {
-  position: relative;
-  padding: 1.2rem 2.5rem;
+// 输入提示样式
+.input-tip {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
   background: linear-gradient(135deg, 
-    #667eea 0%, 
-    #764ba2 50%, 
-    #ec4899 100%);
-  border: none;
-  border-radius: 20px;
+    rgba(167, 139, 250, 0.9), 
+    rgba(99, 102, 241, 0.9));
   color: white;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
-    0 15px 35px rgba(102, 126, 234, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);
   backdrop-filter: blur(10px);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(255, 255, 255, 0.3), 
-      transparent);
-    transition: left 0.6s ease;
-  }
   
   &::after {
     content: '';
     position: absolute;
-    top: 50%;
+    top: 100%;
     left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: all 0.4s ease;
-  }
-  
-  &:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 
-      0 20px 45px rgba(102, 126, 234, 0.5),
-      0 0 30px rgba(167, 139, 250, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    
-    &::before {
-      left: 100%;
-    }
-    
-    &::after {
-      width: 200px;
-      height: 200px;
-    }
-    
-    .btn-ripple {
-      animation: ripple 0.6s ease-out;
-    }
-  }
-  
-  &:active {
-    transform: translateY(-1px) scale(1.02);
-    transition: all 0.1s ease;
-  }
-  
-  &.submitting {
-    pointer-events: none;
-    opacity: 0.8;
-    transform: scale(0.98);
-    
-    &::before {
-      animation: loading-shimmer 1.5s ease-in-out infinite;
-    }
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(167, 139, 250, 0.9);
   }
 }
 
-@keyframes loading-shimmer {
-  0% { left: -100%; }
-  50% { left: 100%; }
-  100% { left: 100%; }
+// 提示动画
+.tip-fade-enter-active,
+.tip-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-// 按钮渐入渐出动画
-.btn-fade-enter-active {
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.btn-fade-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.6, 1);
-}
-
-.btn-fade-enter-from {
+.tip-fade-enter-from,
+.tip-fade-leave-to {
   opacity: 0;
-  transform: translateX(20px) scale(0.8);
-  filter: blur(4px);
+  transform: translateX(-50%) translateY(10px) scale(0.8);
 }
 
-.btn-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-20px) scale(0.8);
-  filter: blur(4px);
-}
-
-.btn-fade-enter-to,
-.btn-fade-leave-from {
+.tip-fade-enter-to,
+.tip-fade-leave-from {
   opacity: 1;
-  transform: translateX(0) scale(1);
-  filter: blur(0px);
+  transform: translateX(-50%) translateY(0) scale(1);
 }
+
+// 加载状态样式
+.input-loading {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid rgba(167, 139, 250, 0.8);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// 加载动画
+.loading-fade-enter-active,
+.loading-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.loading-fade-enter-from,
+.loading-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-50%) scale(0.8);
+}
+
+.loading-fade-enter-to,
+.loading-fade-leave-from {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+// 移除提交按钮相关样式，改为回车发送
 
 // 输入框聚焦动画
 @keyframes focus-pulse {
@@ -975,50 +1107,28 @@ function createSuccessAnimation() {
   }
 }
 
-.btn-text {
-  position: relative;
-  z-index: 2;
-}
+// 移除不再需要的按钮动画样式
 
-.btn-ripple {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-  opacity: 0;
-  z-index: 1;
-}
-
-@keyframes ripple {
-  0% {
-    opacity: 1;
-    transform: scale(0);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1);
-  }
-}
-
-// 现代化弹幕样式
+// 现代化弹幕样式 - 增强毛玻璃质感
 .modern-barrage {
   display: flex;
   align-items: center;
-  padding: 0.4rem 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px) saturate(1.8);
-  border-radius: 16px;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(25px) saturate(2.2) brightness(1.1);
+  border-radius: 20px;
   box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: absolute;
   overflow: hidden;
-  font-size: 0.85rem;
-  max-width: 300px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.9rem;
+  max-width: 320px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: barrage-entrance 0.6s ease-out;
   
   &:hover {
     transform: translateY(-1px) scale(1.02);
@@ -1035,43 +1145,41 @@ function createSuccessAnimation() {
     }
   }
   
-  // 多种颜色主题
+  // 多种增强毛玻璃颜色主题
   &.theme-0 {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
-    border-color: rgba(99, 102, 241, 0.3);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08));
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(139, 92, 246, 0.3);
   }
   
   &.theme-1 {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(219, 39, 119, 0.1));
-    border-color: rgba(236, 72, 153, 0.3);
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(219, 39, 119, 0.08));
+    border-color: rgba(236, 72, 153, 0.25);
+    box-shadow: 0 8px 32px rgba(236, 72, 153, 0.15), inset 0 1px 0 rgba(219, 39, 119, 0.3);
   }
   
   &.theme-2 {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1));
-    border-color: rgba(34, 197, 94, 0.3);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(16, 185, 129, 0.08));
+    border-color: rgba(34, 197, 94, 0.25);
+    box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(16, 185, 129, 0.3);
   }
   
   &.theme-3 {
-    background: linear-gradient(135deg, rgba(251, 146, 60, 0.15), rgba(245, 101, 101, 0.1));
-    border-color: rgba(251, 146, 60, 0.3);
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.12), rgba(245, 101, 101, 0.08));
+    border-color: rgba(251, 146, 60, 0.25);
+    box-shadow: 0 8px 32px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(245, 101, 101, 0.3);
   }
   
   &.theme-4 {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(59, 130, 246, 0.1));
-    border-color: rgba(14, 165, 233, 0.3);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(59, 130, 246, 0.08));
+    border-color: rgba(14, 165, 233, 0.25);
+    box-shadow: 0 8px 32px rgba(14, 165, 233, 0.15), inset 0 1px 0 rgba(59, 130, 246, 0.3);
   }
   
-  // 中央区域的弹幕透明度较低，避免遮挡主要内容
-  &.center-zone {
-    opacity: 0.3;
-    transform: scale(0.9);
-    filter: blur(0.5px);
-    
-    &:hover {
-      opacity: 0.6;
-      transform: scale(0.95);
-      filter: blur(0px);
-    }
+  &.theme-5 {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.08));
+    border-color: rgba(168, 85, 247, 0.25);
+    box-shadow: 0 8px 32px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(124, 58, 237, 0.3);
   }
 }
 
@@ -1172,6 +1280,20 @@ function createSuccessAnimation() {
   }
 }
 
+// 弹幕入场动画
+@keyframes barrage-entrance {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px) scale(0.8);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 // 装饰性浮动元素
 .decorative-elements {
   position: fixed;
@@ -1231,6 +1353,158 @@ function createSuccessAnimation() {
   75% { 
     transform: translate(-30px, -20px) rotate(270deg);
     opacity: 0.7;
+  }
+}
+
+// 自然渐变半透明装饰形状
+.natural-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+// 爱心形状 - 简化版本
+.shape-heart {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(45deg, rgba(255, 182, 193, 0.3), rgba(255, 105, 180, 0.2));
+  border-radius: 50%;
+  animation: gentle-float 8s ease-in-out infinite;
+  
+  &::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 10px;
+    top: 0;
+    background: inherit;
+    border-radius: 50%;
+  }
+  
+  &::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 5px;
+    top: -10px;
+    background: inherit;
+    border-radius: 50%;
+  }
+}
+
+.shape-heart1 { top: 15%; left: 25%; animation-delay: 0s; }
+.shape-heart2 { top: 65%; right: 20%; animation-delay: 2s; }
+.shape-heart3 { bottom: 25%; left: 15%; animation-delay: 4s; }
+.shape-heart4 { top: 40%; right: 35%; animation-delay: 6s; }
+
+// 星形形状
+.shape-star {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 6px solid rgba(255, 223, 0, 0.3);
+  transform: rotate(35deg);
+  animation: gentle-float 10s ease-in-out infinite;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 6px solid rgba(255, 223, 0, 0.3);
+    transform: rotate(-70deg);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 2px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 6px solid rgba(255, 223, 0, 0.3);
+    transform: rotate(70deg);
+  }
+}
+
+.shape-star1 { top: 10%; left: 30%; animation-delay: 1s; }
+.shape-star2 { top: 30%; right: 25%; animation-delay: 3s; }
+.shape-star3 { bottom: 40%; left: 20%; animation-delay: 5s; }
+.shape-star4 { top: 70%; right: 30%; animation-delay: 7s; }
+.shape-star5 { bottom: 20%; right: 15%; animation-delay: 9s; }
+
+// 圆形装饰
+.shape-circle {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(173, 216, 230, 0.4), rgba(135, 206, 235, 0.2));
+  animation: gentle-float 12s ease-in-out infinite;
+}
+
+.shape-circle1 { top: 20%; left: 40%; animation-delay: 1.5s; }
+.shape-circle2 { bottom: 30%; right: 25%; animation-delay: 4.5s; }
+.shape-circle3 { top: 80%; left: 60%; animation-delay: 7.5s; }
+
+// 菱形装饰
+.shape-diamond {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(45deg, rgba(221, 160, 221, 0.3), rgba(238, 130, 238, 0.2));
+  transform: rotate(45deg);
+  animation: gentle-float 14s ease-in-out infinite;
+}
+
+.shape-diamond1 { top: 35%; left: 10%; animation-delay: 2.5s; }
+.shape-diamond2 { bottom: 45%; right: 40%; animation-delay: 5.5s; }
+.shape-diamond3 { top: 60%; left: 45%; animation-delay: 8.5s; }
+
+// 三角形装饰
+.shape-triangle {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 14px solid rgba(152, 251, 152, 0.3);
+  animation: gentle-float 16s ease-in-out infinite;
+}
+
+.shape-triangle1 { top: 50%; left: 50%; animation-delay: 3.5s; }
+.shape-triangle2 { bottom: 35%; left: 35%; animation-delay: 6.5s; }
+
+// 轻柔漂浮动画
+@keyframes gentle-float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-15px) translateX(10px) rotate(90deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-8px) translateX(-5px) rotate(180deg);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translateY(-20px) translateX(8px) rotate(270deg);
+    opacity: 0.5;
   }
 }
 
@@ -1371,29 +1645,7 @@ function createSuccessAnimation() {
   opacity: 0;
 }
 
-// 提交按钮加载状态
-.submit-btn.submitting {
-  pointer-events: none;
-  opacity: 0.8;
-  transform: scale(0.98);
-}
-
-.btn-loader {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: btn-spin 0.8s linear infinite;
-  margin-right: 0.5rem;
-  vertical-align: middle;
-}
-
-@keyframes btn-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+// 移除提交按钮加载样式，改为输入框内加载状态
 
 // 页面加载完成后的入场动画
 .modern-tree-hole {
