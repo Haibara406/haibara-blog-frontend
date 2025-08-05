@@ -440,35 +440,7 @@ function createSuccessAnimation() {
 
 
 
-// 调试函数：手动添加测试弹幕
-function addDebugDanmu() {
-  const debugDanmu = {
-    id: Date.now(),
-    content: `测试弹幕 ${new Date().toLocaleTimeString()} 🚀`,
-    nickname: '调试员',
-    avatar: '',
-    time: Date.now()
-  };
 
-  // 直接添加到弹幕列表
-  treeHoleList.value.push(debugDanmu);
-  console.log('调试弹幕已添加:', debugDanmu);
-  console.log('当前弹幕总数:', treeHoleList.value.length);
-}
-
-// 调试函数：检查弹幕状态
-function checkDanmakuStatus() {
-  console.log('=== 弹幕状态检查 ===');
-  console.log('弹幕列表长度:', treeHoleList.value.length);
-  console.log('弹幕列表内容:', treeHoleList.value);
-  
-  if (treeHoleList.value.length > 0) {
-    console.log('第一条弹幕示例:', treeHoleList.value[0]);
-  } else {
-    console.log('弹幕列表为空，请先获取数据或添加测试弹幕');
-  }
-  console.log('===================');
-}
 </script>
 <template>
   <div class="modern-tree-hole">
@@ -577,12 +549,6 @@ function checkDanmakuStatus() {
               </div>
             </transition>
           </div>
-        </div>
-
-        <!-- 调试按钮 -->
-        <div class="debug-buttons" style="margin-top: 20px; text-align: center;">
-          <button @click="addDebugDanmu" class="debug-btn">添加测试弹幕</button>
-          <button @click="checkDanmakuStatus" class="debug-btn">检查弹幕状态</button>
         </div>
       </div>
     </div>
@@ -1126,25 +1092,7 @@ function checkDanmakuStatus() {
   transform: translateY(-50%) scale(1);
 }
 
-// 调试按钮样式
-.debug-buttons {
-  .debug-btn {
-    margin: 0 10px;
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 20px;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s ease;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-2px);
-    }
-  }
-}
 
 // 输入框聚焦动画
 @keyframes focus-pulse {
@@ -1183,52 +1131,85 @@ function checkDanmakuStatus() {
 
 // 移除不再需要的按钮动画样式
 
- // 弹幕样式 - 使用你的工作代码样式
- .barrage_container {
-   display: flex;
-   align-items: center;
-   position: relative;
-   pointer-events: auto; // 允许弹幕悬停交互
+// 优化的弹幕样式 - 自适应宽度
+.barrage_container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 0.4rem 0.8rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.15), 
+    rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(15px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  // 移除固定宽度限制，让弹幕根据内容自适应
+  min-width: 100px;
+  max-width: 450px; // 增加最大宽度限制
+  width: auto; // 自动宽度
 
-   // 下边框动画
-   &::after {
-     content: '';
-     position: absolute;
-     left: 0;
-     bottom: 0;
-     width: 0;
-     height: 0.2em;
-     border-radius: 0.1em;
-     // 蓝紫色渐变色背景
-     background: linear-gradient(to right, #00c6ff, #0072ff);
-     transition: width 0.3s ease; /* 过渡动画效果 */
-   }
+  // 悬停效果
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 6px 25px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.2), 
+      rgba(255, 255, 255, 0.1));
+  }
 
-   &:hover::after {
-     width: 100%;
-   }
+  // 头像样式
+  & div:first-child {
+    margin-right: 0.6rem;
+    flex-shrink: 0; // 防止头像被压缩
+    
+    :deep(.el-avatar) {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+  }
 
-   & div:last-child span:first-child {
-     margin-left: 0.5rem;
-     color: white;
-     font-weight: bold;
-   }
+  &:hover div:first-child :deep(.el-avatar) {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 15px rgba(167, 139, 250, 0.3);
+  }
 
-   & div:last-child span:last-child {
-     font-size: 1.2rem;
-     color: rgba(255, 255, 255, 0.95); // 确保文字可见
-   }
+  // 文字内容容器 - 允许自然换行
+  & div:last-child {
+    flex: 1;
+    min-width: 0; // 允许收缩
+    white-space: nowrap; // 保持单行显示
+    overflow: visible; // 允许内容可见
 
-   & div:last-child {
-     // 悬浮动态移动下边框
-     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-     padding: 0.5rem;
-     margin-left: 0.5rem;
-     border-radius: 8px;
-     background-color: rgba(255, 255, 255, 0.2);
-     backdrop-filter: blur(10px); // 添加毛玻璃效果
-   }
- }
+    // 昵称样式
+    span:first-child {
+      margin-left: 0.5rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+      font-size: 0.85rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap;
+    }
+
+    // 内容样式
+    span:last-child {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.95);
+      font-weight: 400;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+      // 移除文字截断，让弹幕框适应文字长度
+    }
+  }
+}
 
 // 装饰性浮动元素
 .decorative-elements {
