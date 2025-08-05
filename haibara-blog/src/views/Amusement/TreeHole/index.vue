@@ -52,29 +52,37 @@ onUnmounted(() => {
   }
 })
 
-// 鼠标跟踪器
+// 鼠标跟踪器 - 简化为优雅的光影效果
 function initMouseTracker() {
   document.addEventListener('mousemove', (e) => {
     mouseX.value = e.clientX
     mouseY.value = e.clientY
     
-    // 添加鼠标轨迹点
-    cursorTrail.value.push({
-      x: e.clientX,
-      y: e.clientY,
-      id: Date.now(),
-      opacity: 1
-    })
-    
-    // 限制轨迹点数量并逐渐淡出
-    if (cursorTrail.value.length > 15) {
-      cursorTrail.value.shift()
+    // 创建简洁的光影拖尾
+    if (Math.random() > 0.7) { // 降低生成频率
+      cursorTrail.value.push({
+        x: e.clientX,
+        y: e.clientY,
+        id: Date.now() + Math.random(),
+        opacity: 0.8,
+        size: Math.random() * 6 + 4, // 更小的尺寸
+        life: 0,
+        maxLife: 30 // 更短的生命周期
+      })
     }
     
-    // 逐渐淡出轨迹点
-    setTimeout(() => {
-      cursorTrail.value = cursorTrail.value.filter(point => point.id !== Date.now())
-    }, 1000)
+    // 限制轨迹点数量
+    if (cursorTrail.value.length > 8) {
+      cursorTrail.value.splice(0, 2)
+    }
+    
+    // 更新轨迹点生命周期
+    cursorTrail.value = cursorTrail.value.map(point => {
+      point.life++
+      point.opacity = Math.max(0, 0.8 - point.life / point.maxLife)
+      point.size *= 0.98 // 逐渐缩小
+      return point
+    }).filter(point => point.opacity > 0.05)
   })
 }
 
@@ -247,7 +255,14 @@ function addTreeHoleBtn() {
 function getTreeHole() {
   getTreeHoleList().then(res => {
     if (res.code === 200) {
-      treeHoleList.value = res.data
+      // 为每个弹幕添加随机Y轴位置
+      treeHoleList.value = res.data.map(item => ({
+        ...item,
+        // 随机Y轴位置，确保在header下方和页面内
+        top: Math.random() * (window.innerHeight - 160) + 80,
+        // 添加随机的颜色主题
+        colorTheme: Math.floor(Math.random() * 5)
+      }))
     }
   })
 }
@@ -373,11 +388,13 @@ function createSuccessAnimation() {
       <div 
         v-for="(point, index) in cursorTrail" 
         :key="point.id"
-        class="trail-point"
+        class="trail-point light-trail"
         :style="{
           left: point.x + 'px',
           top: point.y + 'px',
-          opacity: (cursorTrail.length - index) / cursorTrail.length
+          width: point.size + 'px',
+          height: point.size + 'px',
+          opacity: point.opacity
         }"
       ></div>
     </div>
@@ -460,21 +477,26 @@ function createSuccessAnimation() {
 
     <!-- 弹幕区域 - 确保从header下方开始 -->
     <vue-danmaku 
-      :debounce="2000"
-      random-channel
-      :speeds="60"
-      :channels="8"
+      :debounce="1500"
+      :random-channel="false"
+      :speeds="85"
+      :channels="1"
       is-suspend
       v-model:danmus="treeHoleList"
       use-slot 
       loop
       :top="80"
+      :extraStyle="'pointer-events: none;'"
       style="height:calc(100vh - 80px); width:100vw; position: fixed; top: 80px; left: 0; z-index: 5;"
     >
       <template v-slot:dm="{ danmu }">
-        <div class="modern-barrage">
+        <div 
+          class="modern-barrage"
+          :class="`theme-${danmu.colorTheme || 0}`"
+          :style="{ top: danmu.top + 'px' }"
+        >
           <div class="barrage-avatar">
-            <el-avatar :src="danmu.avatar" :size="32"/>
+            <el-avatar :src="danmu.avatar" :size="24"/>
             <div class="avatar-glow"></div>
           </div>
           <div class="barrage-content">
@@ -482,6 +504,7 @@ function createSuccessAnimation() {
             <span class="barrage-text">{{ danmu.content }}</span>
           </div>
           <div class="barrage-trail"></div>
+          <div class="barrage-sparkle"></div>
         </div>
       </template>
     </vue-danmaku>
@@ -574,12 +597,33 @@ function createSuccessAnimation() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at 50% 50%, 
-    rgba(79, 70, 229, 0.03) 0%, 
-    rgba(139, 92, 246, 0.05) 25%, 
-    rgba(219, 39, 119, 0.03) 50%, 
-    rgba(29, 78, 216, 0.02) 100%);
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%),
+    linear-gradient(135deg, 
+      rgba(79, 70, 229, 0.1) 0%, 
+      rgba(139, 92, 246, 0.15) 25%, 
+      rgba(219, 39, 119, 0.1) 50%, 
+      rgba(16, 185, 129, 0.1) 75%,
+      rgba(245, 101, 101, 0.1) 100%);
   z-index: 2;
+  animation: gradient-shift 20s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  25% {
+    filter: hue-rotate(90deg) brightness(1.1);
+  }
+  50% {
+    filter: hue-rotate(180deg) brightness(0.9);
+  }
+  75% {
+    filter: hue-rotate(270deg) brightness(1.05);
+  }
 }
 
 // 鼠标轨迹效果
@@ -595,23 +639,36 @@ function createSuccessAnimation() {
 
 .trail-point {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.8) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
   transform: translate(-50%, -50%);
-  animation: trail-fade 0.8s ease-out forwards;
+  
+  &.light-trail {
+    background: radial-gradient(circle, 
+      rgba(255, 255, 255, 0.6) 0%, 
+      rgba(167, 139, 250, 0.4) 30%, 
+      transparent 70%);
+    filter: blur(1px);
+    animation: light-trail-fade 1s ease-out forwards;
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+  }
 }
 
-@keyframes trail-fade {
+@keyframes light-trail-fade {
   0% { 
-    opacity: 1; 
+    opacity: 0.8; 
     transform: translate(-50%, -50%) scale(1);
+    filter: blur(0px);
+  }
+  50% { 
+    opacity: 0.6; 
+    transform: translate(-50%, -50%) scale(1.1);
+    filter: blur(1px);
   }
   100% { 
     opacity: 0; 
     transform: translate(-50%, -50%) scale(0.3);
+    filter: blur(3px);
   }
 }
 
@@ -679,24 +736,58 @@ function createSuccessAnimation() {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px) saturate(1.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08), 
+    rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(25px) saturate(2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 30px;
   box-shadow: 
     0 20px 40px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.1), 
+      transparent);
+    transition: left 0.6s ease;
+  }
   
   &.focused {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(167, 139, 250, 0.3);
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.12), 
+      rgba(255, 255, 255, 0.06));
+    border-color: rgba(167, 139, 250, 0.4);
     box-shadow: 
-      0 32px 64px rgba(0, 0, 0, 0.15),
-      0 0 0 1px rgba(167, 139, 250, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      0 25px 50px rgba(0, 0, 0, 0.15),
+      0 0 0 2px rgba(167, 139, 250, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      0 0 30px rgba(167, 139, 250, 0.15);
     transform: translateY(-2px);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:hover {
+    border-color: rgba(167, 139, 250, 0.2);
+    box-shadow: 
+      0 25px 45px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 0 20px rgba(167, 139, 250, 0.1);
+    transform: translateY(-1px);
   }
 }
 
@@ -714,18 +805,24 @@ function createSuccessAnimation() {
   background: transparent;
   border: none;
   outline: none;
-  border-radius: 16px;
+  border-radius: 20px;
   transition: all 0.3s ease;
   min-width: 320px;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     font-style: italic;
     font-weight: 300;
+    transition: all 0.3s ease;
   }
   
   &:focus {
     color: white;
+    
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+      transform: translateX(5px);
+    }
     
     & + .input-glow {
       opacity: 1;
@@ -740,10 +837,12 @@ function createSuccessAnimation() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, rgba(167, 139, 250, 0.1), rgba(99, 102, 241, 0.1));
-  border-radius: 16px;
+  background: linear-gradient(45deg, 
+    rgba(167, 139, 250, 0.1), 
+    rgba(99, 102, 241, 0.1));
+  border-radius: 20px;
   opacity: 0;
-  transform: scale(0.8);
+  transform: scale(0.98);
   transition: all 0.3s ease;
   pointer-events: none;
   z-index: -1;
@@ -751,21 +850,68 @@ function createSuccessAnimation() {
 
 .submit-btn {
   position: relative;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.2rem 2.5rem;
+  background: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 50%, 
+    #ec4899 100%);
   border: none;
-  border-radius: 16px;
+  border-radius: 20px;
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 15px 35px rgba(102, 126, 234, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.3), 
+      transparent);
+    transition: left 0.6s ease;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.4s ease;
+  }
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 
+      0 20px 45px rgba(102, 126, 234, 0.5),
+      0 0 30px rgba(167, 139, 250, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    
+    &::before {
+      left: 100%;
+    }
+    
+    &::after {
+      width: 200px;
+      height: 200px;
+    }
     
     .btn-ripple {
       animation: ripple 0.6s ease-out;
@@ -773,8 +919,25 @@ function createSuccessAnimation() {
   }
   
   &:active {
-    transform: translateY(0);
+    transform: translateY(-1px) scale(1.02);
+    transition: all 0.1s ease;
   }
+  
+  &.submitting {
+    pointer-events: none;
+    opacity: 0.8;
+    transform: scale(0.98);
+    
+    &::before {
+      animation: loading-shimmer 1.5s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes loading-shimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
 }
 
 .btn-text {
@@ -808,34 +971,66 @@ function createSuccessAnimation() {
 .modern-barrage {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1.2rem;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px) saturate(1.8);
+  border-radius: 16px;
   box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.15),
+    0 4px 15px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
   overflow: hidden;
+  font-size: 0.85rem;
+  max-width: 300px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   
   &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateY(-2px);
+    transform: translateY(-1px) scale(1.02);
     box-shadow: 
-      0 12px 35px rgba(0, 0, 0, 0.2),
+      0 8px 25px rgba(0, 0, 0, 0.15),
       inset 0 1px 0 rgba(255, 255, 255, 0.3);
       
     .barrage-trail {
       width: 100%;
     }
+    
+    .barrage-sparkle {
+      opacity: 1;
+    }
+  }
+  
+  // 多种颜色主题
+  &.theme-0 {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  
+  &.theme-1 {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(219, 39, 119, 0.1));
+    border-color: rgba(236, 72, 153, 0.3);
+  }
+  
+  &.theme-2 {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1));
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+  
+  &.theme-3 {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.15), rgba(245, 101, 101, 0.1));
+    border-color: rgba(251, 146, 60, 0.3);
+  }
+  
+  &.theme-4 {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(59, 130, 246, 0.1));
+    border-color: rgba(14, 165, 233, 0.3);
   }
 }
 
 .barrage-avatar {
   position: relative;
-  margin-right: 0.8rem;
+  margin-right: 0.6rem;
+  flex-shrink: 0;
   
   .avatar-glow {
     position: absolute;
@@ -848,34 +1043,51 @@ function createSuccessAnimation() {
     opacity: 0;
     transition: opacity 0.3s ease;
     z-index: -1;
+    animation: pulse-glow 2s ease-in-out infinite;
   }
   
   &:hover .avatar-glow {
-    opacity: 0.5;
+    opacity: 0.7;
   }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.1); }
 }
 
 .barrage-content {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .barrage-nickname {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  flex-shrink: 0;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .barrage-text {
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.95);
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.3;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .barrage-trail {
@@ -884,9 +1096,32 @@ function createSuccessAnimation() {
   left: 0;
   height: 2px;
   width: 0;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, currentColor 0%, transparent 100%);
   border-radius: 1px;
-  transition: width 0.3s ease;
+  transition: width 0.4s ease;
+}
+
+.barrage-sparkle {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  animation: sparkle-twinkle 3s ease-in-out infinite;
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { 
+    opacity: 0; 
+    transform: scale(0.5) rotate(0deg);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1) rotate(180deg);
+  }
 }
 
 // 装饰性浮动元素
