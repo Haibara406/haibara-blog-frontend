@@ -749,21 +749,87 @@ function createSuccessAnimation() {
   font-weight: 800;
   margin: 0;
   letter-spacing: 0.1em;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 75%, #f5576c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-flow 3s ease-in-out infinite;
   position: relative;
+  text-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  
+  // 添加多重效果确保文字可见
+  &::before {
+    content: '心灵树洞';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: rgba(102, 126, 234, 0.8);
+    filter: blur(2px);
+    opacity: 0.3;
+    z-index: -1;
+    text-shadow: 0 0 20px rgba(102, 126, 234, 1);
+  }
+  
+  // 额外的文字轮廓效果
+  &::after {
+    content: '心灵树洞';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 75%, #f5576c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.8;
+    z-index: -1;
+    text-shadow: 
+      0 0 10px rgba(102, 126, 234, 0.8),
+      0 0 20px rgba(118, 75, 162, 0.6),
+      0 0 30px rgba(240, 147, 251, 0.4);
+  }
 }
 
 .title-char {
   display: inline-block;
   animation: float 3s ease-in-out infinite;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 75%, #f5576c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: float 3s ease-in-out infinite, gradient-flow 4s ease-in-out infinite;
+  text-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
   
-  &:nth-child(1) { animation-delay: 0s; }
-  &:nth-child(2) { animation-delay: 0.3s; }
-  &:nth-child(3) { animation-delay: 0.6s; }
-  &:nth-child(4) { animation-delay: 0.9s; }
+  // 确保文字可见的备用方案
+  &::before {
+    content: attr(data-char);
+    position: absolute;
+    color: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+    filter: blur(1px);
+  }
+  
+  &:nth-child(1) { 
+    animation-delay: 0s, 0s; 
+    &::before { content: '心'; }
+  }
+  &:nth-child(2) { 
+    animation-delay: 0.3s, 0.5s; 
+    &::before { content: '灵'; }
+  }
+  &:nth-child(3) { 
+    animation-delay: 0.6s, 1s; 
+    &::before { content: '树'; }
+  }
+  &:nth-child(4) { 
+    animation-delay: 0.9s, 1.5s; 
+    &::before { content: '洞'; }
+  }
 }
 
 @keyframes float {
@@ -1439,6 +1505,15 @@ function createSuccessAnimation() {
   75% {
     transform: translateY(-20px) translateX(8px) rotate(270deg);
     opacity: 0.5;
+  }
+}
+
+// 浏览器兼容性备用方案
+@supports not (-webkit-background-clip: text) {
+  .tree-hole-title, .title-char {
+    color: #667eea !important;
+    background: none !important;
+    -webkit-text-fill-color: #667eea !important;
   }
 }
 
