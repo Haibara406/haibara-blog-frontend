@@ -88,205 +88,916 @@ function mdContent(content: string) {
 </script>
 
 <template>
-  <div class="bg">
+  <div class="message-board">
     <div class="occupancyHeight"></div>
-    <div>
-      <div class="title">
-        <div>留言板</div>
-        <el-button type="primary" plain @click="isShow = true">留言</el-button>
-      </div>
-      <el-divider/>
-      <div class="title_content">
-        <span>欢迎访问留言板板块！</span>
-        <span>留言板是一个方便与其他用户交流、分享观点和意见的平台。通过留言板，您可以：</span>
-        <span>1、留下自己的留言：无论是对特定主题的讨论、对某篇文章的评论，还是向其他用户提问，您都可以在留言板上发表自己的留言。</span>
-        <span>2、回复其他用户：看到其他用户的留言后，您可以进行回复和互动，分享自己的观点，提供帮助或者表达共鸣。</span>
-        <span>3、进行在线交流：留言板不仅是一个留言的平台，还是一个与其他用户进行实时交流的地方。您可以通过留言板与他人进行私聊，分享更多的讨论和信息。</span>
-        <span>支持：普通文档，markdown</span>
-      </div>
-      <div>
-        <el-drawer
-            size="45%"
-            v-model="isShow"
-            direction="rtl"
-            :with-header="false"
-        >
-          <div>
-            <MdEditor :theme="mode" style="height: 90vh" :footers="footers" v-model="text" :toolbars="toolbars" no-upload-img
-                      :preview="false"
-                      :on-change="mdContent"
-            >
-              <template #defFooters>
-                <div style="height: 100%;display: flex;align-items: center">
-                  <span style="margin: 0 1rem">字数：{{ wordCount }}</span>
-                  <span>字数限制：2000</span>
-                </div>
-              </template>
-            </MdEditor>
-            <div style="margin-top: 1rem;float: right">
-              <el-button type="primary" @click="addLeaveWord" plain>提交</el-button>
-            </div>
-            <div style="margin-top: 1rem;margin-right: 1rem;float: right" @click="isShow = false">
-              <el-button type="warning" plain>关闭</el-button>
-            </div>
-          </div>
-        </el-drawer>
+    
+    <!-- 头部区域 -->
+    <div class="header-section animate-slide-in-down decorative-particles" v-slide-in>
+      <div class="header-content">
+        <div class="title-wrapper">
+          <h1 class="main-title animate-neon-glow">
+            <span class="title-icon animate-bounce-in">💬</span>
+            <span class="title-text">留言板</span>
+            <div class="title-decoration"></div>
+          </h1>
+          <p class="subtitle animate-slide-in-up">分享你的想法，与世界交流</p>
+        </div>
+        <button class="write-btn hover-lift light-beam" @click="isShow = true">
+          <span class="btn-icon animate-star-twinkle">✍️</span>
+          <span class="btn-text">写留言</span>
+          <div class="btn-ripple"></div>
+        </button>
       </div>
     </div>
 
-    <div>
-      <div class="title">留言列表</div>
-      <div class="form">
-        <template v-for="item in LeaveWordList">
-          <el-card class="box-card" shadow="hover" v-slide-in>
-            <template #header>
-              <div class="card-header">
-                <span>
-                  <el-avatar :src="item.avatar"/>
-                </span>
-                <span class="name">{{ item.nickname }}</span>
-                <span class="time">{{ item.createTime }}</span>
+    <!-- 介绍区域 -->
+    <div class="intro-section animate-slide-in-left" v-slide-in>
+      <div class="intro-card hover-glow starry-background">
+        <div class="intro-header">
+          <div class="intro-icon animate-particle-float">🌟</div>
+          <h3 class="animate-slide-in-right">欢迎来到留言板</h3>
+        </div>
+        <div class="intro-content">
+          <div class="feature-list">
+            <div class="feature-item hover-scale animate-bounce-in" style="animation-delay: 0.1s">
+              <div class="feature-icon animate-heartbeat">💭</div>
+              <div class="feature-text">
+                <strong>自由表达</strong>
+                <span>分享你的想法、观点和见解</span>
+              </div>
+            </div>
+            <div class="feature-item hover-scale animate-bounce-in" style="animation-delay: 0.3s">
+              <div class="feature-icon animate-heartbeat">🤝</div>
+              <div class="feature-text">
+                <strong>互动交流</strong>
+                <span>与其他用户进行深度讨论</span>
+              </div>
+            </div>
+            <div class="feature-item hover-scale animate-bounce-in" style="animation-delay: 0.5s">
+              <div class="feature-icon animate-heartbeat">📝</div>
+              <div class="feature-text">
+                <strong>Markdown支持</strong>
+                <span>支持富文本和Markdown格式</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 写留言弹窗 -->
+    <el-drawer
+        class="message-drawer"
+        size="50%"
+        v-model="isShow"
+        direction="rtl"
+        :with-header="false"
+    >
+      <div class="drawer-content">
+        <div class="drawer-header">
+          <h3 class="drawer-title">
+            <span class="drawer-icon">✨</span>
+            写下你的留言
+          </h3>
+          <div class="drawer-subtitle">让想法自由流淌</div>
+        </div>
+        
+        <div class="editor-container">
+          <MdEditor 
+            :theme="mode" 
+            class="message-editor"
+            :footers="footers" 
+            v-model="text" 
+            :toolbars="toolbars" 
+            no-upload-img
+            :preview="false"
+            :on-change="mdContent"
+          >
+            <template #defFooters>
+              <div class="editor-footer">
+                <div class="word-count">
+                  <span class="count-current">{{ wordCount }}</span>
+                  <span class="count-separator">/</span>
+                  <span class="count-limit">2000</span>
+                </div>
               </div>
             </template>
-            <div class="text">
-              {{ item.content }}
-            </div>
-            <div class="bottom">
-              <div class="count">
-                <div>
-                  <SvgIcon name="comments"/>
-                  <span>{{ item.commentCount }}</span>
-                </div>
-                <div>
-                  <SvgIcon name="like"/>
-                  <span>{{ item.likeCount }}</span>
-                </div>
-                <div>
-                  <SvgIcon name="collection"/>
-                  <span>{{ item.favoriteCount }}</span>
-                </div>
+          </MdEditor>
+        </div>
+        
+        <div class="drawer-actions">
+          <button class="action-btn cancel-btn" @click="isShow = false">
+            <span class="btn-icon">❌</span>
+            <span class="btn-text">取消</span>
+          </button>
+          <button class="action-btn submit-btn" @click="addLeaveWord">
+            <span class="btn-icon">🚀</span>
+            <span class="btn-text">发布留言</span>
+          </button>
+        </div>
+      </div>
+    </el-drawer>
+
+    <!-- 留言列表 -->
+    <div class="messages-section">
+      <div class="section-header" v-slide-in>
+        <h2 class="section-title">
+          <span class="section-icon">📋</span>
+          留言列表
+          <div class="section-decoration"></div>
+        </h2>
+        <div class="message-stats">
+          <span class="stats-item">
+            <span class="stats-number">{{ LeaveWordList.length }}</span>
+            <span class="stats-label">条留言</span>
+          </span>
+        </div>
+      </div>
+      
+      <div class="messages-grid">
+        <div 
+          v-for="(item, index) in LeaveWordList" 
+          :key="item.id"
+          class="message-card hover-lift animate-card-float light-beam"
+          :style="{ '--delay': index * 0.1 + 's', 'animation-delay': index * 0.15 + 's' }"
+          v-slide-in
+          @click="$router.push(`/message/detail/${item.id}`)"
+        >
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="user-info">
+              <div class="avatar-wrapper">
+                <el-avatar :src="item.avatar" class="user-avatar hover-scale"/>
+                <div class="avatar-ring animate-pulse-glow"></div>
               </div>
-              <div>
-                <el-link type="primary" @click="$router.push(`/message/detail/${item.id}`)">
-                  <template #icon>
-                    <el-icon>
-                      <ArrowRightBold/>
-                    </el-icon>
-                  </template>
-                  查看详情
-                </el-link>
+              <div class="user-details">
+                <h4 class="username animate-slide-in-left">{{ item.nickname }}</h4>
+                <span class="timestamp animate-slide-in-left" style="animation-delay: 0.1s">{{ item.createTime }}</span>
               </div>
             </div>
-          </el-card>
-        </template>
+            <div class="card-menu">
+              <div class="menu-dot animate-star-twinkle"></div>
+              <div class="menu-dot animate-star-twinkle" style="animation-delay: 0.2s"></div>
+              <div class="menu-dot animate-star-twinkle" style="animation-delay: 0.4s"></div>
+            </div>
+          </div>
+          
+          <div class="card-content">
+            <p class="message-text animate-slide-in-up">{{ item.content }}</p>
+          </div>
+          
+          <div class="card-footer">
+            <div class="interaction-stats">
+              <div class="stat-item comments hover-scale animate-bounce-in" style="animation-delay: 0.2s">
+                <SvgIcon name="comments" class="stat-icon"/>
+                <span class="stat-count">{{ item.commentCount }}</span>
+              </div>
+              <div class="stat-item likes hover-scale animate-bounce-in" style="animation-delay: 0.3s">
+                <SvgIcon name="like" class="stat-icon animate-heartbeat"/>
+                <span class="stat-count">{{ item.likeCount }}</span>
+              </div>
+              <div class="stat-item favorites hover-scale animate-bounce-in" style="animation-delay: 0.4s">
+                <SvgIcon name="collection" class="stat-icon"/>
+                <span class="stat-count">{{ item.favoriteCount }}</span>
+              </div>
+            </div>
+            <div class="read-more hover-glow">
+              <span class="read-more-text">查看详情</span>
+              <ArrowRightBold class="read-more-icon"/>
+            </div>
+          </div>
+          
+          <div class="card-overlay animate-gradient-shift">
+            <div class="overlay-content">
+              <span class="overlay-text animate-bounce-in">点击查看详情</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-
-.occupancyHeight{
+// 基础样式
+.occupancyHeight {
   margin: 2rem 0;
   @media screen and (min-width: 910px) {
     display: none;
   }
 }
 
-.bg{
+.message-board {
   background: var(--el-bg-color);
+  min-height: 100vh;
+  padding: 0 1rem;
 }
 
-:deep(.el-drawer){
-  @media (max-width: 1000px) {
-    width: 70% !important;
-  }
-  @media (max-width: 600px) {
-    width: 100% !important;
-  }
-}
-
-:deep(.md-editor-toolbar-left) {
-  flex-wrap: wrap;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.title_content {
-  font-weight: bold;
-  font-size: 0.8rem;
-  color: #999;
-  display: flex;
-  flex-direction: column;
-  background: var(--mao-bg-message);
-  padding: 0.5rem;
-  border-radius: $border-radius;
-  margin-bottom: 1rem;
-
-  span {
-    margin-bottom: 1rem;
-    line-height: 1rem;
-  }
-}
-
-.box-card {
-  margin-top: 1rem;
-  font-size: 0.9rem;
-
-  .bottom {
+// 头部区域样式
+.header-section {
+  margin-bottom: 2rem;
+  
+  .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 1rem;
-    color: grey;
-
-    .count {
+    padding: 2rem 0;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 1.5rem;
+      text-align: center;
+    }
+  }
+  
+  .title-wrapper {
+    flex: 1;
+    
+    .main-title {
+      position: relative;
+      font-size: 3rem;
+      font-weight: 800;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       display: flex;
-      margin-top: 0.5rem;
-
-      div {
-        display: flex;
-        align-items: center;
-        margin-right: 1rem;
+      align-items: center;
+      gap: 1rem;
+      
+      @media (max-width: 768px) {
+        font-size: 2.5rem;
+        justify-content: center;
       }
-
-      span {
-        margin-left: 0.2rem;
+      
+      .title-icon {
+        font-size: 3rem;
+        animation: bounce 2s infinite;
+      }
+      
+      .title-text {
+        position: relative;
+        z-index: 2;
+      }
+      
+      .title-decoration {
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+        transform: scaleX(0);
+        animation: expandWidth 1s ease-out 0.5s forwards;
       }
     }
-  }
-
-  .text {
-    margin-bottom: 1rem;
-
-    .reply {
-      margin-top: 3rem;
-
+    
+    .subtitle {
+      margin: 0.5rem 0 0 0;
+      font-size: 1.2rem;
+      color: #666;
+      font-weight: 300;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out 0.8s forwards;
     }
   }
+  
+  .write-btn {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 2rem;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+      
+      .btn-ripple {
+        transform: scale(1);
+        opacity: 0.3;
+      }
+    }
+    
+    &:active {
+      transform: translateY(-1px);
+    }
+    
+    .btn-icon {
+      margin-right: 0.5rem;
+      font-size: 1.2rem;
+    }
+    
+    .btn-ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.6s ease, opacity 0.6s ease;
+      opacity: 0;
+    }
+  }
+}
 
-  .card-header {
+// 介绍区域样式
+.intro-section {
+  margin-bottom: 3rem;
+  
+  .intro-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+  }
+  
+  .intro-header {
     display: flex;
     align-items: center;
-
-    .name {
-      margin-left: 0.5rem;
-      font-size: 1.3rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    
+    .intro-icon {
+      font-size: 2rem;
+      animation: rotate 3s linear infinite;
     }
+    
+    h3 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333;
+    }
+  }
+  
+  .feature-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(102, 126, 234, 0.05);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: rgba(102, 126, 234, 0.1);
+        transform: translateX(5px);
+      }
+      
+      .feature-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+      }
+      
+      .feature-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        
+        strong {
+          color: #333;
+          font-weight: 600;
+        }
+        
+        span {
+          color: #666;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+}
 
-    .time {
-      // 右对齐
-      flex: 1;
-      text-align: right;
-      margin-left: 1rem;
-      font-size: 0.85rem;
-      color: #999;
+// 抽屉样式
+:deep(.message-drawer) {
+  .el-drawer {
+    border-radius: 20px 0 0 20px;
+    
+    @media (max-width: 1000px) {
+      width: 70% !important;
+    }
+    @media (max-width: 600px) {
+      width: 100% !important;
+    }
+  }
+}
+
+.drawer-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  
+  .drawer-header {
+    margin-bottom: 2rem;
+    text-align: center;
+    
+    .drawer-title {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      
+      .drawer-icon {
+        font-size: 2rem;
+        animation: sparkle 2s ease-in-out infinite;
+      }
+    }
+    
+    .drawer-subtitle {
+      margin-top: 0.5rem;
+      color: #666;
+      font-style: italic;
+    }
+  }
+  
+  .editor-container {
+    flex: 1;
+    margin-bottom: 2rem;
+    
+    .message-editor {
+      height: 100% !important;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .editor-footer {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .word-count {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-weight: 600;
+        
+        .count-current {
+          color: #667eea;
+        }
+        
+        .count-separator {
+          color: #ccc;
+        }
+        
+        .count-limit {
+          color: #999;
+        }
+      }
+    }
+  }
+  
+  .drawer-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &.cancel-btn {
+        background: #f5f5f5;
+        color: #666;
+        
+        &:hover {
+          background: #e0e0e0;
+          transform: translateY(-2px);
+        }
+      }
+      
+      &.submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+      }
+    }
+  }
+}
+
+// 留言列表区域
+.messages-section {
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    
+    .section-title {
+      position: relative;
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      
+      .section-icon {
+        font-size: 2rem;
+      }
+      
+      .section-decoration {
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60%;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+      }
+    }
+    
+    .message-stats {
+      .stats-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        
+        .stats-number {
+          font-size: 2rem;
+          font-weight: 800;
+          color: #667eea;
+        }
+        
+        .stats-label {
+          color: #666;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+  
+  .messages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+}
+
+// 留言卡片样式
+.message-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  animation: slideInUp 0.6s ease-out var(--delay);
+  
+  &:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    
+    .card-glow {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
+    .card-overlay {
+      opacity: 1;
+    }
+    
+    .avatar-ring {
+      transform: scale(1.2);
+      opacity: 0.8;
+    }
+    
+    .read-more-icon {
+      transform: translateX(5px);
+    }
+  }
+  
+  .card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: all 0.4s ease;
+    pointer-events: none;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      
+      .avatar-wrapper {
+        position: relative;
+        
+        .user-avatar {
+          width: 50px;
+          height: 50px;
+          border: 3px solid #fff;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .avatar-ring {
+          position: absolute;
+          top: -3px;
+          left: -3px;
+          right: -3px;
+          bottom: -3px;
+          border: 2px solid #667eea;
+          border-radius: 50%;
+          opacity: 0;
+          transition: all 0.3s ease;
+        }
+      }
+      
+      .user-details {
+        .username {
+          margin: 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #333;
+        }
+        
+        .timestamp {
+          font-size: 0.85rem;
+          color: #999;
+        }
+      }
+    }
+    
+    .card-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      
+      .menu-dot {
+        width: 4px;
+        height: 4px;
+        background: #ccc;
+        border-radius: 50%;
+        transition: background 0.3s ease;
+      }
+    }
+  }
+  
+  .card-content {
+    margin-bottom: 1.5rem;
+    
+    .message-text {
+      margin: 0;
+      line-height: 1.6;
+      color: #555;
+      font-size: 0.95rem;
+    }
+  }
+  
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .interaction-stats {
+      display: flex;
+      gap: 1.5rem;
+      
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: #666;
+        transition: color 0.3s ease;
+        
+        &:hover {
+          color: #667eea;
+        }
+        
+        .stat-icon {
+          font-size: 1.1rem;
+        }
+        
+        .stat-count {
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+      }
+    }
+    
+    .read-more {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #667eea;
+      font-weight: 500;
+      font-size: 0.9rem;
+      
+      .read-more-icon {
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+      }
+    }
+  }
+  
+  .card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .overlay-content {
+      text-align: center;
+      color: white;
+      
+      .overlay-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// 动画定义
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -10px, 0);
+  }
+  70% {
+    transform: translate3d(0, -5px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes expandWidth {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 响应式设计
+@media (max-width: 1200px) {
+  .messages-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .message-board {
+    padding: 0 0.5rem;
+  }
+  
+  .header-section .header-content {
+    padding: 1.5rem 0;
+  }
+  
+  .intro-section .intro-card {
+    padding: 1.5rem;
+  }
+  
+  .drawer-content {
+    padding: 1.5rem;
+  }
+  
+  .message-card {
+    padding: 1.2rem;
+  }
+}
+
+// 深色模式适配
+@media (prefers-color-scheme: dark) {
+  .message-card {
+    background: rgba(30, 30, 30, 0.9);
+    color: #e0e0e0;
+    
+    .username {
+      color: #e0e0e0 !important;
+    }
+    
+    .message-text {
+      color: #c0c0c0 !important;
+    }
+  }
+  
+  .intro-card {
+    background: rgba(30, 30, 30, 0.8);
+    color: #e0e0e0;
+    
+    h3 {
+      color: #e0e0e0 !important;
+    }
+    
+    .feature-text strong {
+      color: #e0e0e0 !important;
     }
   }
 }

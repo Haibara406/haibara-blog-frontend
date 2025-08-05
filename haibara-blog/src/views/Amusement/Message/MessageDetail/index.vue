@@ -119,122 +119,679 @@ function cancelFavoriteFunc() {
 </script>
 
 <template>
-  <div>
-    <div>
-      <el-link :icon="ArrowLeftBold" @click="$router.push('/message')">回到留言列表</el-link>
-      <el-divider/>
+  <div class="message-detail animate-page-slide-in">
+    <!-- 返回导航 -->
+    <div class="navigation-section animate-slide-in-down" v-slide-in>
+      <button class="back-btn hover-lift light-beam" @click="$router.push('/message')">
+        <ArrowLeftBold class="back-icon"/>
+        <span class="back-text">回到留言列表</span>
+        <div class="btn-ripple"></div>
+      </button>
     </div>
-    <div class="user">
-      <span><el-avatar :src="leaveWord.avatar"/></span>
-      <div class="detail">
-        <span class="name">{{ leaveWord.nickname }}</span>
-        <span class="time">{{ leaveWord.createTime }}</span>
-      </div>
-    </div>
-    <div class="content">
-      <MdPreview :modelValue="leaveWord.content" :theme="mode"/>
-    </div>
-    <div class="container">
-      <div class="count">
-        <div>
-          <SvgIcon name="comments"/>
-          <span>{{ leaveWord.commentCount }}</span>
-        </div>
-        <div @click="likeFunc">
-          <SvgIcon v-show="!like" name="like"/>
-          <SvgIcon v-show="like" name="like-selected"/>
-          <span>{{ leaveWord.likeCount }}</span>
-        </div>
-        <div @click="favoriteFunc">
-          <SvgIcon v-show="!favorite" name="collection"/>
-          <SvgIcon v-show="favorite" name="collection-selected"/>
-          <span>{{ leaveWord.favoriteCount }}</span>
-        </div>
-      </div>
-    </div>
-    <el-divider content-position="left"/>
-    <!-- 用户评论 -->
-    <Comment :type="2" :like-type="2" :author-id="leaveWord.userId" :type-id="leaveWord.id" :is-show-header="true"
-             v-if="loadingComment"/>
-  </div>
 
+    <!-- 留言内容卡片 -->
+    <div class="message-card animate-card-float decorative-particles" v-slide-in>
+      <div class="card-glow"></div>
+      
+      <!-- 用户信息头部 -->
+      <div class="message-header">
+        <div class="user-section">
+          <div class="avatar-wrapper animate-bounce-in">
+            <el-avatar :src="leaveWord.avatar" class="user-avatar hover-scale"/>
+            <div class="avatar-ring animate-pulse-glow"></div>
+            <div class="online-indicator animate-heartbeat"></div>
+          </div>
+          <div class="user-info">
+            <h2 class="username animate-slide-in-left animate-neon-glow">{{ leaveWord.nickname }}</h2>
+            <div class="user-meta">
+              <span class="publish-time animate-slide-in-left" style="animation-delay: 0.2s">
+                <span class="time-icon animate-star-twinkle">🕒</span>
+                {{ leaveWord.createTime }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="message-actions">
+          <div class="action-menu hover-scale">
+            <div class="menu-dot animate-star-twinkle"></div>
+            <div class="menu-dot animate-star-twinkle" style="animation-delay: 0.2s"></div>
+            <div class="menu-dot animate-star-twinkle" style="animation-delay: 0.4s"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 留言内容 -->
+      <div class="message-content animate-slide-in-up">
+        <div class="content-wrapper light-beam">
+          <MdPreview 
+            :modelValue="leaveWord.content" 
+            :theme="mode"
+            class="markdown-content animate-slide-in-up"
+            style="animation-delay: 0.3s"
+          />
+        </div>
+      </div>
+
+      <!-- 互动统计和操作 -->
+      <div class="interaction-section">
+        <div class="stats-container">
+          <div class="stat-item comments-stat hover-lift animate-bounce-in" style="animation-delay: 0.1s">
+            <div class="stat-icon-wrapper">
+              <SvgIcon name="comments" class="stat-icon"/>
+            </div>
+            <div class="stat-info">
+              <span class="stat-number animate-zoom-in" style="animation-delay: 0.3s">{{ leaveWord.commentCount }}</span>
+              <span class="stat-label">评论</span>
+            </div>
+          </div>
+          
+          <div 
+            class="stat-item likes-stat hover-lift animate-bounce-in" 
+            :class="{ active: like }"
+            @click="likeFunc"
+            style="animation-delay: 0.2s"
+          >
+            <div class="stat-icon-wrapper">
+              <SvgIcon 
+                :name="like ? 'like-selected' : 'like'" 
+                class="stat-icon animate-heartbeat"
+              />
+            </div>
+            <div class="stat-info">
+              <span class="stat-number animate-zoom-in" style="animation-delay: 0.4s">{{ leaveWord.likeCount }}</span>
+              <span class="stat-label">点赞</span>
+            </div>
+            <div class="like-animation" v-if="like"></div>
+          </div>
+          
+          <div 
+            class="stat-item favorites-stat hover-lift animate-bounce-in" 
+            :class="{ active: favorite }"
+            @click="favoriteFunc"
+            style="animation-delay: 0.3s"
+          >
+            <div class="stat-icon-wrapper">
+              <SvgIcon 
+                :name="favorite ? 'collection-selected' : 'collection'" 
+                class="stat-icon animate-star-twinkle"
+              />
+            </div>
+            <div class="stat-info">
+              <span class="stat-number animate-zoom-in" style="animation-delay: 0.5s">{{ leaveWord.favoriteCount }}</span>
+              <span class="stat-label">收藏</span>
+            </div>
+            <div class="favorite-animation" v-if="favorite"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分割线 -->
+    <div class="section-divider animate-slide-in-up" v-slide-in>
+      <div class="divider-line animate-gradient-shift"></div>
+      <div class="divider-text">
+        <span class="divider-icon animate-bounce-in">💬</span>
+        <span class="animate-slide-in-left" style="animation-delay: 0.2s">评论区</span>
+      </div>
+      <div class="divider-line animate-gradient-shift"></div>
+    </div>
+
+    <!-- 评论区域 -->
+    <div class="comments-section animate-slide-in-up starry-background" v-slide-in style="animation-delay: 0.4s">
+      <Comment 
+        :type="2" 
+        :like-type="2" 
+        :author-id="leaveWord.userId" 
+        :type-id="leaveWord.id" 
+        :is-show-header="true"
+        v-if="loadingComment"
+        class="comment-component hover-glow"
+      />
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">
-
-.comments {
-  border-radius: $border-radius;
-
-  .comment {
-    .comment_content {
-      padding: 1rem;
-      border-radius: $border-radius;
-      font-size: 0.9em;
-
-      .child_reply {
-        margin-top: 1rem;
-        background: white;
-        padding: 1rem;
-        border-radius: $border-radius;
-        font-size: 0.9em;
-      }
-    }
-
-    padding: 1rem 0;
+// 主容器样式
+.message-detail {
+  background: var(--el-bg-color);
+  min-height: 100vh;
+  padding: 2rem;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 }
 
-.container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 2rem;
-}
-
-.content {
-  margin: 1rem 0;
-}
-
-:deep(.md-editor-toolbar-left) {
-  flex-wrap: wrap;
-}
-
-.count {
-  display: flex;
-  margin-top: 0.5rem;
-
-  div {
+// 导航区域样式
+.navigation-section {
+  margin-bottom: 2rem;
+  
+  .back-btn {
+    position: relative;
     display: flex;
     align-items: center;
-    margin-right: 1rem;
-    color: grey;
-  }
-
-  span {
-    margin-left: 0.2rem;
+    gap: 0.8rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 50px;
+    padding: 0.8rem 1.5rem;
+    color: #667eea;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.2);
+      background: rgba(102, 126, 234, 0.1);
+      
+      .btn-ripple {
+        transform: scale(1);
+        opacity: 0.3;
+      }
+      
+      .back-icon {
+        transform: translateX(-3px);
+      }
+    }
+    
+    .back-icon {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .back-text {
+      font-size: 1rem;
+    }
+    
+    .btn-ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.6s ease, opacity 0.6s ease;
+      opacity: 0;
+    }
   }
 }
 
-.user {
+// 留言卡片样式
+.message-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border-radius: 24px;
+  padding: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  margin-bottom: 3rem;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    
+    .card-glow {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
+    .avatar-ring {
+      transform: scale(1.2);
+      opacity: 0.8;
+    }
+  }
+  
+  .card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+    opacity: 0;
+    transition: all 0.4s ease;
+    pointer-events: none;
+  }
+}
+
+// 留言头部样式
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  
+  .user-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    
+    .avatar-wrapper {
+      position: relative;
+      
+      .user-avatar {
+        width: 70px;
+        height: 70px;
+        border: 4px solid #fff;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+      }
+      
+      .avatar-ring {
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        border: 3px solid #667eea;
+        border-radius: 50%;
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+      
+      .online-indicator {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 16px;
+        height: 16px;
+        background: #4CAF50;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+    }
+    
+    .user-info {
+      .username {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .user-meta {
+        .publish-time {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #666;
+          font-size: 0.95rem;
+          
+          .time-icon {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+  
+  .message-actions {
+    .action-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      transition: background 0.3s ease;
+      
+      &:hover {
+        background: rgba(102, 126, 234, 0.1);
+      }
+      
+      .menu-dot {
+        width: 5px;
+        height: 5px;
+        background: #ccc;
+        border-radius: 50%;
+        transition: background 0.3s ease;
+      }
+    }
+  }
+}
+
+// 留言内容样式
+.message-content {
+  margin-bottom: 2.5rem;
+  
+  .content-wrapper {
+    .markdown-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #333;
+      
+      :deep(h1), :deep(h2), :deep(h3) {
+        color: #667eea;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+      
+      :deep(p) {
+        margin-bottom: 1.2rem;
+      }
+      
+      :deep(blockquote) {
+        border-left: 4px solid #667eea;
+        background: rgba(102, 126, 234, 0.05);
+        padding: 1rem 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 0 8px 8px 0;
+      }
+      
+      :deep(code) {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', monospace;
+      }
+      
+      :deep(pre) {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      }
+    }
+  }
+}
+
+// 互动区域样式
+.interaction-section {
+  .stats-container {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    
+    @media (max-width: 768px) {
+      gap: 1rem;
+    }
+    
+    .stat-item {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 1.5rem;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+      }
+      
+      &.active {
+        background: rgba(102, 126, 234, 0.1);
+        border-color: #667eea;
+        
+        .stat-icon-wrapper {
+          background: #667eea;
+          color: white;
+          transform: scale(1.1);
+        }
+        
+        .stat-number {
+          color: #667eea;
+        }
+      }
+      
+      .stat-icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #f5f5f5;
+        transition: all 0.3s ease;
+        
+        .stat-icon {
+          font-size: 1.5rem;
+          color: #666;
+          transition: color 0.3s ease;
+        }
+      }
+      
+      .stat-info {
+        text-align: center;
+        
+        .stat-number {
+          display: block;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #333;
+          margin-bottom: 0.2rem;
+          transition: color 0.3s ease;
+        }
+        
+        .stat-label {
+          font-size: 0.9rem;
+          color: #666;
+          font-weight: 500;
+        }
+      }
+      
+      // 点赞动画
+      .like-animation {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(255, 107, 107, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        animation: likeExpand 0.6s ease-out;
+        pointer-events: none;
+      }
+      
+      // 收藏动画
+      .favorite-animation {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(255, 193, 7, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        animation: favoriteExpand 0.6s ease-out;
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+// 分割线样式
+.section-divider {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-
-  .detail {
+  margin: 3rem 0;
+  
+  .divider-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #667eea, transparent);
+  }
+  
+  .divider-text {
     display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 2rem;
+    font-weight: 600;
+    color: #667eea;
+    font-size: 1.1rem;
+    
+    .divider-icon {
+      font-size: 1.3rem;
+    }
+  }
+}
+
+// 评论区域样式
+.comments-section {
+  .comment-component {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+}
+
+// 动画定义
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+@keyframes likeExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes favoriteExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .message-card {
+    padding: 1.5rem;
+  }
+  
+  .message-header {
     flex-direction: column;
-    margin-left: 0.2rem;
+    gap: 1rem;
+    
+    .user-section {
+      gap: 1rem;
+      
+      .avatar-wrapper .user-avatar {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .user-info .username {
+        font-size: 1.5rem;
+      }
+    }
   }
-
-  .name {
-    font-size: 1em;
-    margin-bottom: 0.5em;
-    color: #0072ff;
+  
+  .interaction-section .stats-container {
+    flex-direction: column;
+    align-items: center;
+    
+    .stat-item {
+      flex-direction: row;
+      padding: 1rem 2rem;
+      gap: 1rem;
+      width: 100%;
+      max-width: 300px;
+      
+      .stat-info {
+        text-align: left;
+      }
+    }
   }
+  
+  .section-divider {
+    margin: 2rem 0;
+    
+    .divider-text {
+      padding: 0 1rem;
+      font-size: 1rem;
+    }
+  }
+}
 
-  .time {
-    font-size: 0.75em;
-    color: grey;
+// 深色模式适配
+@media (prefers-color-scheme: dark) {
+  .message-card {
+    background: rgba(30, 30, 30, 0.95);
+    color: #e0e0e0;
+  }
+  
+  .back-btn {
+    background: rgba(30, 30, 30, 0.9);
+    color: #667eea;
+  }
+  
+  .username {
+    color: #e0e0e0 !important;
+  }
+  
+  .markdown-content {
+    color: #c0c0c0 !important;
+    
+    :deep(h1), :deep(h2), :deep(h3) {
+      color: #8a9bff !important;
+    }
+  }
+  
+  .stat-item {
+    background: rgba(30, 30, 30, 0.8);
+    color: #e0e0e0;
+    
+    .stat-number {
+      color: #e0e0e0 !important;
+    }
+    
+    &.active .stat-number {
+      color: #8a9bff !important;
+    }
+  }
+  
+  .comment-component {
+    background: rgba(30, 30, 30, 0.8);
+    color: #e0e0e0;
   }
 }
 </style>

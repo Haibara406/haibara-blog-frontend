@@ -1,0 +1,634 @@
+// 留言板专用动画样式文件
+// ========================================
+
+// 全局动画变量
+:root {
+  --message-primary-color: #667eea;
+  --message-secondary-color: #764ba2;
+  --message-accent-color: #ff6b6b;
+  --message-success-color: #4CAF50;
+  --message-warning-color: #FFC107;
+  
+  --animation-duration-fast: 0.3s;
+  --animation-duration-normal: 0.6s;
+  --animation-duration-slow: 1s;
+  
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out-circ: cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+// 页面入场动画
+@keyframes pageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 卡片浮现动画
+@keyframes cardFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// 渐变背景动画
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// 脉冲光晕动画
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.6), 0 0 30px rgba(102, 126, 234, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+  }
+}
+
+// 按钮波纹动画
+@keyframes buttonRipple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+// 文字打字机效果
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+// 文字闪烁光标
+@keyframes blink {
+  50% {
+    border-color: transparent;
+  }
+}
+
+// 粒子漂浮动画
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 1;
+  }
+  33% {
+    transform: translateY(-30px) rotate(120deg);
+    opacity: 0.8;
+  }
+  66% {
+    transform: translateY(30px) rotate(240deg);
+    opacity: 0.6;
+  }
+}
+
+// 星星闪烁动画
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+// 心跳动画
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+// 摇摆动画
+@keyframes swing {
+  15% {
+    transform: translateX(5px);
+  }
+  30% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  65% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+// 弹跳进入动画
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// 旋转进入动画
+@keyframes rotateIn {
+  0% {
+    opacity: 0;
+    transform: rotate(-200deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0);
+  }
+}
+
+// 滑动淡入动画
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 缩放动画
+@keyframes zoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+// 翻转动画
+@keyframes flipInX {
+  0% {
+    opacity: 0;
+    transform: perspective(400px) rotateX(90deg);
+  }
+  40% {
+    transform: perspective(400px) rotateX(-20deg);
+  }
+  60% {
+    transform: perspective(400px) rotateX(10deg);
+  }
+  80% {
+    transform: perspective(400px) rotateX(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(400px) rotateX(0deg);
+  }
+}
+
+@keyframes flipInY {
+  0% {
+    opacity: 0;
+    transform: perspective(400px) rotateY(90deg);
+  }
+  40% {
+    transform: perspective(400px) rotateY(-20deg);
+  }
+  60% {
+    transform: perspective(400px) rotateY(10deg);
+  }
+  80% {
+    transform: perspective(400px) rotateY(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(400px) rotateY(0deg);
+  }
+}
+
+// 光束扫描动画
+@keyframes lightSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// 霓虹灯效果
+@keyframes neonGlow {
+  0%, 100% {
+    text-shadow: 
+      0 0 5px var(--message-primary-color),
+      0 0 10px var(--message-primary-color),
+      0 0 15px var(--message-primary-color);
+  }
+  50% {
+    text-shadow: 
+      0 0 2px var(--message-primary-color),
+      0 0 5px var(--message-primary-color),
+      0 0 8px var(--message-primary-color),
+      0 0 12px var(--message-primary-color),
+      0 0 18px var(--message-primary-color);
+  }
+}
+
+// 彩虹文字动画
+@keyframes rainbowText {
+  0% { color: #ff0000; }
+  16.66% { color: #ff8000; }
+  33.33% { color: #ffff00; }
+  50% { color: #80ff00; }
+  66.66% { color: #00ff80; }
+  83.33% { color: #0080ff; }
+  100% { color: #8000ff; }
+}
+
+// 水波纹扩散动画
+@keyframes rippleExpand {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+// 粒子爆炸动画
+@keyframes particleExplode {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+// 动画工具类
+.animate-page-slide-in {
+  animation: pageSlideIn var(--animation-duration-normal) var(--ease-out-back);
+}
+
+.animate-card-float {
+  animation: cardFloat var(--animation-duration-normal) var(--ease-in-out-quart);
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-bounce-in {
+  animation: bounceIn var(--animation-duration-normal) var(--ease-out-back);
+}
+
+.animate-rotate-in {
+  animation: rotateIn var(--animation-duration-normal) var(--ease-in-out-quart);
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--animation-duration-normal) var(--ease-out-back);
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--animation-duration-normal) var(--ease-out-back);
+}
+
+.animate-slide-in-up {
+  animation: slideInUp var(--animation-duration-normal) var(--ease-out-back);
+}
+
+.animate-slide-in-down {
+  animation: slideInDown var(--animation-duration-normal) var(--ease-out-back);
+}
+
+.animate-zoom-in {
+  animation: zoomIn var(--animation-duration-fast) var(--ease-in-out-quart);
+}
+
+.animate-flip-in-x {
+  animation: flipInX var(--animation-duration-normal) var(--ease-in-out-quart);
+}
+
+.animate-flip-in-y {
+  animation: flipInY var(--animation-duration-normal) var(--ease-in-out-quart);
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.animate-swing {
+  animation: swing var(--animation-duration-slow) ease-in-out;
+}
+
+.animate-particle-float {
+  animation: particleFloat 3s ease-in-out infinite;
+}
+
+.animate-star-twinkle {
+  animation: starTwinkle 2s ease-in-out infinite;
+}
+
+.animate-neon-glow {
+  animation: neonGlow 2s ease-in-out infinite;
+}
+
+.animate-rainbow-text {
+  animation: rainbowText 3s linear infinite;
+}
+
+// 悬停动画效果
+.hover-lift {
+  transition: transform var(--animation-duration-fast) var(--ease-in-out-quart);
+  
+  &:hover {
+    transform: translateY(-8px);
+  }
+}
+
+.hover-scale {
+  transition: transform var(--animation-duration-fast) var(--ease-in-out-quart);
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.hover-rotate {
+  transition: transform var(--animation-duration-fast) var(--ease-in-out-quart);
+  
+  &:hover {
+    transform: rotate(5deg);
+  }
+}
+
+.hover-glow {
+  transition: box-shadow var(--animation-duration-fast) ease;
+  
+  &:hover {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+  }
+}
+
+// 加载动画
+.loading-dots {
+  &::after {
+    content: '';
+    animation: loadingDots 1.5s steps(4, end) infinite;
+  }
+}
+
+@keyframes loadingDots {
+  0%, 20% {
+    content: '';
+  }
+  40% {
+    content: '.';
+  }
+  60% {
+    content: '..';
+  }
+  80%, 100% {
+    content: '...';
+  }
+}
+
+// 响应式动画控制
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// 移动端优化
+@media (max-width: 768px) {
+  .animate-card-float,
+  .animate-bounce-in,
+  .animate-rotate-in {
+    animation-duration: 0.4s;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+}
+
+// 深色模式动画调整
+@media (prefers-color-scheme: dark) {
+  :root {
+    --message-primary-color: #8a9bff;
+    --message-secondary-color: #9d7bde;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulseGlow {
+    0% {
+      box-shadow: 0 0 5px rgba(138, 155, 255, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(138, 155, 255, 0.6), 0 0 30px rgba(138, 155, 255, 0.4);
+    }
+    100% {
+      box-shadow: 0 0 5px rgba(138, 155, 255, 0.3);
+    }
+  }
+}
+
+// 特效装饰元素
+.decorative-particles {
+  position: relative;
+  overflow: hidden;
+  
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--message-primary-color);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: particleFloat 4s ease-in-out infinite;
+  }
+  
+  &::before {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+  
+  &::after {
+    top: 70%;
+    right: 15%;
+    animation-delay: 2s;
+  }
+}
+
+// 光束特效
+.light-beam {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: lightSweep 2s ease-in-out infinite;
+  }
+}
+
+// 星空背景动画
+.starry-background {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.2), transparent),
+      radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.4), transparent);
+    background-repeat: repeat;
+    background-size: 100px 100px;
+    animation: starTwinkle 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
