@@ -82,12 +82,13 @@ const footers: (Footers | number)[] = [0, 1, '=', 'scrollSwitch'];
 const wordCount = ref(0);
 
 function mdContent(content: string) {
-  // 获取html中的所有文字，去掉空格与标点符号
-  // let text = htmlText.replace(/<[^>]+>/g, "").replace(/[\r\n]/g, "").replace(/[ ]/g, "").replace(/[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+/g, "")
+  // 实时更新内容，无延迟
   if (content.length > 2000) {
     content = content.slice(0, 2000)
     ElMessage.warning('字数超过限制，自动截取前2000字')
   }
+
+  // 直接更新，不使用防抖
   text.value = content
   wordCount.value = content.length
 }
@@ -197,7 +198,7 @@ watch(() => text.value, (newValue) => {
             no-upload-img
             :preview="true"
             :on-change="mdContent"
-            :debounce="50"
+            :debounce="0"
             :scroll-auto="false"
           >
             <template #defFooters>

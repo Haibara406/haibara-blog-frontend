@@ -278,7 +278,32 @@ function updatePreviewPosition(event) {
   display: flex;
   flex-wrap: wrap;
   padding: 12px;
-  background: #fffbfd;
+  background: linear-gradient(135deg, #fffbfd, #fff8fa);
+
+  /* 为表情项添加交错动画 */
+  .emoji-item {
+    animation: emoji-item-enter 0.3s ease-out forwards;
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+
+    @for $i from 1 through 50 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.02}s;
+      }
+    }
+  }
+}
+
+/* 表情项进入动画 */
+@keyframes emoji-item-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 
@@ -423,33 +448,65 @@ function updatePreviewPosition(event) {
   border: 2px solid #ffdbe8;
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 2px 6px rgba(255, 182, 193, 0.2);
-  
+
+  /* 添加发光效果 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff6b9d, #ffd93d, #6bcf7f, #4d9de0);
+    border-radius: 50%;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
   /* 图标样式 */
   .emoji-icon {
     width: 1.5em;
     height: 1.5em;
     color: #ff85a2;
-    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    filter: drop-shadow(0 0 2px rgba(255, 133, 162, 0.3));
   }
-  
+
   /* 悬浮效果 */
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(255, 182, 193, 0.3);
-    
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(255, 182, 193, 0.4);
+    border-color: #ff85a2;
+
+    &::before {
+      opacity: 0.3;
+      animation: rotate-glow 2s linear infinite;
+    }
+
     .emoji-icon {
-      transform: rotate(15deg) scale(1.1);
+      transform: rotate(20deg) scale(1.2);
+      color: #ff4081;
+      filter: drop-shadow(0 0 4px rgba(255, 64, 129, 0.5));
     }
   }
-  
+
   /* 点击效果 */
   &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(255, 182, 193, 0.2);
+    transform: translateY(-1px) scale(0.95);
+    box-shadow: 0 3px 8px rgba(255, 182, 193, 0.3);
+
+    &::before {
+      opacity: 0.6;
+    }
+
+    .emoji-icon {
+      transform: rotate(0deg) scale(1.1);
+    }
   }
-  
+
   /* 水波纹动画 */
   .emoji-ripple {
     position: absolute;
@@ -462,39 +519,108 @@ function updatePreviewPosition(event) {
     pointer-events: none;
     animation: none;
   }
-  
+
   &:active .emoji-ripple {
-    animation: ripple 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: enhanced-ripple 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
-/* 水波纹动画关键帧 */
-@keyframes ripple {
+/* 旋转发光动画 */
+@keyframes rotate-glow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 增强的水波纹动画关键帧 */
+@keyframes enhanced-ripple {
   0% {
     transform: scale(0);
     opacity: 1;
+    background: radial-gradient(circle, rgba(255, 107, 157, 0.8) 0%, rgba(255, 107, 157, 0) 70%);
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+    background: radial-gradient(circle, rgba(255, 215, 61, 0.6) 0%, rgba(255, 215, 61, 0) 70%);
   }
   100% {
-    transform: scale(2);
+    transform: scale(3);
     opacity: 0;
+    background: radial-gradient(circle, rgba(107, 207, 127, 0.4) 0%, rgba(107, 207, 127, 0) 70%);
   }
 }
 
 /* 当弹出框打开时的样式 */
 :deep(.emoji-popover-container) {
-  animation: popup 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transform-origin: top center;
+  animation: emoji-popup-enhanced 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom center;
+  overflow: hidden;
+  position: relative;
 }
 
-/* 弹出动画 */
-@keyframes popup {
+/* 增强的弹出动画 */
+@keyframes emoji-popup-enhanced {
   0% {
-    transform: scale(0.9);
+    transform: scale(0.3) translateY(20px) rotateX(-15deg);
     opacity: 0;
+    filter: blur(4px);
+  }
+  30% {
+    transform: scale(0.7) translateY(5px) rotateX(-5deg);
+    opacity: 0.7;
+    filter: blur(2px);
+  }
+  60% {
+    transform: scale(1.05) translateY(-2px) rotateX(2deg);
+    opacity: 0.9;
+    filter: blur(0px);
+  }
+  80% {
+    transform: scale(0.98) translateY(1px) rotateX(-1deg);
+    opacity: 1;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) translateY(0) rotateX(0deg);
     opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+/* 添加弹出时的光效 */
+:deep(.emoji-popover-container::before) {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg,
+    rgba(255, 182, 193, 0.3),
+    rgba(255, 215, 61, 0.3),
+    rgba(107, 207, 127, 0.3),
+    rgba(77, 157, 224, 0.3)
+  );
+  border-radius: 14px;
+  z-index: -1;
+  animation: glow-border 0.5s ease-out;
+}
+
+@keyframes glow-border {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
   }
 }
 
