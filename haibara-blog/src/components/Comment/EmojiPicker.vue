@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { emojis } from '@/utils/O.o/emoji.ts'
-import { heo } from "@/utils/O.o/heo.ts"
 
 // 为预览创建状态变量
 const showPreview = ref(false)
@@ -26,7 +25,7 @@ const emit = defineEmits(['select-emoji', 'operation-complete'])
 // 选中下标
 const optionsIndex = ref(0)
 // 表情包选项卡
-const emojiOptions = ref(['Emoji', 'Heo'])
+const emojiOptions = ref(['Emoji'])
 // 获取选项卡div
 const options = ref()
 
@@ -153,24 +152,7 @@ function updatePreviewPosition(event) {
             {{ emoji }}
           </div>
         </div>
-        <div class="OvO_heo" v-show="optionsIndex === 1">
-          <div>
-            <!-- 图片表情 -->
-            <div 
-              v-for="(src,key) in heo" 
-              :key="key" 
-              class="emoji-img-wrapper"
-            >
-              <img 
-                :title="key" 
-                :src="src" 
-                @click="addEmoji(key, $event)"
-                @mouseenter="showImagePreview($event, src, key)"
-                @mouseleave="hidePreview"
-              />
-            </div>
-          </div>
-        </div>
+
       </el-scrollbar>
       <div class="OvO_options" ref="options" @mousedown.stop.prevent>
         <div v-for="(emojiOption,index) in emojiOptions" 
@@ -230,16 +212,7 @@ function updatePreviewPosition(event) {
   background: #fffbfd;
 }
 
-.OvO_heo {
-  padding: 12px;
-  background: #fffbfd;
 
-  div {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-}
 
 /* 文字表情项美化 */
 .emoji-item {
@@ -256,24 +229,7 @@ function updatePreviewPosition(event) {
   }
 }
 
-/* 图片表情项美化 */
-.emoji-img-wrapper {
-  position: relative;
-  border-radius: 6px;
-  padding: 2px;
-  transition: all 0.2s ease;
-  
-  img {
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-  }
-  
-  &:hover {
-    background-color: #fff0f7;
-    transform: scale(1.1);
-  }
-}
+
 
 /* 二次元风格选项卡 */
 .OvO_options {
@@ -479,7 +435,7 @@ function updatePreviewPosition(event) {
 }
 
 /* 使整个表情选择器不能获取键盘焦点 */
-.emojis_container, .OvO_options, .OvO_emojis, .OvO_heo, .emoji-item, .emoji-img-wrapper {
+.emojis_container, .OvO_options, .OvO_emojis, .emoji-item {
   outline: none !important;
   -webkit-tap-highlight-color: transparent;
   

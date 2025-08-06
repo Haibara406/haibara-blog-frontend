@@ -2,7 +2,7 @@
 import {MdPreview} from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import EmojiPicker from './EmojiPicker.vue';
-import {heo} from "@/utils/O.o/heo.ts";
+
 
 import {
   addComment,
