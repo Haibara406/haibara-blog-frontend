@@ -28,12 +28,18 @@ function handleData(data) {
 
 const shellRef = ref(null);
 const items = ref([]);
+const isLoading = ref(true);
 
 onMounted(async () => {
-  await getTimeLine().then(res => {
-    items.value = handleData(res.data)
-  })
-  await nextTick(() => {
+  try {
+    await getTimeLine().then(res => {
+      items.value = handleData(res.data)
+    })
+
+    // 数据加载完成后立即设置为非加载状态
+    isLoading.value = false;
+
+    await nextTick(() => {
     const shell = shellRef.value;
     const itemElements = shell.querySelectorAll('.item');
     const itemsArray = Array.from(itemElements);
@@ -65,7 +71,11 @@ onMounted(async () => {
         }
       });
     });
-  });
+    });
+  } catch (error) {
+    console.error('加载时间轴数据失败:', error);
+    isLoading.value = false;
+  }
 });
 
 </script>
@@ -76,7 +86,16 @@ onMounted(async () => {
         <Banner title="时间轴" subtitle="TimeLine"/>
       </template>
       <template #content>
-        <div class="shell" ref="shellRef">
+        <!-- 加载状态 -->
+        <div v-if="isLoading" class="timeline-loading">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+          <p class="loading-text">正在加载时间轴...</p>
+        </div>
+
+        <!-- 时间轴内容 -->
+        <div v-else class="shell" ref="shellRef">
           <div class="timeline">
             <template v-for="(item,year) in items" :key="item.id">
               <div class="year">--{{ year }}--</div>
@@ -108,7 +127,7 @@ onMounted(async () => {
   text-align: center;
   font-size: 1.8rem; // 从2rem减小到1.8rem
   font-weight: bold;
-  margin: 1rem 0;
+  margin: 2.5rem 0 3rem 0; // 增加上下边距，特别是下边距
   color: white;
   border-radius: $border-radius;
   padding: 0.8rem 1.5rem;
@@ -116,9 +135,19 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 10;
 
+  // 第一个年份标签特殊处理
+  &:first-of-type {
+    margin-top: 1rem; // 第一个年份标签上边距小一些
+  }
+
   @media screen and (max-width: 768px) {
     font-size: 1.5rem; // 移动端进一步减小
     padding: 0.6rem 1rem;
+    margin: 2rem 0 2.5rem 0; // 移动端调整边距
+
+    &:first-of-type {
+      margin-top: 0.5rem;
+    }
   }
 }
 
@@ -127,5 +156,41 @@ onMounted(async () => {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--el-text-color-primary);
+}
+
+// 简洁的加载状态样式
+.timeline-loading {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--el-bg-color);
+  border-radius: $border-radius;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+  .loading-spinner {
+    margin-bottom: 20px;
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--el-border-color-light);
+      border-top: 3px solid var(--el-color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  .loading-text {
+    color: var(--el-text-color-regular);
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
