@@ -12,6 +12,7 @@ import com.blog.domain.vo.LoginLogVO;
 import com.blog.enums.LoginTypeEnum;
 import com.blog.mapper.LoginLogMapper;
 import com.blog.service.LoginLogService;
+
 import com.blog.utils.BrowserUtil;
 import com.blog.utils.IpUtils;
 import com.blog.utils.StringUtils;
@@ -63,6 +64,17 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
         String browserName = BrowserUtil.browserName(request);
         String ipAddress = IpUtils.getIpAddr(request);
         String os = BrowserUtil.osName(request);
+
+        // 获取地址信息
+        String address;
+        if (IpUtils.internalIp(ipAddress)) {
+            // 内网IP直接设置
+            address = "内网IP";
+        } else {
+            // 外网IP先设置为未知，后续通过异步方式更新为真实地址
+            address = "未知";
+        }
+
         int requestType;
         String typeHeader = request.getHeader(Const.TYPE_HEADER);
         if (StringUtils.isNotEmpty(typeHeader) && typeHeader.equals(Const.FRONTEND_REQUEST))
@@ -78,6 +90,7 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
         LoginLog logEntity = LoginLog.builder()
                 .userName(userName)
                 .ip(ipAddress)
+                .address(address)
                 .browser(browserName)
                 .os(os)
                 .type(requestType)
