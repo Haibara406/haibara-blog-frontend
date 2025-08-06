@@ -12,6 +12,7 @@ import {cancelLike, isLike, userLike} from '@/apis/like'
 import ChildComment from "./ChildComment.vue";
 import {ElMessage} from "element-plus";
 import {useColorMode} from "@vueuse/core";
+import { emojis } from '@/utils/O.o/emoji.ts';
 
 const props = defineProps({
   authorId: {
@@ -133,9 +134,9 @@ function parsingCommentsFunc(value: string) {
     // 遍历是否存在表情包
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
-      if (heo[match]) {
-        // 有，替换 heo[match]
-        protectedValue = protectedValue.replace(match, `<span><img src="${heo[match]}" width="24" height="24" alt="Ruyu-blog-[1231256151315612]" /></span>`);
+      if (emojis[match]) {
+        // 有，替换为表情符号
+        protectedValue = protectedValue.replace(match, emojis[match]);
       }
     }
   }
