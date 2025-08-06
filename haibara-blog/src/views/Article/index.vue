@@ -16,6 +16,7 @@ import {useColorMode, useTitle} from "@vueuse/core";
 import MobileDirectoryCard from "./MobileDirectoryCard/index.vue";
 import {throttle} from "@/utils/optimize.ts";
 import {ARTICLE_VISIT_PREFIX} from "@/const/Visits";
+import PointerRepelText from "@/components/PointerRepelText/index.vue";
 
 // .env
 const env = import.meta.env;
@@ -50,6 +51,12 @@ const loading = ref(false)
 
 // 字数 统计
 const countMd = ref(0)
+
+// 指针排斥特效开关
+const isPointerRepelEnabled = ref(false)
+
+// 纯文本内容（用于指针排斥特效）
+const plainTextContent = ref('')
 
 // 监听路由变化
 watch(() => route.params.id, () => {
@@ -97,6 +104,10 @@ function mdHtml(htmlText: string) {
   // 获取html中的所有文字，去掉空格与标点符号
   const text = htmlText.replace(/<[^>]+>/g, "").replace(/[\r\n]/g, "").replace(/[ ]/g, "").replace(/[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+/g, "")
   countMd.value = <number>countWords(text.length)
+
+  // 为指针排斥特效提取更完整的纯文本内容
+  const plainText = htmlText.replace(/<[^>]+>/g, "").replace(/[\r\n]/g, " ").trim()
+  plainTextContent.value = plainText
 }
 
 // 字数统计
@@ -251,6 +262,12 @@ function ReadingModeFunc() {
   isReadingMode.value = !isReadingMode.value;
 }
 
+// 切换指针排斥特效
+function togglePointerRepel() {
+  isPointerRepelEnabled.value = !isPointerRepelEnabled.value;
+  ElMessage.success(isPointerRepelEnabled.value ? '已开启指针排斥特效' : '已关闭指针排斥特效');
+}
+
 </script>
 
 <template>
@@ -285,10 +302,33 @@ function ReadingModeFunc() {
             </div>
           </div>
           <div>
+            <!-- 特效切换按钮 -->
+            <div class="effect-toggle-container">
+              <el-button
+                :type="isPointerRepelEnabled ? 'primary' : 'default'"
+                size="small"
+                @click="togglePointerRepel"
+                class="effect-toggle-btn"
+              >
+                <span class="effect-icon">✨</span>
+                <span class="ml-1">{{ isPointerRepelEnabled ? '关闭' : '开启' }}指针排斥特效</span>
+              </el-button>
+            </div>
+
             <!-- 富文本预览 -->
-            <div>
+            <div v-if="!isPointerRepelEnabled">
               <MdPreview :editorId="id" :theme="mode" :modelValue="articleDetail.articleContent"
                          :on-html-changed="mdHtml"/>
+            </div>
+
+            <!-- 指针排斥特效文本 -->
+            <div v-else class="pointer-repel-wrapper">
+              <PointerRepelText
+                :content="plainTextContent"
+                :radius="90"
+                :strength="25"
+                class="article-pointer-repel"
+              />
             </div>
             <el-divider border-style="dashed" content-position="left">
               <div style="display: flex;align-items: center">
@@ -356,7 +396,6 @@ function ReadingModeFunc() {
           </div>
           <!-- 打赏 -->
           <div class="tipping">
-
             <el-tooltip
                 class="box-item"
                 effect="light"
@@ -457,9 +496,32 @@ function ReadingModeFunc() {
         </div>
       </div>
       <div>
+        <!-- 特效切换按钮 -->
+        <div class="effect-toggle-container">
+          <el-button
+            :type="isPointerRepelEnabled ? 'primary' : 'default'"
+            size="small"
+            @click="togglePointerRepel"
+            class="effect-toggle-btn"
+          >
+            <span class="effect-icon">✨</span>
+            <span class="ml-1">{{ isPointerRepelEnabled ? '关闭' : '开启' }}指针排斥特效</span>
+          </el-button>
+        </div>
+
         <!-- 富文本预览 -->
-        <div>
+        <div v-if="!isPointerRepelEnabled">
           <MdPreview :editorId="id" :theme="mode" :modelValue="articleDetail.articleContent" :on-html-changed="mdHtml"/>
+        </div>
+
+        <!-- 指针排斥特效文本 -->
+        <div v-else class="pointer-repel-wrapper">
+          <PointerRepelText
+            :content="plainTextContent"
+            :radius="90"
+            :strength="25"
+            class="article-pointer-repel"
+          />
         </div>
         <el-divider border-style="dashed" content-position="left">
           <div style="display: flex;align-items: center">
@@ -527,7 +589,6 @@ function ReadingModeFunc() {
       </div>
       <!-- 打赏 -->
       <div class="tipping">
-
         <el-tooltip
             class="box-item"
             effect="light"
@@ -992,6 +1053,68 @@ function ReadingModeFunc() {
   }
   60% {
     transform: translateY(-5px);
+  }
+}
+
+// 特效切换按钮样式
+.effect-toggle-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--el-bg-color-page);
+  border-radius: $border-radius;
+  border: 1px solid var(--el-border-color-lighter);
+
+  .effect-toggle-btn {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .effect-icon {
+      font-size: 16px;
+      margin-right: 0.25rem;
+      animation: sparkle 2s infinite;
+    }
+
+    .ml-1 {
+      margin-left: 0.25rem;
+    }
+  }
+}
+
+// 指针排斥特效包装器
+.pointer-repel-wrapper {
+  margin: 1rem 0;
+
+  .article-pointer-repel {
+    min-height: 200px;
+    font-size: 16px;
+    line-height: 1.8;
+    text-align: justify;
+
+    @media screen and (max-width: 768px) {
+      font-size: 14px;
+      padding: 15px;
+    }
+  }
+}
+
+// 闪烁动画
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
   }
 }
 </style>
