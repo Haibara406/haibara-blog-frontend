@@ -6,8 +6,10 @@ import {cancelLike, isLike, userLike} from "@/apis/like";
 import {ElMessage} from "element-plus";
 import {cancelFavorite, isFavorite, userFavorite} from "@/apis/favorite";
 import {useColorMode} from "@vueuse/core";
+import { useDark } from '@vueuse/core';
 
 const mode = useColorMode()
+const isDark = useDark()
 const leaveWord = ref([]);
 const route = useRoute()
 const loadingComment = ref(false)
@@ -123,7 +125,7 @@ function cancelFavoriteFunc() {
 </script>
 
 <template>
-  <div class="message-detail animate-page-slide-in">
+  <div class="message-detail animate-page-slide-in" :class="{ dark: isDark }">
     <!-- 返回导航 -->
     <div class="navigation-section animate-slide-in-down" v-slide-in>
       <button class="ios-dynamic-island-btn secondary extra-wide" @click="$router.push('/message')">
@@ -588,45 +590,126 @@ function cancelFavoriteFunc() {
 }
 
 // 深色模式适配
-@media (prefers-color-scheme: dark) {
+.message-detail.dark {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+
+  // 导航区域
+  .navigation-section {
+    .ios-dynamic-island-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.8);
+      border-color: rgba(255, 255, 255, 0.2);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 1);
+      }
+
+      .ios-btn-icon {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  // 留言卡片
   .message-card {
-    background: rgba(30, 30, 30, 0.95);
-    color: #e0e0e0;
-  }
-  
-  .back-btn {
-    background: rgba(30, 30, 30, 0.9);
-    color: #667eea;
-  }
-  
-  .username {
-    color: #e0e0e0 !important;
-  }
-  
-  .markdown-content {
-    color: #c0c0c0 !important;
-    
-    :deep(h1), :deep(h2), :deep(h3) {
-      color: #8a9bff !important;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+
+    .message-header {
+      .username {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .message-time {
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+
+    .markdown-content {
+      color: rgba(255, 255, 255, 0.8);
+
+      :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      :deep(p) {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      :deep(code) {
+        background: rgba(255, 255, 255, 0.1);
+        color: #8a9bff;
+      }
+
+      :deep(pre) {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      :deep(blockquote) {
+        border-left-color: #667eea;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+      }
     }
   }
-  
-  .stat-item {
-    background: rgba(30, 30, 30, 0.8);
-    color: #e0e0e0;
-    
-    .stat-number {
-      color: #e0e0e0 !important;
-    }
-    
-    &.active .stat-number {
-      color: #8a9bff !important;
+
+  // 统计区域
+  .stats-section {
+    .stat-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .stat-number {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      &.active {
+        background: rgba(102, 126, 234, 0.2);
+        border-color: #667eea;
+
+        .stat-number {
+          color: #8a9bff;
+        }
+
+        .stat-label {
+          color: #8a9bff;
+        }
+      }
     }
   }
-  
-  .comment-component {
-    background: rgba(30, 30, 30, 0.8);
-    color: #e0e0e0;
+
+  // 评论区域
+  .comments-section {
+    .section-title {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .comment-component {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  // 分割线
+  .section-divider {
+    .divider-text {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    &::before,
+    &::after {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
   }
 }
 </style>

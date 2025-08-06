@@ -7,8 +7,10 @@ import {Ref, UnwrapRef} from "vue";
 import {ElMessage} from "element-plus";
 import {getLeaveWordList, userLeaveWord} from "@/apis/leaveWord";
 import {useColorMode} from "@vueuse/core";
+import { useDark } from '@vueuse/core';
 
 const mode = useColorMode()
+const isDark = useDark()
 const isShow = ref(false);
 const text = ref('');
 const LeaveWordList = ref([]);
@@ -94,7 +96,7 @@ function mdContent(content: string) {
 </script>
 
 <template>
-  <div class="message-board">
+  <div class="message-board" :class="{ dark: isDark }">
     <div class="occupancyHeight"></div>
     
     <!-- 加载骨架屏 -->
@@ -634,12 +636,12 @@ function mdContent(content: string) {
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-    
+
     .card-glow {
       opacity: 1;
-      transform: scale(1.1);
+      animation: glow-pulse 3s ease-in-out infinite;
     }
-    
+
     .avatar-ring {
       transform: scale(1.2);
       opacity: 0.8;
@@ -652,10 +654,15 @@ function mdContent(content: string) {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle,
+      rgba(102, 126, 234, 0.4) 0%,
+      rgba(138, 155, 255, 0.2) 30%,
+      rgba(102, 126, 234, 0.1) 60%,
+      transparent 80%);
     opacity: 0;
-    transition: all 0.4s ease;
+    transition: opacity 0.3s ease;
     pointer-events: none;
+    z-index: 1;
   }
   
   .card-header {
@@ -835,6 +842,29 @@ function mdContent(content: string) {
   }
 }
 
+@keyframes glow-pulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.9) rotate(0deg);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.1) rotate(90deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3) rotate(180deg);
+  }
+  75% {
+    opacity: 0.8;
+    transform: scale(1.1) rotate(270deg);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.9) rotate(360deg);
+  }
+}
+
 // 响应式设计
 @media (max-width: 1200px) {
   .messages-grid {
@@ -889,6 +919,141 @@ function mdContent(content: string) {
     
     .feature-text strong {
       color: #e0e0e0 !important;
+    }
+  }
+}
+
+// 深色模式完整适配
+.message-board.dark {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+
+  // 头部区域
+  .header-content {
+    .main-title {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  // 介绍区域
+  .intro-section {
+    .intro-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+
+      .intro-header {
+        .intro-icon {
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        h3 {
+          color: rgba(255, 255, 255, 0.9);
+        }
+      }
+
+      .feature-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-icon {
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        .feature-text {
+          strong {
+            color: rgba(255, 255, 255, 0.9);
+          }
+
+          span {
+            color: rgba(255, 255, 255, 0.6);
+          }
+        }
+      }
+    }
+  }
+
+  // 留言区域
+  .messages-section {
+    .section-title {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .stats-label {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  // 留言卡片
+  .message-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+
+      .card-glow {
+        background: radial-gradient(circle,
+          rgba(138, 155, 255, 0.6) 0%,
+          rgba(102, 126, 234, 0.4) 30%,
+          rgba(138, 155, 255, 0.2) 60%,
+          transparent 80%);
+        opacity: 1;
+        animation: glow-pulse 3s ease-in-out infinite;
+      }
+    }
+
+    .message-header {
+      .user-name {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .message-time {
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+
+    .message-content {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .message-footer {
+      .reply-count {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+
+  // 抽屉内容
+  .drawer-content {
+    background: rgba(30, 30, 30, 0.95);
+
+    .drawer-title {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .drawer-subtitle {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .word-count {
+      .count-current {
+        color: #667eea;
+      }
+
+      .count-separator {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .count-limit {
+        color: rgba(255, 255, 255, 0.5);
+      }
     }
   }
 }
