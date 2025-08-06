@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import {MdPreview} from "md-editor-v3";
+import {MdEditor, MdPreview, ToolbarNames, Footers} from "md-editor-v3";
+import "md-editor-v3/lib/style.css";
 import 'md-editor-v3/lib/preview.css';
 
 import {ArrowRightBold} from "@element-plus/icons-vue";
+import {Ref, UnwrapRef} from "vue";
 import {ElMessage} from "element-plus";
 import {getLeaveWordList, userLeaveWord} from "@/apis/leaveWord";
 import {useColorMode} from "@vueuse/core";
@@ -16,9 +18,8 @@ const text = ref('');
 const LeaveWordList = ref([]);
 const loading = ref(true);
 
-// 仿照评论功能添加预览相关变量
+// 完全照搬评论功能的预览变量
 const preview = ref('');
-const isPreview = ref(false);
 
 onMounted(() => {
   getLeaveWordListFunc()
@@ -58,10 +59,44 @@ const addLeaveWord = () => {
   })
 }
 
-// 字数统计
+// 工具栏
+const toolbars: Ref<UnwrapRef<ToolbarNames[]>> = ref([
+  'bold',
+  'underline',
+  'italic',
+  'title',
+  'strikeThrough',
+  'quote',
+  'unorderedList',
+  'orderedList',
+  'task',
+  'codeRow',
+  'code',
+  'link',
+  'image',
+  'table',
+  'pageFullscreen',
+  'preview',
+  'catalog',
+])
+
+// 将插槽中的组件下标放到对应的位置即可显示
+const footers: (Footers | number)[] = [0, 1, '=', 'scrollSwitch'];
+
+// 字数
 const wordCount = ref(0);
 
-// 完全仿照评论功能的解析方法
+// 完全照搬评论功能的预览监听
+watch(() => text.value, (value) => {
+  preview.value = parsingCommentsFunc(value);
+})
+
+// 完全照搬评论功能的解析函数
+function parsingComments(value: string) {
+  return parsingCommentsFunc(value);
+}
+
+// 完全照搬评论功能的解析md公共方法
 function parsingCommentsFunc(value: string) {
   const codeBlockRegex = /```[\s\S]*?```/g;
   const codeBlocks = value.match(codeBlockRegex);
@@ -81,7 +116,7 @@ function parsingCommentsFunc(value: string) {
     // 遍历是否存在表情包
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
-      // 使用emojis对象替代heo（因为heo未定义）
+      // 由于heo未定义，使用emojis替代
       if (emojis[match]) {
         // 有，替换为表情符号
         protectedValue = protectedValue.replace(match, emojis[match]);
@@ -98,24 +133,14 @@ function parsingCommentsFunc(value: string) {
   return protectedValue;
 }
 
-// 完全仿照评论功能的实时预览监听
-watch(() => text.value, (value) => {
-  preview.value = parsingCommentsFunc(value);
-  wordCount.value = value.length;
-
-  // 字数限制检查
-  if (value.length > 2000) {
-    nextTick(() => {
-      text.value = value.slice(0, 2000);
-      ElMessage.warning('字数超过限制，自动截取前2000字');
-    });
-  }
-}, { immediate: true });
-
 function mdContent(content: string) {
-  // 这个函数现在主要用于MdEditor的onChange回调
-  // 实际的预览更新由watch处理
-  text.value = content;
+  // 字数限制检查
+  if (content.length > 2000) {
+    content = content.slice(0, 2000)
+    ElMessage.warning('字数超过限制，自动截取前2000字')
+  }
+  text.value = content
+  wordCount.value = content.length
 }
 
 </script>
@@ -200,29 +225,29 @@ function mdContent(content: string) {
         </div>
         
         <div class="editor-container">
-          <!-- 仿照评论功能的输入框 -->
-          <div class="form_container">
-            <textarea
-              class="textarea"
-              v-model="text"
-              placeholder="写下你的留言吧！支持Markdown语法和表情包 [嘿嘿]"
-              rows="8"
-            />
-            <div class="btn">
-              <div class="word-count">
-                <span class="count-current">{{ wordCount }}</span>
-                <span class="count-separator">/</span>
-                <span class="count-limit">2000</span>
+          <MdEditor
+            :theme="mode"
+            class="message-editor"
+            :footers="footers"
+            v-model="text"
+            :toolbars="toolbars"
+            no-upload-img
+            :preview="true"
+            :on-change="mdContent"
+            :debounce="0"
+            :scroll-auto="false"
+            :html-preview="preview"
+          >
+            <template #defFooters>
+              <div class="editor-footer">
+                <div class="word-count">
+                  <span class="count-current">{{ wordCount }}</span>
+                  <span class="count-separator">/</span>
+                  <span class="count-limit">2000</span>
+                </div>
               </div>
-              <div>
-                <el-button type="info" plain size="small" @click="isPreview=!isPreview">预览</el-button>
-              </div>
-            </div>
-            <!-- 预览区域 -->
-            <div class="preview" v-if="isPreview">
-              <MdPreview :modelValue="preview" :theme="mode"/>
-            </div>
-          </div>
+            </template>
+          </MdEditor>
         </div>
         
         <div class="drawer-actions">
@@ -539,92 +564,35 @@ function mdContent(content: string) {
     flex: 1;
     margin-bottom: 2rem;
 
-    // 仿照评论功能的样式
-    .form_container {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+    .message-editor {
+      height: 100% !important;
       border-radius: 12px;
-      padding: 1.5rem;
+      overflow: hidden;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-      .textarea {
-        width: 100%;
-        min-height: 120px;
-        padding: 1rem;
-        border: 2px solid #e1e5e9;
-        border-radius: 8px;
-        font-size: 14px;
-        line-height: 1.6;
-        resize: vertical;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.8);
+    .editor-footer {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-        &:focus {
-          outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-          background: rgba(255, 255, 255, 1);
-        }
-
-        &::placeholder {
-          color: #999;
-        }
-      }
-
-      .btn {
+      .word-count {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-top: 1rem;
+        gap: 0.2rem;
+        font-weight: 600;
 
-        .word-count {
-          display: flex;
-          align-items: center;
-          gap: 0.2rem;
-          font-weight: 600;
-          font-size: 14px;
-
-          .count-current {
-            color: #667eea;
-          }
-
-          .count-separator {
-            color: #ccc;
-          }
-
-          .count-limit {
-            color: #999;
-          }
-        }
-      }
-
-      .preview {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: rgba(248, 249, 250, 0.8);
-        border-radius: 8px;
-        border: 1px solid #e1e5e9;
-
-        :deep(.md-editor-preview-wrapper) {
-          padding: 0;
-          background: transparent;
+        .count-current {
+          color: #667eea;
         }
 
-        :deep(.default-theme p) {
-          margin: 0.5rem 0;
-          font-size: 14px;
-          line-height: 1.6;
+        .count-separator {
+          color: #ccc;
         }
 
-        // 表情包样式
-        :deep(.default-theme img) {
-          max-width: 100%;
-          height: auto;
-          vertical-align: middle;
-          border-style: none;
-          padding: 0;
-          margin: 0 0.3rem;
+        .count-limit {
+          color: #999;
         }
       }
     }
