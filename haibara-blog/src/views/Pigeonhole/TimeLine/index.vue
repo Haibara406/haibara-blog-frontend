@@ -99,16 +99,33 @@ onMounted(async () => {
 @import "index.scss";
 
 .year {
-  background-color: white;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   position: sticky;
   top: 5rem;
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.8rem; // 从2rem减小到1.8rem
   font-weight: bold;
   margin: 1rem 0;
-  color: grey;
+  color: white;
   border-radius: $border-radius;
-  // 背景透明度
-  opacity: 0.8;
+  padding: 0.8rem 1.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+
+  @media screen and (max-width: 768px) {
+    font-size: 1.5rem; // 移动端进一步减小
+    padding: 0.6rem 1rem;
+  }
+}
+
+// 暗色模式适配
+.dark .year {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--el-text-color-primary);
 }
 </style>
