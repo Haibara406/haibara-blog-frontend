@@ -24,16 +24,14 @@ function backToBottom() {
 </template>
 
 <style scoped lang="scss">
-
 .back-to-top {
   height: 30px !important;
   width: 30px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   @media screen and (max-width: 768px) {
     height: 30px !important;
     width: 30px !important;
   }
 }
-
-
 </style>

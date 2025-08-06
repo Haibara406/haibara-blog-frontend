@@ -52,11 +52,14 @@ const loading = ref(false)
 // 字数 统计
 const countMd = ref(0)
 
-// 指针排斥特效开关
-const isPointerRepelEnabled = ref(false)
+// 指针排斥特效开关（默认开启）
+const isPointerRepelEnabled = ref(true)
 
 // 纯文本内容（用于指针排斥特效）
 const plainTextContent = ref('')
+
+// HTML内容（用于保持结构的指针排斥特效）
+const htmlContent = ref('')
 
 // 监听路由变化
 watch(() => route.params.id, () => {
@@ -108,6 +111,9 @@ function mdHtml(htmlText: string) {
   // 为指针排斥特效提取更完整的纯文本内容
   const plainText = htmlText.replace(/<[^>]+>/g, "").replace(/[\r\n]/g, " ").trim()
   plainTextContent.value = plainText
+
+  // 保存HTML内容用于结构化显示
+  htmlContent.value = htmlText
 }
 
 // 字数统计
@@ -262,7 +268,7 @@ function ReadingModeFunc() {
   isReadingMode.value = !isReadingMode.value;
 }
 
-// 切换指针排斥特效
+// 切换指针排斥特效（保留函数但不再使用）
 function togglePointerRepel() {
   isPointerRepelEnabled.value = !isPointerRepelEnabled.value;
   ElMessage.success(isPointerRepelEnabled.value ? '已开启指针排斥特效' : '已关闭指针排斥特效');
@@ -302,33 +308,31 @@ function togglePointerRepel() {
             </div>
           </div>
           <div>
-            <!-- 特效切换按钮 -->
-            <div class="effect-toggle-container">
-              <el-button
-                :type="isPointerRepelEnabled ? 'primary' : 'default'"
-                size="small"
-                @click="togglePointerRepel"
-                class="effect-toggle-btn"
-              >
-                <span class="effect-icon">✨</span>
-                <span class="ml-1">{{ isPointerRepelEnabled ? '关闭' : '开启' }}指针排斥特效</span>
-              </el-button>
+            <!-- 阅读模式提示 -->
+            <div class="reading-mode-tip">
+              <div class="tip-content">
+                <span class="tip-icon">📖</span>
+                <span class="tip-text">若想沉浸式阅读请点击浏览器右侧书本状的按钮，即可开启阅读模式</span>
+              </div>
             </div>
 
-            <!-- 富文本预览 -->
-            <div v-if="!isPointerRepelEnabled">
-              <MdPreview :editorId="id" :theme="mode" :modelValue="articleDetail.articleContent"
-                         :on-html-changed="mdHtml"/>
-            </div>
-
-            <!-- 指针排斥特效文本 -->
-            <div v-else class="pointer-repel-wrapper">
+            <!-- 指针排斥特效文本（默认开启） -->
+            <div class="pointer-repel-wrapper">
               <PointerRepelText
                 :content="plainTextContent"
-                :radius="90"
-                :strength="25"
+                :html-content="htmlContent"
+                :preserve-structure="true"
+                :radius="80"
+                :strength="20"
+                :smoothness="0.12"
                 class="article-pointer-repel"
               />
+            </div>
+
+            <!-- 隐藏的富文本预览（用于生成HTML内容） -->
+            <div style="display: none;">
+              <MdPreview :editorId="id" :theme="mode" :modelValue="articleDetail.articleContent"
+                         :on-html-changed="mdHtml"/>
             </div>
             <el-divider border-style="dashed" content-position="left">
               <div style="display: flex;align-items: center">
@@ -496,32 +500,9 @@ function togglePointerRepel() {
         </div>
       </div>
       <div>
-        <!-- 特效切换按钮 -->
-        <div class="effect-toggle-container">
-          <el-button
-            :type="isPointerRepelEnabled ? 'primary' : 'default'"
-            size="small"
-            @click="togglePointerRepel"
-            class="effect-toggle-btn"
-          >
-            <span class="effect-icon">✨</span>
-            <span class="ml-1">{{ isPointerRepelEnabled ? '关闭' : '开启' }}指针排斥特效</span>
-          </el-button>
-        </div>
-
-        <!-- 富文本预览 -->
-        <div v-if="!isPointerRepelEnabled">
-          <MdPreview :editorId="id" :theme="mode" :modelValue="articleDetail.articleContent" :on-html-changed="mdHtml"/>
-        </div>
-
-        <!-- 指针排斥特效文本 -->
-        <div v-else class="pointer-repel-wrapper">
-          <PointerRepelText
-            :content="plainTextContent"
-            :radius="90"
-            :strength="25"
-            class="article-pointer-repel"
-          />
+        <!-- 阅读模式：显示原始Markdown内容 -->
+        <div>
+          <MdPreview :editorId="id" :theme="mode" :modelValue="articleDetail.articleContent"/>
         </div>
         <el-divider border-style="dashed" content-position="left">
           <div style="display: flex;align-items: center">
@@ -665,10 +646,10 @@ function togglePointerRepel() {
 
 // 移动端目录按钮
 .move_catalog_btn {
-  border-radius: 1em;
-  box-shadow: var(--el-box-shadow-light);
-  border: 1px solid var(--el-border-color);
-  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--el-border-color-light);
+  background: var(--el-bg-color);
   // 固定在右下角
   position: fixed;
   right: 5em;
@@ -680,6 +661,24 @@ function togglePointerRepel() {
   justify-content: center;
   align-items: center;
   visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: var(--el-color-primary-light-9);
+    border-color: var(--el-color-primary-light-5);
+
+    .move_catalog_svg {
+      animation: gentle-bounce-catalog 0.6s ease-out;
+    }
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.95);
+    transition: all 0.1s ease;
+  }
+
   @media screen and (max-width: 910px) {
     visibility: visible;
     right: 3em;
@@ -692,11 +691,18 @@ function togglePointerRepel() {
   }
 
   .move_catalog_svg {
+    transition: all 0.3s ease;
+
     @media screen and (max-width: 768px) {
       width: 25px !important;
       height: 25px !important;
     }
   }
+}
+
+@keyframes gentle-bounce-catalog {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 
 :deep(.el-drawer__header) {
@@ -1056,35 +1062,50 @@ function togglePointerRepel() {
   }
 }
 
-// 特效切换按钮样式
-.effect-toggle-container {
+// 阅读模式提示样式
+.reading-mode-tip {
   display: flex;
   justify-content: center;
   margin: 1rem 0;
   padding: 1rem;
-  background: var(--el-bg-color-page);
+  background: linear-gradient(135deg, rgba(74, 108, 247, 0.1) 0%, rgba(107, 70, 193, 0.1) 100%);
   border-radius: $border-radius;
   border: 1px solid var(--el-border-color-lighter);
+  position: relative;
+  overflow: hidden;
 
-  .effect-toggle-btn {
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 3s infinite;
+  }
+
+  .tip-content {
     display: flex;
     align-items: center;
     font-weight: 500;
-    transition: all 0.3s ease;
+    color: var(--el-text-color-primary);
+    position: relative;
+    z-index: 1;
 
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    .tip-icon {
+      font-size: 18px;
+      margin-right: 0.5rem;
+      animation: bounce-gentle 2s infinite;
     }
 
-    .effect-icon {
-      font-size: 16px;
-      margin-right: 0.25rem;
-      animation: sparkle 2s infinite;
-    }
+    .tip-text {
+      font-size: 14px;
+      line-height: 1.5;
 
-    .ml-1 {
-      margin-left: 0.25rem;
+      @media screen and (max-width: 768px) {
+        font-size: 12px;
+      }
     }
   }
 }
@@ -1115,6 +1136,29 @@ function togglePointerRepel() {
   50% {
     opacity: 0.7;
     transform: scale(1.1);
+  }
+}
+
+// 轻柔弹跳动画
+@keyframes bounce-gentle {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-1px);
+  }
+}
+
+// 光泽扫过动画
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
   }
 }
 </style>
