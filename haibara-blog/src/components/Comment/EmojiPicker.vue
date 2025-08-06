@@ -53,21 +53,90 @@ function optionEmoji(index: number) {
 function createClickEffect(event) {
   // 获取点击的元素
   const target = event.currentTarget;
-  
+
   // 添加点击效果类
   target.classList.add('emoji-clicked');
-  
+
+  // 创建粒子爆炸效果
+  createParticleExplosion(event);
+
+  // 创建彩虹波纹效果
+  createRainbowRipple(event);
+
   // 移除类名以重置动画
   setTimeout(() => {
     target.classList.remove('emoji-clicked');
-  }, 300); // 动画持续时间
+  }, 600); // 增加动画持续时间
+}
+
+// 创建粒子爆炸效果
+function createParticleExplosion(event) {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  // 创建多个粒子
+  for (let i = 0; i < 12; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'emoji-particle';
+
+    // 随机颜色
+    const colors = ['#ff6b9d', '#ffd93d', '#6bcf7f', '#4d9de0', '#e15554', '#f9844a'];
+    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+    // 随机方向和距离
+    const angle = (i / 12) * 2 * Math.PI;
+    const distance = 50 + Math.random() * 30;
+    const endX = centerX + Math.cos(angle) * distance;
+    const endY = centerY + Math.sin(angle) * distance;
+
+    particle.style.left = centerX + 'px';
+    particle.style.top = centerY + 'px';
+    particle.style.setProperty('--end-x', endX + 'px');
+    particle.style.setProperty('--end-y', endY + 'px');
+
+    document.body.appendChild(particle);
+
+    // 移除粒子
+    setTimeout(() => {
+      if (particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+    }, 800);
+  }
+}
+
+// 创建彩虹波纹效果
+function createRainbowRipple(event) {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  const ripple = document.createElement('div');
+  ripple.className = 'emoji-rainbow-ripple';
+  ripple.style.left = centerX + 'px';
+  ripple.style.top = centerY + 'px';
+
+  document.body.appendChild(ripple);
+
+  // 移除波纹
+  setTimeout(() => {
+    if (ripple.parentNode) {
+      ripple.parentNode.removeChild(ripple);
+    }
+  }, 1000);
 }
 
 // 修改添加表情函数，加入点击效果
 function addEmoji(emoji: string, event) {
   // 创建点击反馈效果
   createClickEffect(event);
-  
+
+  // 添加震动反馈（如果设备支持）
+  if (navigator.vibrate) {
+    navigator.vibrate(50);
+  }
+
   // 原有逻辑不变
   emit('select-emoji', emoji);
   emit('operation-complete');
@@ -217,15 +286,22 @@ function updatePreviewPosition(event) {
 /* 文字表情项美化 */
 .emoji-item {
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
   font-size: 1.2em;
   position: relative;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(135deg, transparent, rgba(255, 240, 247, 0.3));
+
   &:hover {
-    background-color: #fff0f7;
-    transform: scale(1.1);
+    background: linear-gradient(135deg, #fff0f7, #ffe8f4);
+    transform: scale(1.15) translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 182, 193, 0.3);
+    border: 1px solid rgba(255, 182, 193, 0.4);
+  }
+
+  &:active {
+    transform: scale(1.05) translateY(0);
   }
 }
 
@@ -448,34 +524,117 @@ function updatePreviewPosition(event) {
 
 /* 文字表情点击效果 */
 .emoji-item.emoji-clicked {
-  animation: emoji-pulse 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: #ffd1e6;
-  color: #ff4081;
-  transform: scale(1.2);
-  z-index: 1;
+  animation: emoji-super-pulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(45deg, #ff6b9d, #ffd93d, #6bcf7f, #4d9de0);
+  background-size: 300% 300%;
+  color: white;
+  transform: scale(1.3);
+  z-index: 1000;
+  box-shadow: 0 0 20px rgba(255, 107, 157, 0.8);
+  border-radius: 12px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 /* 图片表情点击效果 */
 .emoji-img-wrapper img.emoji-clicked {
-  animation: emoji-pulse 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 0 4px rgba(255, 64, 129, 0.7));
-  transform: scale(1.2);
-  z-index: 1;
+  animation: emoji-super-pulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 8px rgba(255, 64, 129, 0.9))
+          drop-shadow(0 0 16px rgba(255, 215, 61, 0.6))
+          drop-shadow(0 0 24px rgba(107, 207, 127, 0.4));
+  transform: scale(1.3);
+  z-index: 1000;
 }
 
-/* 点击动画关键帧 */
-@keyframes emoji-pulse {
+/* 超级点击动画关键帧 */
+@keyframes emoji-super-pulse {
   0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 64, 129, 0.4);
+    transform: scale(1) rotate(0deg);
+    box-shadow: 0 0 0 0 rgba(255, 107, 157, 0.8);
+    background-position: 0% 50%;
+  }
+  25% {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 0 0 8px rgba(255, 107, 157, 0.4);
+    background-position: 25% 50%;
   }
   50% {
-    transform: scale(1.2);
-    box-shadow: 0 0 0 10px rgba(255, 64, 129, 0);
+    transform: scale(1.3) rotate(-3deg);
+    box-shadow: 0 0 0 16px rgba(255, 107, 157, 0.2);
+    background-position: 50% 50%;
+  }
+  75% {
+    transform: scale(1.2) rotate(2deg);
+    box-shadow: 0 0 0 24px rgba(255, 107, 157, 0.1);
+    background-position: 75% 50%;
   }
   100% {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 0 rgba(255, 64, 129, 0);
+    transform: scale(1.1) rotate(0deg);
+    box-shadow: 0 0 0 32px rgba(255, 107, 157, 0);
+    background-position: 100% 50%;
+  }
+}
+
+/* 粒子效果样式 */
+.emoji-particle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  animation: particle-explosion 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes particle-explosion {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(calc(var(--end-x) - var(--start-x, 0px)), calc(var(--end-y) - var(--start-y, 0px))) scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(calc(var(--end-x) - var(--start-x, 0px)), calc(var(--end-y) - var(--start-y, 0px))) scale(0);
+    opacity: 0;
+  }
+}
+
+/* 彩虹波纹效果 */
+.emoji-rainbow-ripple {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    #ff6b9d,
+    #ffd93d,
+    #6bcf7f,
+    #4d9de0,
+    #e15554,
+    #f9844a,
+    #ff6b9d
+  );
+  animation: rainbow-ripple 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes rainbow-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(3) rotate(180deg);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(6) rotate(360deg);
+    opacity: 0;
   }
 }
 </style> 

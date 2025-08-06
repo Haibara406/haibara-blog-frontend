@@ -89,9 +89,22 @@ function mdContent(content: string) {
     ElMessage.warning('字数超过限制，自动截取前2000字')
   }
   text.value = content
-  console.log(text.value)
   wordCount.value = content.length
 }
+
+// 添加实时预览监听，类似评论功能
+watch(() => text.value, (newValue) => {
+  // 实时更新字数统计
+  wordCount.value = newValue.length;
+
+  // 如果需要，可以在这里添加其他实时处理逻辑
+  if (newValue.length > 2000) {
+    nextTick(() => {
+      text.value = newValue.slice(0, 2000);
+      ElMessage.warning('字数超过限制，自动截取前2000字');
+    });
+  }
+}, { immediate: true });
 
 </script>
 
@@ -175,16 +188,16 @@ function mdContent(content: string) {
         </div>
         
         <div class="editor-container">
-          <MdEditor 
-            :theme="mode" 
+          <MdEditor
+            :theme="mode"
             class="message-editor"
-            :footers="footers" 
-            v-model="text" 
-            :toolbars="toolbars" 
+            :footers="footers"
+            v-model="text"
+            :toolbars="toolbars"
             no-upload-img
             :preview="true"
             :on-change="mdContent"
-            :debounce="300"
+            :debounce="50"
             :scroll-auto="false"
           >
             <template #defFooters>
