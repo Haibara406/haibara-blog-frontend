@@ -29,7 +29,11 @@ function getLeaveWord() {
 
 function isLikeFunc() {
   isLike(3, leaveWord.value.id).then(res => {
-    like.value = res.code === 200
+    if (res.code === 200) {
+      like.value = res.data && res.data.length > 0
+    } else {
+      like.value = false
+    }
   })
 }
 

@@ -212,7 +212,11 @@ function isFavoriteFunc() {
 // 是否点赞
 function isLikeFunc() {
   isLike(1, articleDetail.value.id).then(res => {
-    like.value = res.code === 200;
+    if (res.code === 200) {
+      like.value = res.data && res.data.length > 0
+    } else {
+      like.value = false
+    }
   })
 }
 
