@@ -88,10 +88,28 @@ onMounted(async () => {
       <template #content>
         <!-- 加载状态 -->
         <div v-if="isLoading" class="timeline-loading">
-          <div class="loading-spinner">
-            <div class="spinner"></div>
+          <div class="loading-animation">
+            <div class="timeline-skeleton">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-items">
+                <div class="skeleton-item" v-for="i in 3" :key="i">
+                  <div class="skeleton-dot"></div>
+                  <div class="skeleton-card">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-content">
+                      <div class="skeleton-title"></div>
+                      <div class="skeleton-desc"></div>
+                      <div class="skeleton-desc short"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p class="loading-text">正在加载时间轴...</p>
+          <p class="loading-text">
+            <span class="loading-icon">⏳</span>
+            正在加载时间轴数据...
+          </p>
         </div>
 
         <!-- 时间轴内容 -->
@@ -158,9 +176,9 @@ onMounted(async () => {
   color: var(--el-text-color-primary);
 }
 
-// 简洁的加载状态样式
+// 优雅的时间轴加载动画
 .timeline-loading {
-  min-height: 50vh;
+  min-height: 60vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -168,17 +186,111 @@ onMounted(async () => {
   background: var(--el-bg-color);
   border-radius: $border-radius;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 40px 20px;
 
-  .loading-spinner {
-    margin-bottom: 20px;
+  .loading-animation {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 30px;
 
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--el-border-color-light);
-      border-top: 3px solid var(--el-color-primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+    .timeline-skeleton {
+      position: relative;
+
+      .skeleton-line {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 2px;
+        height: 100%;
+        background: linear-gradient(
+          180deg,
+          transparent 0%,
+          var(--el-border-color-light) 20%,
+          var(--el-border-color-light) 80%,
+          transparent 100%
+        );
+        transform: translateX(-50%);
+        animation: skeleton-pulse 2s ease-in-out infinite;
+      }
+
+      .skeleton-items {
+        display: flex;
+        flex-direction: column;
+        gap: 60px;
+        padding: 20px 0;
+
+        .skeleton-item {
+          display: flex;
+          align-items: flex-start;
+          position: relative;
+
+          &:nth-child(odd) {
+            flex-direction: row;
+            .skeleton-card {
+              margin-left: 30px;
+            }
+          }
+
+          &:nth-child(even) {
+            flex-direction: row-reverse;
+            .skeleton-card {
+              margin-right: 30px;
+            }
+          }
+
+          .skeleton-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--el-color-primary);
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            animation: skeleton-dot-pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 0 4px var(--el-bg-color);
+          }
+
+          .skeleton-card {
+            flex: 1;
+            max-width: 280px;
+            background: var(--el-fill-color-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            animation: skeleton-shimmer 2s ease-in-out infinite;
+
+            .skeleton-image {
+              width: 100%;
+              height: 120px;
+              background: var(--el-fill-color);
+              border-radius: 6px;
+              margin-bottom: 12px;
+              animation: skeleton-shimmer 2s ease-in-out infinite 0.2s;
+            }
+
+            .skeleton-content {
+              .skeleton-title {
+                height: 20px;
+                background: var(--el-fill-color);
+                border-radius: 4px;
+                margin-bottom: 10px;
+                animation: skeleton-shimmer 2s ease-in-out infinite 0.4s;
+              }
+
+              .skeleton-desc {
+                height: 14px;
+                background: var(--el-fill-color);
+                border-radius: 3px;
+                margin-bottom: 8px;
+                animation: skeleton-shimmer 2s ease-in-out infinite 0.6s;
+
+                &.short {
+                  width: 70%;
+                  animation-delay: 0.8s;
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
@@ -186,11 +298,75 @@ onMounted(async () => {
     color: var(--el-text-color-regular);
     font-size: 16px;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .loading-icon {
+      font-size: 18px;
+      animation: loading-bounce 1.5s ease-in-out infinite;
+    }
   }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+// 骨架屏动画关键帧
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes skeleton-dot-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    opacity: 0.6;
+    transform: translateX(-2px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateX(2px);
+  }
+  100% {
+    opacity: 0.6;
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes loading-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+// 移动端适配
+@media screen and (max-width: 768px) {
+  .timeline-loading {
+    .loading-animation .timeline-skeleton .skeleton-items .skeleton-item {
+      &:nth-child(odd),
+      &:nth-child(even) {
+        flex-direction: row;
+        .skeleton-card {
+          margin-left: 30px;
+          margin-right: 0;
+        }
+      }
+    }
+  }
 }
 </style>
