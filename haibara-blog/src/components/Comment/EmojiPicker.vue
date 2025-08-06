@@ -34,7 +34,51 @@ onMounted(() => {
   if (options.value) {
     options.value.children[optionsIndex.value].classList.add('active');
   }
+
+  // 初始化表情项动画
+  initEmojiAnimation();
 })
+
+// 初始化表情项动画
+function initEmojiAnimation() {
+  nextTick(() => {
+    const emojiItems = document.querySelectorAll('.emoji-item');
+    emojiItems.forEach((item, index) => {
+      // 重置状态
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(10px) scale(0.8)';
+
+      // 添加动画
+      setTimeout(() => {
+        item.style.transition = 'all 0.3s ease-out';
+        item.style.opacity = '1';
+        item.style.transform = 'translateY(0) scale(1)';
+      }, index * 20); // 每个表情延迟20ms
+    });
+  });
+}
+
+// 监听滚动，为新出现的表情添加动画
+function handleScroll() {
+  const scrollContainer = document.querySelector('.el-scrollbar__wrap');
+  if (!scrollContainer) return;
+
+  const emojiItems = document.querySelectorAll('.emoji-item');
+  const containerRect = scrollContainer.getBoundingClientRect();
+
+  emojiItems.forEach((item, index) => {
+    const itemRect = item.getBoundingClientRect();
+    const isVisible = itemRect.top < containerRect.bottom && itemRect.bottom > containerRect.top;
+
+    if (isVisible && item.style.opacity === '0') {
+      setTimeout(() => {
+        item.style.transition = 'all 0.3s ease-out';
+        item.style.opacity = '1';
+        item.style.transform = 'translateY(0) scale(1)';
+      }, (index % 10) * 20); // 每10个一组，重新开始延迟
+    }
+  });
+}
 
 function optionEmoji(index: number) {
   optionsIndex.value = index
@@ -194,6 +238,7 @@ function updatePreviewPosition(event) {
     :width="popoverWidth"
     trigger="click"
     :popper-class="'emoji-popover-container'"
+    @show="initEmojiAnimation"
   >
     <template #reference>
       <slot name="trigger">
@@ -205,18 +250,19 @@ function updatePreviewPosition(event) {
     </template>
     
     <div class="emojis_container" @mousedown.stop.prevent>
-      <el-scrollbar>
+      <el-scrollbar @scroll="handleScroll">
         <div class="OvO_emojis" v-show="optionsIndex === 0">
           <!-- 文字表情 -->
-          <div 
-            v-for="(emoji,key) in emojis" 
-            :key="key" 
-            :title="key" 
+          <div
+            v-for="(emoji,key) in emojis"
+            :key="key"
+            :title="key"
             @click.stop="addEmoji(emoji, $event)"
             @mousedown.stop.prevent
             class="emoji-item"
             @mouseenter="showTextPreview($event, emoji, key)"
             @mouseleave="hidePreview"
+            style="opacity: 0; transform: translateY(10px) scale(0.8);"
           >
             {{ emoji }}
           </div>
@@ -279,31 +325,6 @@ function updatePreviewPosition(event) {
   flex-wrap: wrap;
   padding: 12px;
   background: linear-gradient(135deg, #fffbfd, #fff8fa);
-
-  /* 为表情项添加交错动画 */
-  .emoji-item {
-    animation: emoji-item-enter 0.3s ease-out forwards;
-    opacity: 0;
-    transform: translateY(10px) scale(0.8);
-
-    @for $i from 1 through 50 {
-      &:nth-child(#{$i}) {
-        animation-delay: #{$i * 0.02}s;
-      }
-    }
-  }
-}
-
-/* 表情项进入动画 */
-@keyframes emoji-item-enter {
-  0% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 
@@ -648,56 +669,36 @@ function updatePreviewPosition(event) {
   }
 }
 
-/* 文字表情点击效果 */
+/* 文字表情点击效果 - 恢复原始效果 */
 .emoji-item.emoji-clicked {
-  animation: emoji-super-pulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(45deg, #ff6b9d, #ffd93d, #6bcf7f, #4d9de0);
-  background-size: 300% 300%;
-  color: white;
-  transform: scale(1.3);
-  z-index: 1000;
-  box-shadow: 0 0 20px rgba(255, 107, 157, 0.8);
-  border-radius: 12px;
-  font-weight: bold;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  animation: emoji-pulse 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffd1e6;
+  color: #ff4081;
+  transform: scale(1.2);
+  z-index: 1;
 }
 
-/* 图片表情点击效果 */
+/* 图片表情点击效果 - 恢复原始效果 */
 .emoji-img-wrapper img.emoji-clicked {
-  animation: emoji-super-pulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 0 8px rgba(255, 64, 129, 0.9))
-          drop-shadow(0 0 16px rgba(255, 215, 61, 0.6))
-          drop-shadow(0 0 24px rgba(107, 207, 127, 0.4));
-  transform: scale(1.3);
-  z-index: 1000;
+  animation: emoji-pulse 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 4px rgba(255, 64, 129, 0.7));
+  transform: scale(1.2);
+  z-index: 1;
 }
 
-/* 超级点击动画关键帧 */
-@keyframes emoji-super-pulse {
+/* 点击动画关键帧 - 恢复原始效果 */
+@keyframes emoji-pulse {
   0% {
-    transform: scale(1) rotate(0deg);
-    box-shadow: 0 0 0 0 rgba(255, 107, 157, 0.8);
-    background-position: 0% 50%;
-  }
-  25% {
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 0 0 8px rgba(255, 107, 157, 0.4);
-    background-position: 25% 50%;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 64, 129, 0.4);
   }
   50% {
-    transform: scale(1.3) rotate(-3deg);
-    box-shadow: 0 0 0 16px rgba(255, 107, 157, 0.2);
-    background-position: 50% 50%;
-  }
-  75% {
-    transform: scale(1.2) rotate(2deg);
-    box-shadow: 0 0 0 24px rgba(255, 107, 157, 0.1);
-    background-position: 75% 50%;
+    transform: scale(1.2);
+    box-shadow: 0 0 0 10px rgba(255, 64, 129, 0);
   }
   100% {
-    transform: scale(1.1) rotate(0deg);
-    box-shadow: 0 0 0 32px rgba(255, 107, 157, 0);
-    background-position: 100% 50%;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 0 rgba(255, 64, 129, 0);
   }
 }
 
