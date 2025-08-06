@@ -262,10 +262,46 @@ function scrollWork() {
 }
 
 const isReadingMode = ref(false)
+const isTransitioning = ref(false)
+const transitionAction = ref('') // 'entering' 或 'exiting'
 
-// 开启阅读模式a
+// 开启阅读模式 - 添加流畅的过渡动画
 function ReadingModeFunc() {
-  isReadingMode.value = !isReadingMode.value;
+  if (isTransitioning.value) return // 防止动画期间重复点击
+
+  isTransitioning.value = true
+
+  if (!isReadingMode.value) {
+    // 进入阅读模式
+    transitionAction.value = 'entering'
+    document.body.style.overflow = 'hidden'
+
+    // 延迟切换模式以显示动画
+    setTimeout(() => {
+      isReadingMode.value = true
+      document.body.style.overflow = ''
+
+      // 动画完成后重置状态
+      setTimeout(() => {
+        isTransitioning.value = false
+        transitionAction.value = ''
+      }, 500)
+    }, 800)
+  } else {
+    // 退出阅读模式
+    transitionAction.value = 'exiting'
+    document.body.style.overflow = 'hidden'
+
+    setTimeout(() => {
+      isReadingMode.value = false
+      document.body.style.overflow = ''
+
+      setTimeout(() => {
+        isTransitioning.value = false
+        transitionAction.value = ''
+      }, 500)
+    }, 800)
+  }
 }
 
 // 切换指针排斥特效（保留函数但不再使用）
@@ -277,8 +313,26 @@ function togglePointerRepel() {
 </script>
 
 <template>
-  <div v-show="!isReadingMode">
-    <Main is-side-bar>
+  <!-- 过渡遮罩层 -->
+  <div v-if="isTransitioning" class="reading-mode-transition">
+    <div class="transition-overlay">
+      <div class="transition-content">
+        <div class="book-animation">
+          <div class="book-cover"></div>
+          <div class="book-pages">
+            <div class="page" v-for="i in 3" :key="i" :style="{ animationDelay: `${i * 0.1}s` }"></div>
+          </div>
+        </div>
+        <div class="transition-text">
+          {{ transitionAction === 'entering' ? '进入阅读模式...' : '退出阅读模式...' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <transition name="reading-mode" mode="out-in">
+    <div v-if="!isReadingMode" key="normal-mode" class="normal-mode">
+      <Main is-side-bar>
       <template #header>
         <Header/>
       </template>
@@ -468,11 +522,11 @@ function togglePointerRepel() {
       <template #footer>
         <Footer/>
       </template>
-    </Main>
-  </div>
-  <div v-show="isReadingMode" class="bg-white dark:bg-gray-800">
+      </Main>
+    </div>
+    <div v-else key="reading-mode" class="reading-mode-container bg-white dark:bg-gray-800">
     <!-- 退出按钮 -->
-    <div @click="isReadingMode = false"
+    <div @click="ReadingModeFunc"
          class="z-10 w-[50px] h-[50px] bg-gray-200 hover:bg-gray-300 fixed top-[2em] right-[1em] lg:right-[5em] rounded flex items-center justify-center duration-300 cursor-pointer">
       <svg-icon name="exit_icon" style="width: 25px;height: 25px;"/>
     </div>
@@ -610,7 +664,8 @@ function togglePointerRepel() {
         </div>
       </div>
     </div>
-  </div>
+    </div>
+  </transition>
   <MobileDirectoryCard :id="id" :scroll-element="scrollElement" :is-show-move-catalog="isShowMoveCatalog"
                        @update:isShowMoveCatalog="(value) =>  isShowMoveCatalog = value"/>
   <BottomRightLayout v-show="!isReadingMode" to-top scroll-percentage reading-mode to-comment
@@ -717,6 +772,42 @@ function togglePointerRepel() {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+
+  // 添加渐变遮罩层以提高文字可读性
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(0, 0, 0, 0.3) 30%,
+      rgba(0, 0, 0, 0.1) 60%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+    z-index: 1;
+  }
+
+  // 添加动态背景效果
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      circle at 30% 70%,
+      rgba(74, 108, 247, 0.2) 0%,
+      transparent 50%
+    );
+    z-index: 2;
+  }
 
   .head_title_text {
     display: flex;
@@ -725,17 +816,30 @@ function togglePointerRepel() {
     color: white;
     font-size: 15px;
     padding: 5%;
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    justify-content: flex-end;
 
     .tag {
-      // 背景透明度0
       background-color: rgba(255, 255, 255, 0);
     }
 
     div div {
-      background-color: rgba(255, 255, 255, 0.3);
-      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
       margin: 5px;
-      padding: 5px;
+      padding: 8px 12px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
     }
 
     div {
@@ -744,8 +848,45 @@ function togglePointerRepel() {
 
     .title {
       font-size: 40px;
-      margin: 10px 0;
+      margin: 15px 0;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+      font-weight: 700;
+      line-height: 1.2;
+
+      @media screen and (max-width: 768px) {
+        font-size: 28px;
+      }
     }
+
+    .statistics, .time {
+      div {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        font-size: 13px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// 暗色模式适配
+.dark .head_title {
+  &::before {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.4) 30%,
+      rgba(0, 0, 0, 0.2) 60%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+  }
+
+  &::after {
+    background: radial-gradient(
+      circle at 30% 70%,
+      rgba(107, 70, 193, 0.3) 0%,
+      transparent 50%
+    );
   }
 }
 
@@ -1159,6 +1300,236 @@ function togglePointerRepel() {
   }
   100% {
     left: 100%;
+  }
+}
+
+// 阅读模式过渡动画样式
+.reading-mode-transition {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
+
+  .transition-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: overlay-fade-in 0.4s ease-out;
+
+    // 添加微妙的渐变效果
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(
+        circle at 50% 50%,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+  }
+
+  .transition-content {
+    text-align: center;
+    color: var(--el-text-color-primary);
+    animation: content-slide-up 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+  }
+
+  .book-animation {
+    position: relative;
+    width: 80px;
+    height: 100px;
+    margin: 0 auto 20px;
+
+    .book-cover {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg,
+        rgba(255, 255, 255, 0.8),
+        rgba(240, 240, 240, 0.6)
+      );
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.05);
+      animation: book-open 1.2s ease-in-out infinite;
+    }
+
+    .book-pages {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: calc(100% - 16px);
+      height: calc(100% - 16px);
+
+      .page {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+        animation: page-flip 1.8s ease-in-out infinite;
+        transform-origin: left center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+    }
+  }
+
+  .transition-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    animation: text-pulse 1.2s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 12px 24px;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+// 阅读模式切换动画
+.reading-mode-enter-active,
+.reading-mode-leave-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reading-mode-enter-from {
+  opacity: 0;
+  transform: scale(0.95) translateY(20px);
+}
+
+.reading-mode-leave-to {
+  opacity: 0;
+  transform: scale(1.05) translateY(-20px);
+}
+
+.normal-mode,
+.reading-mode-container {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// 过渡动画关键帧
+@keyframes overlay-fade-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transform: scale(1);
+  }
+}
+
+@keyframes content-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes book-open {
+  0%, 100% {
+    transform: rotateY(0deg) scale(1);
+  }
+  50% {
+    transform: rotateY(-15deg) scale(1.05);
+  }
+}
+
+@keyframes page-flip {
+  0%, 100% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateY(-90deg);
+    opacity: 0.7;
+  }
+}
+
+@keyframes text-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+// 暗色模式适配
+.dark .reading-mode-transition {
+  .transition-overlay {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &::before {
+      background: radial-gradient(
+        circle at 50% 50%,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 50%,
+        transparent 100%
+      );
+    }
+  }
+
+  .book-animation {
+    .book-cover {
+      background: linear-gradient(145deg,
+        rgba(80, 80, 80, 0.8),
+        rgba(60, 60, 60, 0.6)
+      );
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .book-pages .page {
+      background: rgba(100, 100, 100, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .transition-text {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--el-text-color-primary);
   }
 }
 </style>
