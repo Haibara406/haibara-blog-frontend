@@ -17,6 +17,7 @@ import MobileDirectoryCard from "./MobileDirectoryCard/index.vue";
 import {throttle} from "@/utils/optimize.ts";
 import {ARTICLE_VISIT_PREFIX} from "@/const/Visits";
 import PointerRepelText from "@/components/PointerRepelText/index.vue";
+import { useReadingMode } from "@/composables/useReadingMode";
 
 // .env
 const env = import.meta.env;
@@ -261,47 +262,12 @@ function scrollWork() {
   progressY.value = Math.floor((scrollTop / scrollHeight) * 100) + '%';
 }
 
-const isReadingMode = ref(false)
-const isTransitioning = ref(false)
-const transitionAction = ref('') // 'entering' 或 'exiting'
+// 使用全局阅读模式状态管理
+const { isReadingMode, isTransitioning, transitionAction, toggleReadingMode } = useReadingMode()
 
-// 开启阅读模式 - 添加流畅的过渡动画
+// 开启阅读模式 - 使用全局状态管理
 function ReadingModeFunc() {
-  if (isTransitioning.value) return // 防止动画期间重复点击
-
-  isTransitioning.value = true
-
-  if (!isReadingMode.value) {
-    // 进入阅读模式
-    transitionAction.value = 'entering'
-    document.body.style.overflow = 'hidden'
-
-    // 延迟切换模式以显示动画
-    setTimeout(() => {
-      isReadingMode.value = true
-      document.body.style.overflow = ''
-
-      // 动画完成后重置状态
-      setTimeout(() => {
-        isTransitioning.value = false
-        transitionAction.value = ''
-      }, 500)
-    }, 800)
-  } else {
-    // 退出阅读模式
-    transitionAction.value = 'exiting'
-    document.body.style.overflow = 'hidden'
-
-    setTimeout(() => {
-      isReadingMode.value = false
-      document.body.style.overflow = ''
-
-      setTimeout(() => {
-        isTransitioning.value = false
-        transitionAction.value = ''
-      }, 500)
-    }, 800)
-  }
+  toggleReadingMode()
 }
 
 // 切换指针排斥特效（保留函数但不再使用）

@@ -2,14 +2,14 @@ import { ref, computed, watch } from 'vue';
 
 // 设置项接口
 interface AppSettings {
-  clickEffectEnabled: boolean;
+  mouseFollowEffectEnabled: boolean; // 鼠标跟随特效
   fullscreenEnabled: boolean;
   // 可以在这里添加更多设置项
 }
 
 // 默认设置
 const defaultSettings: AppSettings = {
-  clickEffectEnabled: false, // 默认关闭点击特效
+  mouseFollowEffectEnabled: false, // 默认关闭鼠标跟随特效
   fullscreenEnabled: false,  // 默认关闭全屏功能
 };
 
@@ -46,11 +46,11 @@ watch(settings, (newSettings) => {
 
 // 设置管理 composable
 export const useSettings = () => {
-  // 点击特效开关
-  const clickEffectEnabled = computed({
-    get: () => settings.value.clickEffectEnabled,
+  // 鼠标跟随特效开关
+  const mouseFollowEffectEnabled = computed({
+    get: () => settings.value.mouseFollowEffectEnabled,
     set: (value: boolean) => {
-      settings.value.clickEffectEnabled = value;
+      settings.value.mouseFollowEffectEnabled = value;
     }
   });
 
@@ -71,7 +71,7 @@ export const useSettings = () => {
   const getAllSettings = () => settings.value;
 
   return {
-    clickEffectEnabled,
+    mouseFollowEffectEnabled,
     fullscreenEnabled,
     resetSettings,
     getAllSettings,

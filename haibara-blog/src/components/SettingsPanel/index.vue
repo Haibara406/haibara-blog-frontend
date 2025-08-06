@@ -1,7 +1,7 @@
 <template>
   <div class="settings-panel" :class="{ closing: isClosing }" @click.self="handleClose">
     <!-- 华丽的设置面板 -->
-    <div class="settings-container">
+    <div class="settings-container" :class="{ dark: isDark }">
       <!-- 标题区域 -->
       <div class="header-section">
         <div class="header-bg"></div>
@@ -44,22 +44,22 @@
 
           </div>
           
-          <!-- 点击特效 -->
-          <div class="feature-card" :class="{ active: clickEffectEnabled }">
+          <!-- 鼠标跟随特效 -->
+          <div class="feature-card" :class="{ active: mouseFollowEffectEnabled }">
             <div class="feature-icon">
               <el-icon><Pointer /></el-icon>
             </div>
             <div class="feature-info">
-              <h3 class="feature-title">点击特效</h3>
-              <p class="feature-desc">华丽的鼠标点击动画(有彩蛋哟~)</p>
+              <h3 class="feature-title">鼠标跟随特效</h3>
+              <p class="feature-desc">炫酷的鼠标跟随动画，尾部对着尾部</p>
             </div>
             <div class="feature-toggle">
-              <el-switch 
-                v-model="clickEffectEnabled"
+              <el-switch
+                v-model="mouseFollowEffectEnabled"
                 size="large"
                 active-color="#409EFF"
                 inactive-color="#DCDFE6"
-                @change="handleClickEffectToggle"
+                @change="handleMouseFollowEffectToggle"
               />
             </div>
           </div>
@@ -91,17 +91,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Close, FullScreen, Pointer, Setting, RefreshLeft, Check } from '@element-plus/icons-vue';
 import { useSettings } from '@/composables/useSettings';
 import screenfull from 'screenfull';
+import { useDark } from '@vueuse/core';
 
 // 定义事件
 const emit = defineEmits(['close']);
 
 // 获取设置管理
-const { clickEffectEnabled, fullscreenEnabled, resetSettings } = useSettings();
+const { mouseFollowEffectEnabled, fullscreenEnabled, resetSettings } = useSettings();
+
+// 获取深色模式状态
+const isDark = useDark();
 
 // 关闭动画状态
 const isClosing = ref(false);
@@ -142,12 +146,12 @@ const handleFullscreenToggle = (value: boolean) => {
   }
 };
 
-// 处理点击特效开关
-const handleClickEffectToggle = (value: boolean) => {
+// 处理鼠标跟随特效开关
+const handleMouseFollowEffectToggle = (value: boolean) => {
   if (value) {
-    ElMessage.success('✨ 点击特效已开启，试试点击页面吧！');
+    ElMessage.success('✨ 鼠标跟随特效已开启，移动鼠标试试吧！');
   } else {
-    ElMessage.info('❌ 点击特效已关闭');
+    ElMessage.info('❌ 鼠标跟随特效已关闭');
   }
 };
 
@@ -435,30 +439,75 @@ const handleReset = async () => {
 }
 
 // 深色模式适配
-@media (prefers-color-scheme: dark) {
-  .settings-container {
-    background: linear-gradient(145deg, 
-      rgba(30, 30, 30, 0.95) 0%, 
-      rgba(20, 20, 20, 0.9) 100%);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-  
+.settings-container.dark {
+  background: linear-gradient(145deg,
+    rgba(30, 30, 30, 0.95) 0%,
+    rgba(20, 20, 20, 0.9) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+
   .feature-card {
     background: rgba(40, 40, 40, 0.8);
     border-color: rgba(255, 255, 255, 0.1);
-    
+
     &:hover {
       border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    &::before {
+      background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
     }
   }
-  
+
   .feature-icon {
     background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+
+    .el-icon {
+      color: rgba(255, 255, 255, 0.8);
+    }
   }
-  
+
+  .feature-title {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .feature-desc {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .main-title {
+    color: rgba(255, 255, 255, 0.9);
+
+    .title-icon {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  .subtitle {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
   .footer-section {
     background: rgba(0, 0, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.1);
+
+    .footer-text {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 1);
+    }
   }
 }
 

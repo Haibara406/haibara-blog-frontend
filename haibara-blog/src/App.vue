@@ -7,8 +7,8 @@
   <Music />
   <DevToolsBlocker :enableDevToolsBlocker="true" />
   <ContextMenu />
-  <!-- 鼠标点击特效 -->
-  <ClickEffect />
+  <!-- 鼠标跟随特效 -->
+  <MouseFollowEffect />
 </template>
 
 <script setup lang="ts">
@@ -16,7 +16,7 @@ import {useDark, useToggle} from "@vueuse/core";
 import useWebsiteStore from "@/store/modules/website.ts";
 import DevToolsBlocker from "@/components/DevToolsBlocker/index.vue";
 import ContextMenu from "@/components/ContextMenu/index.vue";
-import ClickEffect from "@/components/ClickEffect/index.vue";
+import MouseFollowEffect from "@/components/MouseFollowEffect/index.vue";
 
 const useWebsite = useWebsiteStore()
 
