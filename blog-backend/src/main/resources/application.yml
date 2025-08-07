@@ -161,7 +161,7 @@ oauth:
     redirect-uri: https://haikari.top/api/oauth/github/callback
 web:
   index:
-    path: https://haikari.top/
+    path: https://sherry.haikari.top/
 # knife4j的增强配置，不需要增强可以不配
 knife4j:
   enable: true
@@ -174,7 +174,7 @@ http_pool:
   connection_request_timeout: 1000
   socket_timeout: 65000
   validate_after_inactivity: 2000
-# 链接 minio TODO
+# 链接 minio
 minio:
   endpoint: http://45.204.4.56:9000
   accessKey: minioadmin
