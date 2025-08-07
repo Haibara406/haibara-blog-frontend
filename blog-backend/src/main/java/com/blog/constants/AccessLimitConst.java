@@ -98,4 +98,26 @@ public class AccessLimitConst {
     public static final int BACK_GET_BANNERS_MAX_COUNT = 60;
 
     public static final int SELECT_UPDATE_MENU_ROLE_MAX_COUNT = 5;
+
+    public static final int GET_CURRENT_PAGE_POPUPS_MAX_COUNT = 30;
+
+    public static final int GET_POPUP_LIST_MAX_COUNT = DEFAULT_MAX_COUNT;
+
+    public static final int SEARCH_POPUP_MAX_COUNT = DEFAULT_MAX_COUNT;
+
+    public static final int ADD_POPUP_MAX_COUNT = 10;
+
+    public static final int UPDATE_POPUP_MAX_COUNT = 10;
+
+    public static final int GET_POPUP_BY_ID_MAX_COUNT = DEFAULT_MAX_COUNT;
+
+    public static final int DELETE_POPUP_MAX_COUNT = 20;
+
+    public static final int DELETE_POPUP_SECONDS = 300;
+
+    public static final int UPDATE_POPUP_STATUS_MAX_COUNT = 20;
+
+    public static final int UPDATE_POPUP_STATUS_SECONDS = 300;
+
+    public static final int UPLOAD_POPUP_IMAGE_MAX_COUNT = 5;
 }

@@ -151,4 +151,58 @@ public class ValidationConstants {
 
     public static final String TYPE_ERROR = "参数错误";
 
+    // ==================== 弹窗管理相关验证常量 ====================
+
+    public static final String POPUP_TITLE_NOT_NULL = "弹窗标题不能为空";
+
+    public static final String POPUP_TITLE_TOO_LONG = "弹窗标题长度不能超过100个字符";
+
+    public static final String POPUP_CONTENT_TOO_LONG = "弹窗内容长度不能超过65535个字符";
+
+    public static final String POPUP_TYPE_NOT_NULL = "弹窗类型不能为空";
+
+    public static final String POPUP_TYPE_RANGE_ERROR = "弹窗类型值必须在1-4之间";
+
+    public static final String DISPLAY_POSITION_NOT_NULL = "显示位置不能为空";
+
+    public static final String DISPLAY_POSITION_RANGE_ERROR = "显示位置值必须在1-2之间";
+
+    public static final String TARGET_PAGES_TOO_LONG = "目标页面路径长度不能超过500个字符";
+
+    public static final String TARGET_USERS_NOT_NULL = "目标用户不能为空";
+
+    public static final String TARGET_USERS_RANGE_ERROR = "目标用户值必须在1-3之间";
+
+    public static final String TIME_RANGE_NOT_NULL = "时间段不能为空";
+
+    public static final String TIME_RANGE_RANGE_ERROR = "时间段值必须在0-4之间";
+
+    public static final String DISPLAY_MODE_NOT_NULL = "显示模式不能为空";
+
+    public static final String DISPLAY_MODE_RANGE_ERROR = "显示模式值必须在1-4之间";
+
+    public static final String CONTENT_TYPE_NOT_NULL = "内容类型不能为空";
+
+    public static final String CONTENT_TYPE_RANGE_ERROR = "内容类型值必须在1-3之间";
+
+    public static final String IMAGE_URL_TOO_LONG = "图片URL长度不能超过500个字符";
+
+    public static final String JUMP_URL_TOO_LONG = "跳转链接长度不能超过500个字符";
+
+    public static final String POPUP_POSITION_TOO_LONG = "弹窗位置长度不能超过20个字符";
+
+    public static final String PRIORITY_NOT_NULL = "优先级权重不能为空";
+
+    public static final String PRIORITY_RANGE_ERROR = "优先级权重值必须在1-99之间";
+
+    public static final String CLOSEABLE_NOT_NULL = "是否可关闭不能为空";
+
+    public static final String CLOSEABLE_RANGE_ERROR = "是否可关闭值必须为0或1";
+
+    public static final String AUTO_CLOSE_TIME_RANGE_ERROR = "自动关闭时间必须大于0";
+
+    public static final String MIN_PRIORITY_RANGE_ERROR = "最小优先级必须大于0";
+
+    public static final String MAX_PRIORITY_RANGE_ERROR = "最大优先级必须大于0";
+
 }

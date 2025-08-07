@@ -10,7 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.blog.domain.BaseData;
 
-import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Date;
 
 /**
@@ -48,16 +49,16 @@ public class Popup implements BaseData {
     private Integer targetUsers;
 
     @Schema(description = "开始日期(为空则立即生效)", example = "2025-08-07 14:30:00")
-    private Date startDate;
+    private LocalDate startDate;
 
     @Schema(description = "结束日期(为空则永久有效)", example = "2025-12-31 23:59:59")
-    private Date endDate;
+    private LocalDate endDate;
 
     @Schema(description = "开始时间(若与结束时间都为null则全天都能看到)", example = "09:00:00")
-    private Time startTime;
+    private LocalTime startTime;
 
     @Schema(description = "结束时间(若与开始时间都为null则全天都能看到)", example = "18:00:00")
-    private Time endTime;
+    private LocalTime endTime;
 
     @Schema(description = "显示模式：1-每次刷新，2-会话期间一次，3-每日一次，4-永久一次", example = "1", allowableValues = {"1", "2", "3", "4"})
     private Integer displayMode;

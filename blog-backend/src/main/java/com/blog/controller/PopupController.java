@@ -49,7 +49,7 @@ public class PopupController {
             @Parameter(name = "sessionId", description = "会话ID", required = true)
     })
     @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+            maxCount = AccessLimitConst.GET_CURRENT_PAGE_POPUPS_MAX_COUNT)
     @GetMapping("/current")
     public ResponseResult<List<PopupVO>> getCurrentPagePopups(
             @RequestParam("currentPage") @NotNull String currentPage,
@@ -68,7 +68,7 @@ public class PopupController {
     })
     @LogAnnotation(module = "弹窗管理", operation = LogConst.GET)
     @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+            maxCount = AccessLimitConst.GET_POPUP_LIST_MAX_COUNT)
     @GetMapping("/back/list/{current}/{pageSize}")
     public ResponseResult<PageVO<List<PopupVO>>> getPopupList(
             @PathVariable("current") @NotNull Long current,
@@ -82,7 +82,7 @@ public class PopupController {
     @Parameter(name = "popupQueryDTO", description = "搜索条件")
     @LogAnnotation(module = "弹窗管理", operation = LogConst.SEARCH)
     @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+            maxCount = AccessLimitConst.SEARCH_POPUP_MAX_COUNT)
     @PostMapping("/back/search")
     public ResponseResult<PageVO<List<PopupVO>>> searchPopup(@RequestBody @Valid PopupQueryDTO popupQueryDTO) {
         return ControllerUtils.messageHandler(() -> popupService.searchPopup(popupQueryDTO));
@@ -93,7 +93,7 @@ public class PopupController {
     @Parameter(name = "popupDTO", description = "弹窗信息")
     @LogAnnotation(module = "弹窗管理", operation = LogConst.INSERT)
     @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+            maxCount = AccessLimitConst.ADD_POPUP_MAX_COUNT)
     @PostMapping("/back/add")
     public ResponseResult<Void> addPopup(@RequestBody @Valid PopupDTO popupDTO) {
         return popupService.addPopup(popupDTO);
@@ -104,7 +104,7 @@ public class PopupController {
     @Parameter(name = "popupDTO", description = "弹窗信息")
     @LogAnnotation(module = "弹窗管理", operation = LogConst.UPDATE)
     @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+            maxCount = AccessLimitConst.UPDATE_POPUP_MAX_COUNT)
     @PutMapping("/back/update")
     public ResponseResult<Void> updatePopup(@RequestBody @Valid PopupDTO popupDTO) {
         return popupService.updatePopup(popupDTO);
@@ -115,7 +115,7 @@ public class PopupController {
     @Parameter(name = "id", description = "弹窗ID", required = true)
     @LogAnnotation(module = "弹窗管理", operation = LogConst.GET)
     @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+            maxCount = AccessLimitConst.GET_POPUP_BY_ID_MAX_COUNT)
     @GetMapping("/back/get/{id}")
     public ResponseResult<PopupDTO> getPopupById(@PathVariable("id") @NotNull Long id) {
         return ControllerUtils.messageHandler(() -> popupService.getPopupById(id));
@@ -125,8 +125,8 @@ public class PopupController {
     @Operation(summary = "删除弹窗")
     @Parameter(name = "ids", description = "弹窗ID列表")
     @LogAnnotation(module = "弹窗管理", operation = LogConst.DELETE)
-    @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+    @AccessLimit(seconds = AccessLimitConst.DELETE_POPUP_SECONDS,
+            maxCount = AccessLimitConst.DELETE_POPUP_MAX_COUNT)
     @DeleteMapping("/back/delete")
     public ResponseResult<Void> deletePopup(@RequestBody List<Long> ids) {
         return popupService.deletePopup(ids);
@@ -139,8 +139,8 @@ public class PopupController {
             @Parameter(name = "status", description = "状态(0:禁用 1:启用)", required = true)
     })
     @LogAnnotation(module = "弹窗管理", operation = LogConst.UPDATE)
-    @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+    @AccessLimit(seconds = AccessLimitConst.UPDATE_POPUP_STATUS_SECONDS,
+            maxCount = AccessLimitConst.UPDATE_POPUP_STATUS_MAX_COUNT)
     @PostMapping("/back/update/status")
     public ResponseResult<Void> updateStatus(
             @RequestParam("id") @NotNull Long id,
@@ -154,7 +154,7 @@ public class PopupController {
     @Parameter(name = "file", description = "图片文件", required = true)
     @LogAnnotation(module = "弹窗管理", operation = LogConst.UPLOAD_IMAGE)
     @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
-            maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
+            maxCount = AccessLimitConst.UPLOAD_POPUP_IMAGE_MAX_COUNT)
     @PostMapping("/back/upload/image")
     public ResponseResult<String> uploadImage(@RequestParam("file") MultipartFile file) {
         return popupService.uploadImage(file);
