@@ -7,6 +7,8 @@ import {SET_TOKEN} from "@/utils/auth";
 import {ElMessage} from "element-plus";
 import useUserStore from "@/store/modules/user.ts";
 
+// 定义emit
+const emit = defineEmits(['switch'])
 
 const formRef = ref();
 const env = import.meta.env;
@@ -25,7 +27,9 @@ const rule = {
     {required: true, message: '请输入密码'}
   ]
 }
+
 const userStore = useUserStore()
+
 function userLogin() {
   formRef.value.validate((valid) => {
     if (valid) {
@@ -42,81 +46,297 @@ function userLogin() {
     }
   })
 }
+
+// 切换到注册页面
+function switchToRegister() {
+  emit('switch')
+  router.push('/register')
+}
 </script>
 
 <template>
-  <div style="text-align: center;margin: 0 20px">
-    <div style="margin-top: 150px">
-      <div style="font-size: 25px;font-weight: bold">登录</div>
-      <div style="font-size: 14px;color: grey;margin-top: 1rem">用户密码使用键式哈希算法加密，所以请放心注册</div>
+  <div class="login-form">
+    <!-- 标题盒子 -->
+    <div class="title-box">
+      <h1>登录</h1>
     </div>
-    <div style="margin-top: 50px">
+
+    <!-- 输入框盒子 -->
+    <div class="input-box">
       <el-form :model="form" :rules="rule" ref="formRef">
         <el-form-item prop="username">
-          <el-input v-model="form.username" maxlength="20" type="text" placeholder="用户名/邮箱">
-            <template #prefix>
-              <el-icon>
-                <User/>
-              </el-icon>
-            </template>
-          </el-input>
+          <input
+            v-model="form.username"
+            type="text"
+            placeholder="用户名/邮箱"
+            maxlength="20"
+            @keyup.enter="userLogin()"
+          >
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="form.password" type="password" maxlength="20" placeholder="密码" @keyup.enter="userLogin()">
-            <template #prefix>
-              <el-icon>
-                <Lock/>
-              </el-icon>
-            </template>
-          </el-input>
+          <input
+            v-model="form.password"
+            type="password"
+            placeholder="密码"
+            maxlength="20"
+            @keyup.enter="userLogin()"
+          >
         </el-form-item>
-        <el-row>
-          <el-col :span="12" style="text-align: left">
-            <el-form-item prop="remember">
-              <el-checkbox v-model="form.remember" label="记住我"></el-checkbox>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12" style="text-align: right">
-            <el-link @click="$router.push('/reset')">忘记密码</el-link>
-          </el-col>
-        </el-row>
       </el-form>
+
+      <!-- 记住我和忘记密码 -->
+      <div class="form-options">
+        <el-checkbox v-model="form.remember" class="remember-checkbox">记住我</el-checkbox>
+        <el-link @click="$router.push('/reset')" class="forgot-link">忘记密码?</el-link>
+      </div>
     </div>
-    <div style="margin-top: 30px">
-      <el-button style="width: 270px" type="success" plain @click="userLogin()">立即登录</el-button>
+
+    <!-- 按钮盒子 -->
+    <div class="btn-box">
+      <button @click="userLogin()">登录</button>
+      <p @click="switchToRegister()">没有账号?去注册</p>
     </div>
-    <el-divider>
-      <span style="font-size: 13px;color: grey">没有账号</span>
-    </el-divider>
-    <div>
-      <el-button @click="$router.push('/register')" style="width: 270px" type="danger" plain>立即注册</el-button>
-    </div>
-    <el-divider>
-      <span style="font-size: 13px;color: grey">其他方式</span>
-    </el-divider>
-    <div>
-      <div class="other_login">
-        <div>
-          <el-link :href="env.MODE === 'development' ? env.VITE_SERVE + '/oauth/gitee/render' : env.VITE_SERVE + '/api/oauth/gitee/render'">
-            <svg-icon name="gitee" width="20px" height="20px" color="#4E86F1"/>
-          </el-link>
-        </div>
-        <div style="margin-left: 1rem">
-          <el-link :href="env.MODE === 'development' ? env.VITE_SERVE + '/oauth/github/render' : env.VITE_SERVE + '/api/oauth/github/render'">
-            <svg-icon name="github" width="20px" height="20px" color="#4E86F1"/>
-          </el-link>
-        </div>
+
+    <!-- 第三方登录 -->
+    <div class="third-party-login">
+      <div class="divider">
+        <span>其他登录方式</span>
+      </div>
+      <div class="oauth-buttons">
+        <el-link :href="env.MODE === 'development' ? env.VITE_SERVE + '/oauth/gitee/render' : env.VITE_SERVE + '/api/oauth/gitee/render'">
+          <div class="oauth-btn gitee-btn">
+            <svg-icon name="gitee" width="20px" height="20px" color="#C71D23"/>
+            <span>Gitee</span>
+          </div>
+        </el-link>
+        <el-link :href="env.MODE === 'development' ? env.VITE_SERVE + '/oauth/github/render' : env.VITE_SERVE + '/api/oauth/github/render'">
+          <div class="oauth-btn github-btn">
+            <svg-icon name="github" width="20px" height="20px" color="#333"/>
+            <span>GitHub</span>
+          </div>
+        </el-link>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.other_login{
+/* 登录表单 */
+.login-form {
+  width: 100%;
+  height: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  div:hover{
-    cursor: pointer;
+  padding: 0 40px;
+}
+
+/* 标题盒子 */
+.title-box {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+/* 标题 */
+.title-box h1 {
+  text-align: center;
+  color: white;
+  user-select: none;
+  letter-spacing: 5px;
+  text-shadow: 4px 4px 3px rgba(0, 0, 0, .1);
+  font-size: 28px;
+}
+
+/* 输入框盒子 */
+.input-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* 输入框 */
+.input-box input {
+  width: 80%;
+  max-width: 300px;
+  height: 40px;
+  margin-bottom: 20px;
+  text-indent: 10px;
+  border: 1px solid #fff;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 120px;
+  backdrop-filter: blur(10px);
+  outline: none;
+  color: #333;
+  font-size: 14px;
+}
+
+.input-box input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+  transition: opacity 0.3s;
+}
+
+.input-box input:focus {
+  color: #b0cfe9;
+}
+
+.input-box input:focus::placeholder {
+  opacity: 0;
+}
+
+/* 表单选项 */
+.form-options {
+  width: 80%;
+  max-width: 300px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.remember-checkbox {
+  color: white;
+}
+
+.remember-checkbox :deep(.el-checkbox__label) {
+  color: white;
+  font-size: 14px;
+}
+
+.forgot-link {
+  color: white;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* 按钮盒子 */
+.btn-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+/* 按钮 */
+.btn-box button {
+  width: 200px;
+  height: 40px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 20px;
+  background-color: #69b3f0;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-box button:hover {
+  opacity: 0.8;
+  transform: translateY(-2px);
+}
+
+/* 按钮文字 */
+.btn-box p {
+  color: white;
+  font-size: 14px;
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-box p:hover {
+  border-bottom: 1px solid white;
+}
+
+/* 第三方登录 */
+.third-party-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.divider {
+  width: 80%;
+  max-width: 300px;
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.divider span {
+  background: transparent;
+  padding: 0 15px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+}
+
+.oauth-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.oauth-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  transition: all 0.3s;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+}
+
+.oauth-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .login-form {
+    padding: 0 20px;
+  }
+
+  .input-box input {
+    width: 100%;
+  }
+
+  .form-options {
+    width: 100%;
+  }
+
+  .divider {
+    width: 100%;
+  }
+
+  .oauth-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .oauth-btn {
+    width: 200px;
+    justify-content: center;
   }
 }
 </style>
