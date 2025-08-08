@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 interface Props {
   show: boolean
@@ -35,15 +35,64 @@ const startScale = ref(1)
 const isTransitioning = ref(false)
 const transitionDirection = ref<'prev' | 'next' | ''>('')
 
+// 安全的当前索引计算
+const safeCurrentIndex = computed(() => {
+  if (!props.photos || props.photos.length === 0) return 0
+  const index = props.currentIndex
+  if (index < 0) return 0
+  if (index >= props.photos.length) return props.photos.length - 1
+  return index
+})
+
+// 安全的当前图片URL
+const currentPhotoUrl = computed(() => {
+  if (!props.photos || props.photos.length === 0) return ''
+  return props.photos[safeCurrentIndex.value] || ''
+})
+
 // 判断是否为初始状态
 const isInitialState = computed(() => {
-  return scale.value === 1 && 
-         rotation.value === 0 && 
-         !flipX.value && 
-         !flipY.value && 
-         translateX.value === 0 && 
+  return scale.value === 1 &&
+         rotation.value === 0 &&
+         !flipX.value &&
+         !flipY.value &&
+         translateX.value === 0 &&
          translateY.value === 0
 })
+
+// 计算是否可以切换图片
+const canGoPrev = computed(() => {
+  return props.photos && props.photos.length > 1
+})
+
+const canGoNext = computed(() => {
+  return props.photos && props.photos.length > 1
+})
+
+// 计算当前图片信息
+const currentPhotoInfo = computed(() => {
+  if (!props.photos || props.photos.length === 0) {
+    return { current: 0, total: 0 }
+  }
+  return {
+    current: safeCurrentIndex.value + 1,
+    total: props.photos.length
+  }
+})
+
+// 监听photos数组变化，确保currentIndex在有效范围内
+watch(() => props.photos, (newPhotos) => {
+  if (!newPhotos || newPhotos.length === 0) {
+    emit('update:currentIndex', 0)
+    return
+  }
+
+  if (props.currentIndex >= newPhotos.length) {
+    emit('update:currentIndex', newPhotos.length - 1)
+  } else if (props.currentIndex < 0) {
+    emit('update:currentIndex', 0)
+  }
+}, { immediate: true })
 
 // 重置所有变换
 const resetTransform = () => {
@@ -76,16 +125,66 @@ const closePreview = () => {
   emit('update:show', false)
 }
 
+// 创建粒子效果
+const createParticleEffect = () => {
+  const container = document.querySelector('.preview-image-container')
+  if (!container) return
+
+  for (let i = 0; i < 8; i++) {
+    const particle = document.createElement('div')
+    particle.className = 'transition-particle'
+    particle.style.position = 'absolute'
+    particle.style.width = '4px'
+    particle.style.height = '4px'
+    particle.style.background = 'rgba(255, 255, 255, 0.8)'
+    particle.style.borderRadius = '50%'
+    particle.style.pointerEvents = 'none'
+    particle.style.zIndex = '1000'
+
+    const startX = Math.random() * container.clientWidth
+    const startY = Math.random() * container.clientHeight
+    particle.style.left = `${startX}px`
+    particle.style.top = `${startY}px`
+
+    container.appendChild(particle)
+
+    // 动画
+    particle.animate([
+      {
+        transform: 'scale(0) translate(0, 0)',
+        opacity: 0
+      },
+      {
+        transform: 'scale(1) translate(0, 0)',
+        opacity: 1
+      },
+      {
+        transform: `scale(0) translate(${(Math.random() - 0.5) * 100}px, ${(Math.random() - 0.5) * 100}px)`,
+        opacity: 0
+      }
+    ], {
+      duration: 800,
+      easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    }).onfinish = () => {
+      if (container.contains(particle)) {
+        container.removeChild(particle)
+      }
+    }
+  }
+}
+
 // 切换图片
 const prevPhoto = () => {
-  if (isTransitioning.value) return
+  if (isTransitioning.value || !props.photos || props.photos.length === 0) return
   isTransitioning.value = true
   transitionDirection.value = 'prev'
-  
+
+  createParticleEffect()
   resetTransform()
-  
-  const newIndex = props.currentIndex > 0 
-    ? props.currentIndex - 1 
+
+  const currentIndex = safeCurrentIndex.value
+  const newIndex = currentIndex > 0
+    ? currentIndex - 1
     : props.photos.length - 1
   emit('update:currentIndex', newIndex)
 
@@ -96,14 +195,16 @@ const prevPhoto = () => {
 }
 
 const nextPhoto = () => {
-  if (isTransitioning.value) return
+  if (isTransitioning.value || !props.photos || props.photos.length === 0) return
   isTransitioning.value = true
   transitionDirection.value = 'next'
-  
+
+  createParticleEffect()
   resetTransform()
-  
-  const newIndex = props.currentIndex < props.photos.length - 1 
-    ? props.currentIndex + 1 
+
+  const currentIndex = safeCurrentIndex.value
+  const newIndex = currentIndex < props.photos.length - 1
+    ? currentIndex + 1
     : 0
   emit('update:currentIndex', newIndex)
 
@@ -138,10 +239,21 @@ const toggleFlipY = () => {
   flipY.value = !flipY.value
 }
 
+// 图片加载处理
+const handleImageLoad = () => {
+  // 图片加载成功，可以在这里添加一些逻辑
+  console.log('Image loaded successfully')
+}
+
+const handleImageError = () => {
+  // 图片加载失败，可以在这里添加错误处理逻辑
+  console.error('Failed to load image:', currentPhotoUrl.value)
+}
+
 // 处理键盘事件
 const handleKeydown = (e: KeyboardEvent) => {
   if (!props.show) return
-  
+
   if (e.key === 'Escape') {
     closePreview()
   } else if (e.key === 'ArrowLeft') {
@@ -276,10 +388,11 @@ onUnmounted(() => {
                transform: `translate(${translateX}px, ${translateY}px)`
              }">
           <img
-            :key="currentIndex"
-            :src="photos[currentIndex]"
+            v-if="currentPhotoUrl"
+            :key="safeCurrentIndex"
+            :src="currentPhotoUrl"
             :style="{
-              transform: `scale(${scale}) rotate(${rotation}deg) 
+              transform: `scale(${scale}) rotate(${rotation}deg)
                          scaleX(${flipX ? -1 : 1}) scaleY(${flipY ? -1 : 1})`,
               transformOrigin: 'center',
               transition: 'transform 0.3s ease'
@@ -296,15 +409,36 @@ onUnmounted(() => {
             @touchend.prevent="handleTouchEnd"
             @touchcancel.prevent="handleTouchEnd"
             @dragstart.prevent
+            @load="handleImageLoad"
+            @error="handleImageError"
             draggable="false"
             alt="预览图片"
           >
+          <div v-else class="image-placeholder">
+            <div class="placeholder-content">
+              <span class="placeholder-icon">🖼️</span>
+              <p class="placeholder-text">图片加载中...</p>
+            </div>
+          </div>
         </div>
       </div>
       <div class="preview-toolbar">
         <div class="toolbar-group">
-          <button class="preview-btn" @click="prevPhoto" title="上一张">◀</button>
-          <button class="preview-btn" @click="nextPhoto" title="下一张">▶</button>
+          <button
+            class="preview-btn"
+            :disabled="!canGoPrev || isTransitioning"
+            @click="prevPhoto"
+            title="上一张"
+          >◀</button>
+          <div class="photo-counter" v-if="currentPhotoInfo.total > 0">
+            {{ currentPhotoInfo.current }} / {{ currentPhotoInfo.total }}
+          </div>
+          <button
+            class="preview-btn"
+            :disabled="!canGoNext || isTransitioning"
+            @click="nextPhoto"
+            title="下一张"
+          >▶</button>
         </div>
         <div class="toolbar-group">
           <button class="preview-btn" @click="zoomIn" title="放大">+</button>
@@ -327,8 +461,8 @@ onUnmounted(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -336,7 +470,26 @@ onUnmounted(() => {
   overscroll-behavior: none;
   touch-action: none;
   -webkit-overflow-scrolling: touch;
-  animation: previewFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: modalFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  opacity: 0;
+}
+
+@keyframes modalFadeIn {
+  0% {
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+    opacity: 0;
+  }
+  50% {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    opacity: 0.8;
+  }
+  100% {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    opacity: 1;
+  }
 }
 
 @keyframes previewFadeIn {
@@ -371,39 +524,77 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  perspective: 1000px;
+}
+
+.transition-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 70%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
 }
 
 .preview-image {
-  max-width: 100vw;
-  max-height: 100vh;
+  max-width: 90vw; /* 减小最大宽度，避免全屏 */
+  max-height: 80vh; /* 减小最大高度，避免全屏 */
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
   transform-origin: center;
-  will-change: transform;
+  will-change: transform, opacity, filter;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   touch-action: none;
-  opacity: 0;
-  animation: imageAppear 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+  opacity: 1; /* 修改为默认可见，由JS控制隐藏 */
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 12px; /* 添加圆角 */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); /* 添加阴影效果 */
+  filter: brightness(1) saturate(1) contrast(1);
 }
 
-@keyframes imageAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* 删除旧的动画，由JS控制过渡 */
+
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90vw;
+  height: 80vh;
+  max-width: 800px;
+  max-height: 600px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.placeholder-content {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.placeholder-text {
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.8;
 }
 
 .preview-toolbar {
   position: fixed;
   bottom: 40px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
   display: flex;
   gap: 20px;
   background: rgba(255, 255, 255, 0.15);
@@ -415,7 +606,7 @@ onUnmounted(() => {
   z-index: 1001;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 0;
-  animation: toolbarAppear 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+  animation: toolbarAppear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s forwards;
 }
 
 .preview-toolbar:hover {
@@ -426,13 +617,25 @@ onUnmounted(() => {
 }
 
 @keyframes toolbarAppear {
-  from {
+  0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(30px);
+    transform: translateX(-50%) translateY(40px) scale(0.8);
+    filter: blur(4px);
   }
-  to {
+  50% {
+    opacity: 0.8;
+    transform: translateX(-50%) translateY(-5px) scale(1.05);
+    filter: blur(1px);
+  }
+  80% {
+    opacity: 0.95;
+    transform: translateX(-50%) translateY(-2px) scale(1.02);
+    filter: blur(0.5px);
+  }
+  100% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
+    filter: blur(0px);
   }
 }
 
@@ -519,6 +722,39 @@ onUnmounted(() => {
 .preview-btn:active {
   transform: translateY(-1px) scale(0.98);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.preview-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.preview-btn:disabled:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.preview-btn:disabled::before {
+  opacity: 0;
+}
+
+.photo-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 60px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 0 8px;
 }
 
 .preview-btn[title]::after {
@@ -623,46 +859,56 @@ onUnmounted(() => {
 @keyframes smoothSlideFromLeft {
   0% {
     opacity: 0;
-    transform: translateX(-15%) scale(0.95);
-    filter: blur(2px);
+    transform: translateX(-20%) scale(0.9) rotateY(-15deg);
+    filter: blur(3px) brightness(0.8);
   }
-  30% {
-    opacity: 0.6;
-    transform: translateX(-8%) scale(0.97);
-    filter: blur(1px);
+  20% {
+    opacity: 0.4;
+    transform: translateX(-12%) scale(0.95) rotateY(-8deg);
+    filter: blur(2px) brightness(0.9);
   }
-  70% {
-    opacity: 0.9;
-    transform: translateX(-2%) scale(0.99);
-    filter: blur(0.5px);
+  50% {
+    opacity: 0.8;
+    transform: translateX(-4%) scale(0.98) rotateY(-2deg);
+    filter: blur(1px) brightness(0.95);
+  }
+  80% {
+    opacity: 0.95;
+    transform: translateX(-1%) scale(1.01) rotateY(1deg);
+    filter: blur(0.5px) brightness(1.02);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0px);
+    transform: translateX(0) scale(1) rotateY(0deg);
+    filter: blur(0px) brightness(1);
   }
 }
 
 @keyframes smoothSlideFromRight {
   0% {
     opacity: 0;
-    transform: translateX(15%) scale(0.95);
-    filter: blur(2px);
+    transform: translateX(20%) scale(0.9) rotateY(15deg);
+    filter: blur(3px) brightness(0.8);
   }
-  30% {
-    opacity: 0.6;
-    transform: translateX(8%) scale(0.97);
-    filter: blur(1px);
+  20% {
+    opacity: 0.4;
+    transform: translateX(12%) scale(0.95) rotateY(8deg);
+    filter: blur(2px) brightness(0.9);
   }
-  70% {
-    opacity: 0.9;
-    transform: translateX(2%) scale(0.99);
-    filter: blur(0.5px);
+  50% {
+    opacity: 0.8;
+    transform: translateX(4%) scale(0.98) rotateY(2deg);
+    filter: blur(1px) brightness(0.95);
+  }
+  80% {
+    opacity: 0.95;
+    transform: translateX(1%) scale(1.01) rotateY(-1deg);
+    filter: blur(0.5px) brightness(1.02);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0px);
+    transform: translateX(0) scale(1) rotateY(0deg);
+    filter: blur(0px) brightness(1);
   }
 }
 

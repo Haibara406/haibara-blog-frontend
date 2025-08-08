@@ -278,7 +278,7 @@ const isDark = useDark()
               :style="{ paddingLeft: `${album.level * 16}px` }"
               @click="navigateToAlbum(album.id); closeMobileMenu()">
             <span class="album-name">
-              {{ album.name }}
+              <span class="album-name-text">{{ album.name }}</span>
             </span>
             <ul v-if="album.children.length > 0" class="sub-albums">
               <li v-for="child in album.children"
@@ -292,7 +292,7 @@ const isDark = useDark()
                   :style="{ paddingLeft: `${child.level * 16}px` }"
                   @click.stop="navigateToAlbum(child.id); closeMobileMenu()">
                 <span class="album-name">
-                  {{ child.name }}
+                  <span class="album-name-text">{{ child.name }}</span>
                 </span>
                 <ul v-if="child.children.length > 0" class="sub-albums">
                   <li v-for="grandChild in child.children"
@@ -304,7 +304,7 @@ const isDark = useDark()
                       :style="{ paddingLeft: `${grandChild.level * 16}px` }"
                       @click.stop="navigateToAlbum(grandChild.id); closeMobileMenu()">
                     <span class="album-name">
-                      {{ grandChild.name }}
+                      <span class="album-name-text">{{ grandChild.name }}</span>
                     </span>
                   </li>
                 </ul>
@@ -537,7 +537,9 @@ const isDark = useDark()
 }
 
 .album-name {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   padding: 12px 16px;
   padding-left: 52px;
   border-radius: 12px;
@@ -566,6 +568,12 @@ const isDark = useDark()
   font-size: 1.2em;
   line-height: 1;
   transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.album-name-text {
+  margin-left: 8px; /* 为文本添加左侧间距 */
+  width: 100%; /* 确保文本占满剩余空间 */
 }
 
 /* 有子菜单的项目使用打开的文件夹图标 */
@@ -815,7 +823,9 @@ const isDark = useDark()
 
 /* 主页按钮基础样式 */
 .home-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   padding: 12px 16px;
   padding-left: 52px;
   border-radius: 12px;
@@ -845,6 +855,12 @@ const isDark = useDark()
   font-size: 1.2em;
   line-height: 1;
   transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.home-item .album-name-text {
+  margin-left: 8px; /* 为文本添加左侧间距 */
+  width: 100%; /* 确保文本占满剩余空间 */
 }
 
 /* 主页按钮悬浮状态 */

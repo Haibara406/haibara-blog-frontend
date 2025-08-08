@@ -47,39 +47,51 @@ const hoveredItemIndex = ref<number | null>(null)
 const isTransitioning = ref(false)
 const hoverTimeout = ref<number | null>(null)
 
-// 处理悬浮效果 - 重新设计为轻柔丝滑
+// 处理悬浮效果 - 重新设计为更轻柔丝滑
 const handleItemHover = (index: number) => {
   if (!isTransitioning.value) {
     // 清除之前的延时
     if (hoverTimeout.value) {
       clearTimeout(hoverTimeout.value)
     }
-
-    // 立即设置悬浮状态
-    hoveredItemIndex.value = index
-
-    // 为不支持 :has() 的浏览器添加类名
-    nextTick(() => {
-      const galleryWrapper = document.querySelector('.gallery-wrapper')
-      if (galleryWrapper) {
-        galleryWrapper.classList.add('has-hovered')
-      }
-    })
+    
+    // 使用延时来使悬浮效果更加轻柔
+    hoverTimeout.value = window.setTimeout(() => {
+      // 设置悬浮状态
+      hoveredItemIndex.value = index
+      
+      // 为不支持 :has() 的浏览器添加类名
+      nextTick(() => {
+        const galleryWrapper = document.querySelector('.gallery-wrapper')
+        if (galleryWrapper) {
+          galleryWrapper.classList.add('has-hovered')
+        }
+      })
+    }, 50) // 小的延时提供更丝滑的体验
   }
 }
 
 const handleItemLeave = () => {
   if (!isTransitioning.value) {
-    // 立即移除悬浮状态，让CSS过渡处理动画
-    hoveredItemIndex.value = null
-
-    // 移除类名
-    nextTick(() => {
-      const galleryWrapper = document.querySelector('.gallery-wrapper')
-      if (galleryWrapper) {
-        galleryWrapper.classList.remove('has-hovered')
-      }
-    })
+    // 清除之前的延时
+    if (hoverTimeout.value) {
+      clearTimeout(hoverTimeout.value)
+      hoverTimeout.value = null
+    }
+    
+    // 使用小延时使鼠标离开效果更自然
+    setTimeout(() => {
+      // 移除悬浮状态，让CSS过渡处理动画
+      hoveredItemIndex.value = null
+      
+      // 移除类名
+      nextTick(() => {
+        const galleryWrapper = document.querySelector('.gallery-wrapper')
+        if (galleryWrapper) {
+          galleryWrapper.classList.remove('has-hovered')
+        }
+      })
+    }, 30) // 小延时提供更自然的离开效果
   }
 }
 
@@ -95,6 +107,19 @@ const handleItemClick = (item: GalleryItem, index: number, event: MouseEvent) =>
     const rect = clickedElement.getBoundingClientRect()
     const img = clickedElement.querySelector('img') as HTMLImageElement
 
+    // 创建背景遮罩
+    const backgroundOverlay = document.createElement('div')
+    backgroundOverlay.style.position = 'fixed'
+    backgroundOverlay.style.top = '0'
+    backgroundOverlay.style.left = '0'
+    backgroundOverlay.style.width = '100vw'
+    backgroundOverlay.style.height = '100vh'
+    backgroundOverlay.style.background = 'rgba(0, 0, 0, 0)'
+    backgroundOverlay.style.backdropFilter = 'blur(0px)'
+    backgroundOverlay.style.zIndex = '9999'
+    backgroundOverlay.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    backgroundOverlay.style.pointerEvents = 'none'
+
     // 创建过渡元素
     const transitionElement = img.cloneNode(true) as HTMLImageElement
     transitionElement.style.position = 'fixed'
@@ -104,105 +129,129 @@ const handleItemClick = (item: GalleryItem, index: number, event: MouseEvent) =>
     transitionElement.style.height = `${rect.height}px`
     transitionElement.style.zIndex = '10000'
     transitionElement.style.borderRadius = '20px'
-    transitionElement.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    transitionElement.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
     transitionElement.style.objectFit = 'cover'
     transitionElement.style.boxShadow = '0 25px 80px rgba(0, 0, 0, 0.3)'
-
-    // 创建背景遮罩
-    const backdrop = document.createElement('div')
-    backdrop.style.position = 'fixed'
-    backdrop.style.top = '0'
-    backdrop.style.left = '0'
-    backdrop.style.width = '100vw'
-    backdrop.style.height = '100vh'
-    backdrop.style.background = 'rgba(0, 0, 0, 0)'
-    backdrop.style.zIndex = '9999'
-    backdrop.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-    backdrop.style.backdropFilter = 'blur(0px)'
-
-    document.body.appendChild(backdrop)
-    document.body.appendChild(transitionElement)
-
-    // 隐藏原始元素
-    clickedElement.style.opacity = '0'
-    clickedElement.style.transition = 'opacity 0.3s ease'
+    transitionElement.style.transformOrigin = 'center'
+    transitionElement.style.willChange = 'transform, border-radius, box-shadow'
 
     // 保存当前滚动位置
     const scrollPosition = window.scrollY
 
-    // 延迟一帧后开始动画
+    // 禁用滚动
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.top = `-${scrollPosition}px`
+    document.body.style.overflow = 'hidden'
+    document.body.style.left = '0'
+    document.body.style.marginTop = '0'
+
+    // 获取当前相册的所有照片
+    const photos = getCurrentGallery()
+        .filter(isPhoto)
+        .map(item => item.data.url)
+    previewPhotos.value = photos
+    currentPhotoIndex.value = photos.indexOf(item.data.url)
+
+    // 添加背景遮罩到DOM
+    document.body.appendChild(backgroundOverlay)
+
+    // 立即显示预览界面，但隐藏其中的图片
+    showPreview.value = true
+
+    // 开始背景动画
     requestAnimationFrame(() => {
-      // 计算目标位置（屏幕中心，保持宽高比）
-      const imgAspectRatio = img.naturalWidth / img.naturalHeight || 16/9
-      const maxWidth = window.innerWidth * 0.9
-      const maxHeight = window.innerHeight * 0.9
+      backgroundOverlay.style.background = 'rgba(0, 0, 0, 0.4)'
+      backgroundOverlay.style.backdropFilter = 'blur(20px)'
+    })
+    
+    // 延迟一帧，确保预览界面已经渲染
+    requestAnimationFrame(() => {
+      // 在下一帧中获取预览图片元素的位置
+      const previewContainer = document.querySelector('.preview-image-container') as HTMLElement
+      const previewImg = document.querySelector('.preview-image') as HTMLImageElement
 
-      let targetWidth = maxWidth
-      let targetHeight = maxWidth / imgAspectRatio
+      if (previewContainer && previewImg) {
+        // 隐藏预览图片，只显示过渡元素
+        previewImg.style.opacity = '0'
 
-      if (targetHeight > maxHeight) {
-        targetHeight = maxHeight
-        targetWidth = maxHeight * imgAspectRatio
-      }
+        // 添加过渡元素到DOM
+        document.body.appendChild(transitionElement)
 
-      const targetLeft = (window.innerWidth - targetWidth) / 2
-      const targetTop = (window.innerHeight - targetHeight) / 2
+        // 添加初始缩放效果
+        clickedElement.style.transform = 'scale(0.95)'
+        clickedElement.style.opacity = '0.8'
+        clickedElement.style.transition = 'all 0.3s ease'
 
-      // 开始背景动画
-      backdrop.style.background = 'rgba(0, 0, 0, 0.95)'
-      backdrop.style.backdropFilter = 'blur(20px)'
+        // 计算目标位置（应与预览图片相同）
+        const imgAspectRatio = img.naturalWidth / img.naturalHeight || 16/9
+        const maxWidth = window.innerWidth * 0.9
+        const maxHeight = window.innerHeight * 0.8 // 匹配预览图片的大小限制
 
-      // 开始图片过渡动画
-      transitionElement.style.top = `${targetTop}px`
-      transitionElement.style.left = `${targetLeft}px`
-      transitionElement.style.width = `${targetWidth}px`
-      transitionElement.style.height = `${targetHeight}px`
-      transitionElement.style.borderRadius = '12px'
-      transitionElement.style.boxShadow = '0 50px 120px rgba(0, 0, 0, 0.5)'
+        let targetWidth = maxWidth
+        let targetHeight = maxWidth / imgAspectRatio
 
-      // 在动画进行到60%时开始准备预览
-      setTimeout(() => {
-        // 禁用滚动
-        document.body.style.position = 'fixed'
-        document.body.style.width = '100%'
-        document.body.style.top = `-${scrollPosition}px`
-        document.body.style.overflow = 'hidden'
-        document.body.style.left = '0'
-        document.body.style.marginTop = '0'
+        if (targetHeight > maxHeight) {
+          targetHeight = maxHeight
+          targetWidth = maxHeight * imgAspectRatio
+        }
 
-        // 获取当前相册的所有照片
-        const photos = getCurrentGallery()
-            .filter(isPhoto)
-            .map(item => item.data.url)
-        previewPhotos.value = photos
-        currentPhotoIndex.value = photos.indexOf(item.data.url)
+        const targetLeft = (window.innerWidth - targetWidth) / 2
+        const targetTop = (window.innerHeight - targetHeight) / 2
 
-        // 提前显示预览，但保持过渡元素在上层
-        showPreview.value = true
-      }, 600)
-
-      // 动画完成后平滑移除过渡元素
-      setTimeout(() => {
-        // 更平滑的渐隐过渡元素
-        transitionElement.style.transition = 'opacity 0.4s ease-out'
-        transitionElement.style.opacity = '0'
-        backdrop.style.transition = 'opacity 0.4s ease-out'
-        backdrop.style.opacity = '0'
-
-        // 完全移除过渡元素
+        // 添加微妙的初始动画
         setTimeout(() => {
-          if (document.body.contains(backdrop)) {
-            document.body.removeChild(backdrop)
-          }
-          if (document.body.contains(transitionElement)) {
-            document.body.removeChild(transitionElement)
-          }
+          // 开始图片过渡动画
+          transitionElement.style.top = `${targetTop}px`
+          transitionElement.style.left = `${targetLeft}px`
+          transitionElement.style.width = `${targetWidth}px`
+          transitionElement.style.height = `${targetHeight}px`
+          transitionElement.style.borderRadius = '12px'
+          transitionElement.style.boxShadow = '0 50px 120px rgba(0, 0, 0, 0.5)'
+          transitionElement.style.transform = 'scale(1.02) rotateY(2deg)'
+        }, 50)
 
-          // 恢复原始元素
-          clickedElement.style.opacity = '1'
-          isTransitioning.value = false
-        }, 400)
-      }, 1000)
+        // 动画结束后，显示预览图片并移除过渡元素
+        setTimeout(() => {
+          // 添加最终的缩放效果
+          transitionElement.style.transform = 'scale(1) rotateY(0deg)'
+
+          // 延迟显示预览图片
+          setTimeout(() => {
+            previewImg.style.opacity = '1'
+            previewImg.style.transform = 'scale(0.98)'
+            previewImg.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+
+            // 添加弹性效果
+            setTimeout(() => {
+              previewImg.style.transform = 'scale(1)'
+            }, 50)
+
+            // 移除过渡元素
+            if (document.body.contains(transitionElement)) {
+              transitionElement.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out'
+              transitionElement.style.opacity = '0'
+              transitionElement.style.transform = 'scale(1.05)'
+
+              setTimeout(() => {
+                if (document.body.contains(transitionElement)) {
+                  document.body.removeChild(transitionElement)
+                }
+
+                // 移除背景遮罩
+                if (document.body.contains(backgroundOverlay)) {
+                  document.body.removeChild(backgroundOverlay)
+                }
+
+                // 恢复原始元素
+                clickedElement.style.opacity = '1'
+                clickedElement.style.transform = 'scale(1)'
+                isTransitioning.value = false
+              }, 300)
+            }
+          }, 100)
+        }, 700) // 等待过渡完成
+      }
     })
   } else if (isAlbum(item)) {
     emit('update:currentPath', [...props.currentPath, item.data.id])
@@ -712,14 +761,19 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
     filter: blur(2px);
   }
   50% {
-    opacity: 0.7;
-    transform: translateY(-5px) scale(1.02) rotateX(-2deg);
-    filter: blur(1px);
+    opacity: 0.8;
+    transform: translateY(-8px) scale(1.03) rotateX(-2deg);
+    filter: blur(0.5px);
+  }
+  75% {
+    opacity: 0.9;
+    transform: translateY(-4px) scale(1.01) rotateX(-1deg);
+    filter: blur(0.25px);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1) rotateX(0deg);
-    filter: blur(0px);
+    filter: blur(0);
   }
 }
 
@@ -727,44 +781,47 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* 更流畅的图片过渡 */
   border-radius: 20px;
   cursor: pointer !important;
+  will-change: transform, filter; /* 优化性能 */
 }
 
-/* 轻柔丝滑的悬浮效果 */
+/* 更轻柔丝滑的悬浮效果 */
 .gallery-item {
-  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* 使用弹性过渡更丝滑 */
   transform-origin: center;
+  will-change: transform, box-shadow, filter;
 }
 
 .gallery-item.hovered {
-  transform: scale(1.03);
+  transform: scale(1.04) translateY(-8px);
   z-index: 100;
-  box-shadow: 0 15px 40px rgba(92, 106, 196, 0.25);
+  box-shadow: 0 20px 50px rgba(92, 106, 196, 0.3);
   border-color: rgba(92, 106, 196, 0.4);
-  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .gallery-item.hovered img {
-  filter: brightness(1.05) saturate(1.08);
-  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  filter: brightness(1.08) saturate(1.1) contrast(1.02);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(1.01); /* 轻微放大图片 */
 }
 
 /* 移除复杂的发光动画，保持简洁 */
 
-/* 轻柔的背景效果 */
+/* 更轻柔的背景效果 */
 .hover-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(5px);
   z-index: 50;
   opacity: 0;
-  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
 }
 
@@ -772,28 +829,29 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   opacity: 1;
 }
 
-/* 当有悬浮项目时，其他项目轻微模糊 */
+/* 当有悬浮项目时，其他项目轻微模糊和缩小 */
 .gallery-wrapper:has(.gallery-item.hovered) .gallery-item:not(.hovered) {
-  filter: blur(1px);
-  opacity: 0.75;
-  transform: scale(0.995);
-  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  filter: blur(1.5px);
+  opacity: 0.7;
+  transform: scale(0.985) translateY(4px);
+  transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* 为不支持 :has() 的浏览器提供备用方案 */
 .gallery-wrapper.has-hovered .gallery-item:not(.hovered) {
-  filter: blur(1px);
-  opacity: 0.75;
-  transform: scale(0.995);
-  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  filter: blur(1.5px);
+  opacity: 0.7;
+  transform: scale(0.985) translateY(4px);
+  transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* 移除旧的悬浮效果，保持简洁 */
 
 /* 添加点击动画 */
 .gallery-item:active {
-  transform: translateY(-8px) scale(0.98) rotateY(1deg);
-  transition: all 0.1s ease;
+  transform: translateY(-6px) scale(0.97) rotateY(0.5deg);
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 12px 30px rgba(92, 106, 196, 0.2);
 }
 
 /* 点击涟漪效果 */
@@ -821,7 +879,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   width: 300px;
   height: 300px;
   opacity: 1;
-  transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
 }
 
 /* 为相册项目添加特殊的点击效果 */
@@ -845,7 +903,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* 更加弹性的过渡 */
   backdrop-filter: blur(8px);
   border-radius: 0 0 20px 20px;
   transform: translateY(100%);
@@ -860,7 +918,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
 .gallery-item.hovered .item-info {
   transform: translateY(0);
   opacity: 1;
-  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .item-info::before {
