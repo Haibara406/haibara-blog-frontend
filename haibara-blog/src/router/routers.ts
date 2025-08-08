@@ -85,7 +85,7 @@ export const constantRouter = [
             // 音乐
             {
                 path: '/music',
-                component: () => import('@/views/Music/index.vue'),
+                component: () => import('@/views/Music/clean.vue'),
                 name: 'music',
                 meta: {
                     title: '音乐',
