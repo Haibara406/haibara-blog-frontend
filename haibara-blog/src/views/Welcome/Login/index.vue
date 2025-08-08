@@ -133,16 +133,17 @@ function goToReset() {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   padding: 0 40px;
 }
 
 /* 标题盒子 */
 .title-box {
-  height: 100px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 /* 标题 */
@@ -157,6 +158,8 @@ function goToReset() {
 
 /* 输入框盒子 */
 .input-box {
+  width: 100%;
+  max-width: 350px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -165,7 +168,7 @@ function goToReset() {
 
 /* 输入框 */
 .input-box input {
-  width: 60%;
+  width: 100%;
   height: 40px;
   margin-bottom: 20px;
   text-indent: 10px;
@@ -176,6 +179,7 @@ function goToReset() {
   outline: none;
   color: #333;
   font-size: 14px;
+  transition: all 0.3s ease;
 }
 
 .input-box input::placeholder {
@@ -185,6 +189,10 @@ function goToReset() {
 
 .input-box input:focus {
   color: #b0cfe9;
+  border-color: #69b3f0;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(105, 179, 240, 0.3);
 }
 
 .input-box input:focus::placeholder {
@@ -193,7 +201,8 @@ function goToReset() {
 
 /* 表单选项 */
 .form-options {
-  width: 60%;
+  width: 100%;
+  max-width: 350px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -202,16 +211,19 @@ function goToReset() {
 
 .remember-checkbox {
   color: white;
-  cursor: pointer;
 }
 
 .remember-checkbox :deep(.el-checkbox__label) {
   color: white;
   font-size: 14px;
-  cursor: pointer;
+  cursor: default;
 }
 
 .remember-checkbox :deep(.el-checkbox__input) {
+  cursor: pointer;
+}
+
+.remember-checkbox :deep(.el-checkbox__inner) {
   cursor: pointer;
 }
 
@@ -314,11 +326,13 @@ function goToReset() {
   text-decoration: none;
   color: #333;
   font-size: 14px;
+  cursor: pointer;
 }
 
 .oauth-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
 }
 
 /* 响应式设计 */

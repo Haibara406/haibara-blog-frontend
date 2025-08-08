@@ -196,6 +196,7 @@ function doReset() {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   padding: 0 40px;
 }
 
@@ -253,6 +254,8 @@ function doReset() {
 
 /* 输入框盒子 */
 .input-box {
+  width: 100%;
+  max-width: 350px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -261,7 +264,7 @@ function doReset() {
 
 /* 输入框 */
 .input-box input {
-  width: 60%;
+  width: 100%;
   height: 40px;
   margin-bottom: 20px;
   text-indent: 10px;
@@ -272,6 +275,7 @@ function doReset() {
   outline: none;
   color: #333;
   font-size: 14px;
+  transition: all 0.3s ease;
 }
 
 .input-box input::placeholder {
@@ -281,6 +285,10 @@ function doReset() {
 
 .input-box input:focus {
   color: #b0cfe9;
+  border-color: #69b3f0;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(105, 179, 240, 0.3);
 }
 
 .input-box input:focus::placeholder {
@@ -289,7 +297,8 @@ function doReset() {
 
 /* 验证码输入组 */
 .code-input-group {
-  width: 60%;
+  width: 100%;
+  max-width: 350px;
   display: flex;
   gap: 10px;
   margin-bottom: 20px;

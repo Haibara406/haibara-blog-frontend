@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import Login from './Login/index.vue'
 import Register from './Register/index.vue'
 import Reset from './Reset/index.vue'
+import Header from '@/components/Layout/Header/index.vue'
 
 const route = useRoute()
 
@@ -94,9 +95,11 @@ defineExpose({
 </script>
 
 <template>
-  <div class="welcome-container">
-    <!-- 最外层的大盒子 -->
-    <div class="box">
+  <div class="welcome-page">
+    <Header/>
+    <div class="welcome-container">
+      <!-- 最外层的大盒子 -->
+      <div class="box">
       <!-- 滑动盒子 -->
       <div class="pre-box" ref="preBoxRef">
         <h1>WELCOME</h1>
@@ -108,13 +111,24 @@ defineExpose({
 
       <!-- 注册盒子 -->
       <div class="register-form">
-        <Register v-if="route.name === 'welcome-register'" @switch="mySwitch"/>
+        <transition name="slide-fade" mode="out-in">
+          <div key="register" v-if="route.name === 'welcome-register'">
+            <Register @switch="mySwitch"/>
+          </div>
+        </transition>
       </div>
 
       <!-- 登录盒子 -->
       <div class="login-form">
-        <Login v-if="route.name === 'welcome-login'" @switch="mySwitch"/>
-        <Reset v-if="route.name === 'welcome-reset'" @switch="mySwitch"/>
+        <transition name="slide-fade" mode="out-in">
+          <div key="login" v-if="route.name === 'welcome-login'">
+            <Login @switch="mySwitch"/>
+          </div>
+          <div key="reset" v-else-if="route.name === 'welcome-reset'">
+            <Reset @switch="mySwitch"/>
+          </div>
+        </transition>
+      </div>
       </div>
     </div>
   </div>
@@ -168,13 +182,50 @@ defineExpose({
   box-sizing: border-box;
 }
 
-.welcome-container {
+.welcome-page {
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+}
+
+.welcome-container {
+  width: 100vw;
+  height: calc(100vh - 60px);
   overflow-x: hidden;
   display: flex;
   /* 渐变方向从左到右 */
   background: linear-gradient(to right, rgb(247, 209, 215), rgb(191, 227, 241));
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 页面切换动画 */
+.slide-fade-enter-active {
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateX(30px) scale(0.95);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-30px) scale(0.95);
 }
 
 /* 最外层的大盒子 */

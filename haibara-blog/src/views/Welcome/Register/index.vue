@@ -196,16 +196,17 @@ function switchToLogin() {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   padding: 0 40px;
 }
 
 /* 标题盒子 */
 .title-box {
-  height: 80px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 /* 标题 */
@@ -220,17 +221,19 @@ function switchToLogin() {
 
 /* 输入框盒子 */
 .input-box {
+  width: 100%;
+  max-width: 350px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 /* 输入框 */
 .input-box input {
-  width: 60%;
+  width: 100%;
   height: 40px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-indent: 10px;
   border: 1px solid #fff;
   background-color: rgba(255, 255, 255, 0.3);
@@ -239,6 +242,7 @@ function switchToLogin() {
   outline: none;
   color: #333;
   font-size: 14px;
+  transition: all 0.3s ease;
 }
 
 .input-box input::placeholder {
@@ -248,6 +252,10 @@ function switchToLogin() {
 
 .input-box input:focus {
   color: #b0cfe9;
+  border-color: #69b3f0;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(105, 179, 240, 0.3);
 }
 
 .input-box input:focus::placeholder {
@@ -256,10 +264,11 @@ function switchToLogin() {
 
 /* 验证码输入组 */
 .code-input-group {
-  width: 60%;
+  width: 100%;
+  max-width: 350px;
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .code-input {
