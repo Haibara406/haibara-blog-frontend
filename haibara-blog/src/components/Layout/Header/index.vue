@@ -126,7 +126,7 @@ const handleLoginClick = () => {
   <!-- 移动端 -->
   <div class="move_nav" style="margin-left: 1.5rem">
     <div>
-      <div @click="drawer = true">
+      <div @click="drawer = true" style="cursor: pointer;">
         <SvgIcon name="directory_icon" width="30" height="30" color="#409EFF" class="icon"/>
       </div>
       <!-- 移动端日夜切换 -->
@@ -231,6 +231,26 @@ const handleLoginClick = () => {
     display: none;
   }
 
+  // 移动端菜单图标样式
+  > div:first-child > div:first-child {
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(64, 158, 255, 0.1);
+      transform: scale(1.1);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
   .right_nav {
     display: flex;
     align-items: center;
@@ -256,9 +276,16 @@ const handleLoginClick = () => {
   margin-right: 20px;
   transition: transform 0.3s linear;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
 
   &:hover {
     transform: scale(1.1);
+    background: rgba(64, 158, 255, 0.1);
+  }
+
+  * {
+    cursor: pointer;
   }
 }
 

@@ -129,7 +129,7 @@ onUnmounted(() => {
     <div id="menu-left">
       <div id="menus">
         <span id="blog-info">
-          <a href="/">{{ useWebsite.webInfo?.websiteName }}</a>
+          <a href="/" style="cursor: pointer;">{{ useWebsite.webInfo?.websiteName }}</a>
         </span>
         <div class="menus_items">
           <div class="menus_item" @click="router.push('/')">
@@ -395,6 +395,27 @@ nav {
       #blog-info {
         width: 120px;
         margin: 0 10px;
+        cursor: pointer;
+
+        a {
+          color: white;
+          text-decoration: none;
+          font-size: 1.5rem;
+          font-weight: bold;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          transition: all 0.3s ease;
+          cursor: pointer;
+          display: block;
+          width: 100%;
+          height: 100%;
+          padding: 10px 0;
+
+          &:hover {
+            color: #409EFF;
+            text-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
+            transform: scale(1.02);
+          }
+        }
       }
 
       .menus_items {
@@ -415,6 +436,7 @@ nav {
           margin: 0 2px;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: visible !important;
+          cursor: pointer;
 
           // 添加动态渐变背景
           &::after {
@@ -437,6 +459,7 @@ nav {
             transform: rotate(0deg) scale(1);
             color: #409EFF;
             filter: drop-shadow(0 0 0 transparent);
+            cursor: pointer;
           }
 
           &::before {
@@ -502,10 +525,18 @@ nav {
             position: relative;
             z-index: 1;
             transition: all 0.3s ease;
-            
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+
             span{
               margin-left: 5px;
               transition: all 0.3s ease;
+              cursor: pointer;
+            }
+
+            .el-icon {
+              cursor: pointer;
             }
           }
 
@@ -596,12 +627,16 @@ nav {
               position: relative !important;
               z-index: 10 !important;
               transition: all 0.3s ease !important;
+              cursor: pointer !important;
+              width: 100% !important;
+              height: 100% !important;
 
               .el-icon {
                 margin-right: 12px !important;
                 font-size: 18px !important;
                 transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
                 color: #333 !important;
+                cursor: pointer !important;
               }
             }
 
@@ -680,6 +715,10 @@ nav {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       flex-shrink: 0;
+
+      * {
+        cursor: pointer;
+      }
 
       &:hover {
         transform: translateY(-2px) scale(1.05);
