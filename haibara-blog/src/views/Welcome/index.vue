@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Login from './Login/index.vue'
 import Register from './Register/index.vue'
+import Reset from './Reset/index.vue'
 
 const route = useRoute()
 
@@ -80,7 +81,7 @@ watch(() => route.name, (newName) => {
   if (newName === 'welcome-register' && flag.value) {
     // 当前在登录状态，需要切换到注册
     mySwitch()
-  } else if (newName === 'welcome-login' && !flag.value) {
+  } else if ((newName === 'welcome-login' || newName === 'welcome-reset') && !flag.value) {
     // 当前在注册状态，需要切换到登录
     mySwitch()
   }
@@ -113,6 +114,7 @@ defineExpose({
       <!-- 登录盒子 -->
       <div class="login-form">
         <Login v-if="route.name === 'welcome-login'" @switch="mySwitch"/>
+        <Reset v-if="route.name === 'welcome-reset'" @switch="mySwitch"/>
       </div>
     </div>
   </div>

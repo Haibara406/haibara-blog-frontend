@@ -228,8 +228,7 @@ function switchToLogin() {
 
 /* 输入框 */
 .input-box input {
-  width: 80%;
-  max-width: 300px;
+  width: 60%;
   height: 40px;
   margin-bottom: 20px;
   text-indent: 10px;
@@ -257,8 +256,7 @@ function switchToLogin() {
 
 /* 验证码输入组 */
 .code-input-group {
-  width: 80%;
-  max-width: 300px;
+  width: 60%;
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
@@ -346,11 +344,11 @@ function switchToLogin() {
   }
 
   .input-box input {
-    width: 100%;
+    width: 90%;
   }
 
   .code-input-group {
-    width: 100%;
+    width: 90%;
   }
 
   .code-btn {

@@ -52,6 +52,11 @@ function switchToRegister() {
   emit('switch')
   router.push('/register')
 }
+
+// 跳转到重置密码页面
+function goToReset() {
+  router.push('/reset')
+}
 </script>
 
 <template>
@@ -87,7 +92,7 @@ function switchToRegister() {
       <!-- 记住我和忘记密码 -->
       <div class="form-options">
         <el-checkbox v-model="form.remember" class="remember-checkbox">记住我</el-checkbox>
-        <el-link @click="$router.push('/reset')" class="forgot-link">忘记密码?</el-link>
+        <span @click="goToReset()" class="forgot-link">忘记密码?</span>
       </div>
     </div>
 
@@ -160,8 +165,7 @@ function switchToRegister() {
 
 /* 输入框 */
 .input-box input {
-  width: 80%;
-  max-width: 300px;
+  width: 60%;
   height: 40px;
   margin-bottom: 20px;
   text-indent: 10px;
@@ -189,8 +193,7 @@ function switchToRegister() {
 
 /* 表单选项 */
 .form-options {
-  width: 80%;
-  max-width: 300px;
+  width: 60%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -199,17 +202,24 @@ function switchToRegister() {
 
 .remember-checkbox {
   color: white;
+  cursor: pointer;
 }
 
 .remember-checkbox :deep(.el-checkbox__label) {
   color: white;
   font-size: 14px;
+  cursor: pointer;
+}
+
+.remember-checkbox :deep(.el-checkbox__input) {
+  cursor: pointer;
 }
 
 .forgot-link {
   color: white;
   font-size: 14px;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .forgot-link:hover {
@@ -318,15 +328,15 @@ function switchToRegister() {
   }
 
   .input-box input {
-    width: 100%;
+    width: 90%;
   }
 
   .form-options {
-    width: 100%;
+    width: 90%;
   }
 
   .divider {
-    width: 100%;
+    width: 90%;
   }
 
   .oauth-buttons {
