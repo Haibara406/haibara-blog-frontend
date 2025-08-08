@@ -77,6 +77,24 @@ const props = defineProps<Props>()
   margin-bottom: 30px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: bannerSlideIn 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.album-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.25);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes bannerSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .banner-background {
@@ -296,6 +314,34 @@ const props = defineProps<Props>()
   padding: 6px 12px;
   border-radius: 12px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.breadcrumb-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.breadcrumb-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.breadcrumb-item:hover::before {
+  left: 100%;
+}
+
+.breadcrumb-item:active {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .breadcrumb-item.home {

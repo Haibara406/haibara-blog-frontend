@@ -534,25 +534,28 @@ const isDark = useDark()
 
 .album-name {
   display: block;
-  padding: 10px 16px;
-  padding-left: 40px;
-  border-radius: 10px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255, 255, 255, 0.8);
+  padding: 12px 16px;
+  padding-left: 44px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.9);
   color: #5c6ac4;
-  font-size: 0.95em;
+  font-size: 1em;
+  font-weight: 500;
   position: relative;
-  border: 1px solid rgba(92, 106, 196, 0.1);
+  border: 1px solid rgba(92, 106, 196, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .album-name::before {
   content: '📁';
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1.2em;
+  font-size: 1.3em;
   line-height: 1;
+  transition: all 0.3s ease;
 }
 
 /* 有子菜单的项目使用打开的文件夹图标 */
@@ -580,10 +583,12 @@ const isDark = useDark()
 /* 调整文字位置 */
 .album-name {
   padding-left: 40px;
+  position: relative;
 }
 
 .home-item {
   padding-left: 40px;
+  position: relative;
 }
 
 .album-tree-item.active > .album-name {
@@ -601,17 +606,47 @@ const isDark = useDark()
   list-style: none;
   padding: 0;
   margin: 0;
-  display: none;
+  max-height: 0;
   opacity: 0;
+  overflow: hidden;
   transform: translateX(-10px);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
 }
 
 .has-children:hover > .sub-albums {
-  display: block;
+  max-height: 500px;
   opacity: 1;
   transform: translateX(0);
-  margin-top: 6px;
+  margin-top: 8px;
+  padding: 8px 0;
+  box-shadow: 0 4px 15px rgba(92, 106, 196, 0.1);
+}
+
+/* 为子相册项目添加延迟动画 */
+.sub-albums .album-tree-item {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.has-children:hover > .sub-albums .album-tree-item {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.has-children:hover > .sub-albums .album-tree-item:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.has-children:hover > .sub-albums .album-tree-item:nth-child(2) {
+  transition-delay: 0.2s;
+}
+
+.has-children:hover > .sub-albums .album-tree-item:nth-child(3) {
+  transition-delay: 0.3s;
 }
 
 .home-item:hover {
@@ -726,10 +761,16 @@ const isDark = useDark()
   box-shadow: 0 4px 12px rgba(92, 106, 196, 0.2);
 }
 
-/* 悬停状态 - 只有轻微位移和阴影效果 */
+/* 悬停状态 */
 .album-name:hover {
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(92, 106, 196, 0.15);
+  transform: translateX(6px) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(92, 106, 196, 0.2);
+  background: rgba(92, 106, 196, 0.05);
+  border-color: rgba(92, 106, 196, 0.3);
+}
+
+.album-name:hover::before {
+  transform: translateY(-50%) scale(1.1) rotate(5deg);
 }
 
 /* 主页按钮基础样式 */
@@ -765,46 +806,55 @@ const isDark = useDark()
 /* 主页按钮基础样式 */
 .home-item {
   display: block;
-  padding: 10px 16px;
-  padding-left: 40px;
-  border-radius: 10px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255, 255, 255, 0.8);
+  padding: 12px 16px;
+  padding-left: 44px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.9);
   color: #5c6ac4;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   cursor: pointer;
   position: relative;
-  border: 1px solid rgba(92, 106, 196, 0.1);
+  border: 1px solid rgba(92, 106, 196, 0.15);
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* 主页按钮选中状态 */
-.home-item.active {
-  background: #5c6ac4;
-  color: white;
-  box-shadow: 0 4px 12px rgba(92, 106, 196, 0.2);
-}
-
-/* 主页按钮悬浮状态 */
-.home-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(92, 106, 196, 0.15);
-}
-
-/* 主页图标基础颜色 */
+/* 主页图标 */
 .home-item::before {
   content: '🏠';
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1.2em;
+  font-size: 1.3em;
   line-height: 1;
-  color: #5c6ac4;
+  transition: all 0.3s ease;
 }
 
-/* 主页图标选中状态 */
+/* 主页按钮悬浮状态 */
+.home-item:hover {
+  transform: translateX(6px) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(92, 106, 196, 0.2);
+  background: rgba(92, 106, 196, 0.05);
+  border-color: rgba(92, 106, 196, 0.3);
+}
+
+.home-item:hover::before {
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* 主页按钮选中状态 */
+.home-item.active {
+  background: #5c6ac4;
+  color: white;
+  box-shadow: 0 6px 20px rgba(92, 106, 196, 0.3);
+  transform: translateX(4px);
+}
+
 .home-item.active::before {
   color: white;
+  transform: translateY(-50%) scale(1.1);
 }
 
 .breadcrumb-root {

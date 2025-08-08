@@ -87,13 +87,14 @@ const initializeVisibility = (startIndex: number = 0) => {
             ...new Array(gallery.length - itemsVisible.value.length).fill(false)
         ]
     }
-    
+
     // 使用 requestAnimationFrame 确保动画流畅
     requestAnimationFrame(() => {
+        // 创建波浪式动画效果
         for (let i = startIndex; i < gallery.length; i++) {
             setTimeout(() => {
                 itemsVisible.value[i] = true
-            }, (i - startIndex) * 100) // 每个项目间隔 100ms
+            }, (i - startIndex) * 80 + Math.sin(i * 0.5) * 50) // 波浪式延迟
         }
     })
 }
@@ -107,6 +108,21 @@ const handleScroll = () => {
   if (!props.loading && props.hasMore && documentHeight - scrollPosition <= 100) {
     emit('loadMore')
   }
+
+  // 添加视差效果
+  const scrollY = window.scrollY
+  const galleryItems = document.querySelectorAll('.gallery-item')
+
+  galleryItems.forEach((item, index) => {
+    const rect = item.getBoundingClientRect()
+    const isVisible = rect.top < window.innerHeight && rect.bottom > 0
+
+    if (isVisible) {
+      const speed = 0.1 + (index % 3) * 0.05 // 不同项目不同的视差速度
+      const yPos = scrollY * speed
+      item.style.transform = `translateY(${yPos}px)`
+    }
+  })
 }
 
 // 修改生命周期钩子
@@ -127,10 +143,13 @@ onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll)
 })
 
+// 页面切换动画状态
+const isPageTransitioning = ref(false)
+
 // 修改 watch 函数
 watch(() => [props.currentPath, props.galleries], (newValue, oldValue) => {
     const gallery = getCurrentGallery()
-    
+
     // 检查是否是路径变化（包括返回主页的情况）
     const isPathChange = oldValue && oldValue[0] ? (
         // 当前路径长度变化
@@ -140,22 +159,31 @@ watch(() => [props.currentPath, props.galleries], (newValue, oldValue) => {
         // 从其他路径返回主页
         (props.currentPath.length === 0 && oldValue[0].length > 0)
     ) : false
-    
+
     if (isPathChange) {
-        // 路径变化时，滚动到顶部
+        // 开始页面切换动画
+        isPageTransitioning.value = true
+
+        // 先隐藏所有项目
+        itemsVisible.value = new Array(gallery.length).fill(false)
+
+        // 滚动到顶部
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         })
-        
-        // 重置可见性状态并触发新的动画
-        itemsVisible.value = new Array(gallery.length).fill(false)
-        initializeVisibility(0)
+
+        // 延迟后显示新内容
+        setTimeout(() => {
+            isPageTransitioning.value = false
+            initializeVisibility(0)
+        }, 300)
+
     } else if (gallery.length > prevGalleryLength.value) {
         // 加载更多时，只为新项目添加动画
         initializeVisibility(prevGalleryLength.value)
     }
-    
+
     // 更新 prevGalleryLength
     prevGalleryLength.value = gallery.length
 }, { deep: true, immediate: true })
@@ -166,6 +194,41 @@ const hasPhotos = (item: GalleryItem): boolean => {
     return item.data.photos.length > 0 || !!item.data.coverUrl
   }
   return false
+}
+
+// 递归计算相册中的照片总数
+const countPhotosRecursively = (galleryPath: string): number => {
+  const gallery = props.galleries[galleryPath] || []
+  let totalPhotos = 0
+
+  // 计算当前目录的照片数
+  totalPhotos += gallery.filter(item => isPhoto(item)).length
+
+  // 递归计算子相册中的照片数
+  gallery.filter(item => isAlbum(item)).forEach(albumItem => {
+    const subGalleryPath = albumItem.data.id.toString()
+    totalPhotos += countPhotosRecursively(subGalleryPath)
+  })
+
+  return totalPhotos
+}
+
+// 递归计算相册总数
+const countAlbumsRecursively = (galleryPath: string): number => {
+  const gallery = props.galleries[galleryPath] || []
+  let totalAlbums = 0
+
+  // 计算当前目录的相册数
+  const currentAlbums = gallery.filter(item => isAlbum(item))
+  totalAlbums += currentAlbums.length
+
+  // 递归计算子相册中的相册数
+  currentAlbums.forEach(albumItem => {
+    const subGalleryPath = albumItem.data.id.toString()
+    totalAlbums += countAlbumsRecursively(subGalleryPath)
+  })
+
+  return totalAlbums
 }
 
 // 修改获取当前相册信息的计算属性
@@ -182,8 +245,8 @@ const currentAlbum = computed(() => {
     return {
       title: '我的相册',
       description: '相册功能正在测试阶段，图片来源于网络，如有侵权请联系我！！！',
-      photosCount: gallery.filter(item => isPhoto(item)).length,
-      albumsCount: gallery.filter(item => isAlbum(item)).length,
+      photosCount: countPhotosRecursively(path),
+      albumsCount: countAlbumsRecursively(path),
       coverImage: firstPhoto ? (firstPhoto.data as Photo).url : undefined
     }
   } else {
@@ -201,8 +264,8 @@ const currentAlbum = computed(() => {
     return {
       title: albumInfo?.data.name || '未命名相册',
       description: albumInfo?.data.description || '',
-      photosCount: gallery.filter(item => isPhoto(item)).length,
-      albumsCount: gallery.filter(item => isAlbum(item)).length,
+      photosCount: countPhotosRecursively(path),
+      albumsCount: countAlbumsRecursively(path),
       coverImage: firstPhoto ? (firstPhoto.data as Photo).url : undefined
     }
   }
@@ -266,9 +329,15 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
         @refresh="handleRefresh"
     />
 
-    <div class="gallery-wrapper">
+    <div class="gallery-wrapper" :class="{ 'transitioning': isPageTransitioning }">
+      <!-- 页面切换过渡效果 -->
+      <div v-if="isPageTransitioning" class="page-transition">
+        <div class="transition-spinner"></div>
+        <p>切换中...</p>
+      </div>
+
       <!-- 修改加载状态的判断逻辑 -->
-      <div v-if="props.loading && getCurrentGallery().length === 0" class="loading-state">
+      <div v-else-if="props.loading && getCurrentGallery().length === 0" class="loading-state">
         <div class="loading-spinner"></div>
         <p>加载中...</p>
       </div>
@@ -332,6 +401,38 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   padding: 0 20px;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* 添加背景动画效果 */
+.photo-gallery::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    rgba(92, 106, 196, 0.02) 0%,
+    rgba(102, 126, 234, 0.03) 25%,
+    rgba(92, 106, 196, 0.02) 50%,
+    rgba(102, 126, 234, 0.03) 75%,
+    rgba(92, 106, 196, 0.02) 100%
+  );
+  background-size: 400% 400%;
+  animation: backgroundFlow 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes backgroundFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .gallery-wrapper {
@@ -346,6 +447,68 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   min-height: 400px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: wrapperSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes wrapperSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* 页面切换过渡效果 */
+.gallery-wrapper.transitioning {
+  opacity: 0.7;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+.page-transition {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  color: #666;
+  font-size: 1.1em;
+  animation: transitionFadeIn 0.3s ease;
+}
+
+.transition-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(92, 106, 196, 0.1);
+  border-top: 3px solid #5c6ac4;
+  border-radius: 50%;
+  animation: transitionSpin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes transitionFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes transitionSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .gallery-grid {
@@ -364,18 +527,40 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   overflow: hidden;
   cursor: pointer;
   opacity: 0;
-  transform: translateY(30px) scale(0.95);
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(40px) scale(0.9) rotateX(15deg);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   will-change: opacity, transform;
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
+  filter: blur(2px);
+  perspective: 1000px;
 }
 
 .gallery-item.visible {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0) scale(1) rotateX(0deg);
+  filter: blur(0px);
+  animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9) rotateX(15deg);
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(-5px) scale(1.02) rotateX(-2deg);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+    filter: blur(0px);
+  }
 }
 
 .gallery-item img {
@@ -387,14 +572,67 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
 }
 
 .gallery-item:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 16px 40px rgba(92, 106, 196, 0.2);
-  border-color: rgba(92, 106, 196, 0.3);
+  transform: translateY(-12px) scale(1.03) rotateY(2deg);
+  box-shadow: 0 20px 50px rgba(92, 106, 196, 0.25);
+  border-color: rgba(92, 106, 196, 0.4);
+  animation: hoverPulse 2s ease-in-out infinite;
 }
 
 .gallery-item:hover img {
-  transform: scale(1.08);
-  filter: brightness(1.1) saturate(1.1);
+  transform: scale(1.1) rotateZ(1deg);
+  filter: brightness(1.15) saturate(1.2) contrast(1.1);
+}
+
+@keyframes hoverPulse {
+  0%, 100% {
+    box-shadow: 0 20px 50px rgba(92, 106, 196, 0.25);
+  }
+  50% {
+    box-shadow: 0 25px 60px rgba(92, 106, 196, 0.35);
+  }
+}
+
+/* 添加点击动画 */
+.gallery-item:active {
+  transform: translateY(-8px) scale(0.98) rotateY(1deg);
+  transition: all 0.1s ease;
+}
+
+/* 点击涟漪效果 */
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.gallery-item::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(92, 106, 196, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.gallery-item:active::after {
+  width: 300px;
+  height: 300px;
+  opacity: 1;
+  transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+}
+
+/* 为相册项目添加特殊的点击效果 */
+.gallery-item[data-type="album"]:active::after {
+  background: rgba(102, 126, 234, 0.4);
+}
+
+.gallery-item[data-type="photo"]:active::after {
+  background: rgba(92, 106, 196, 0.3);
 }
 
 /* 相册信息样式 */
@@ -412,6 +650,14 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(8px);
   border-radius: 0 0 20px 20px;
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.gallery-item:hover .item-info {
+  transform: translateY(0);
+  opacity: 1;
+  animation: slideUpFade 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .item-info::before {
@@ -419,6 +665,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   font-size: 1.6em;
   line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: iconBounce 2s ease-in-out infinite;
 }
 
 .item-info h3 {
@@ -430,6 +677,32 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   text-overflow: ellipsis;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.02em;
+  transform: translateX(-10px);
+  transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .item-info h3 {
+  transform: translateX(0);
+}
+
+@keyframes slideUpFade {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes iconBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 /* 响应式调整 */
@@ -555,20 +828,41 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
 
 /* 悬浮效果 */
 .gallery-item:hover .default-album-cover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.3);
+  transform: translateY(-5px) scale(1.03) rotateY(5deg);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  filter: brightness(1.1) saturate(1.1);
+  filter: brightness(1.15) saturate(1.2);
+  animation: albumHover 1.5s ease-in-out infinite;
 }
 
 .gallery-item:hover .album-icon::before {
-  transform: rotate(-12deg) scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  transform: rotate(-15deg) scale(1.1) translateZ(10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  animation: iconFloat 2s ease-in-out infinite;
 }
 
 .gallery-item:hover .album-icon::after {
-  transform: rotate(12deg) scale(1.05) translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  transform: rotate(15deg) scale(1.1) translateY(-4px) translateZ(5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  animation: iconFloat 2s ease-in-out infinite reverse;
+}
+
+@keyframes albumHover {
+  0%, 100% {
+    filter: brightness(1.15) saturate(1.2);
+  }
+  50% {
+    filter: brightness(1.25) saturate(1.3);
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: rotate(-15deg) scale(1.1) translateY(0) translateZ(10px);
+  }
+  50% {
+    transform: rotate(-15deg) scale(1.15) translateY(-2px) translateZ(15px);
+  }
 }
 
 /* 点击效果 */
@@ -679,7 +973,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   padding: 80px 20px;
   color: #666;
   font-size: 1.2em;
-  animation: fadeIn 0.5s ease;
+  animation: fadeInBounce 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .loading-state .loading-spinner {
@@ -688,9 +982,58 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   border: 4px solid rgba(92, 106, 196, 0.1);
   border-top: 4px solid #5c6ac4;
   border-radius: 50%;
-  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: spinPulse 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   margin-bottom: 20px;
   box-shadow: 0 4px 12px rgba(92, 106, 196, 0.2);
+  position: relative;
+}
+
+.loading-state .loading-spinner::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 2px solid rgba(92, 106, 196, 0.05);
+  border-radius: 50%;
+  animation: spinReverse 2s linear infinite;
+}
+
+@keyframes fadeInBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-5px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spinPulse {
+  0% {
+    transform: rotate(0deg) scale(1);
+    box-shadow: 0 4px 12px rgba(92, 106, 196, 0.2);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 6px 20px rgba(92, 106, 196, 0.3);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    box-shadow: 0 4px 12px rgba(92, 106, 196, 0.2);
+  }
+}
+
+@keyframes spinReverse {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
 }
 
 @keyframes fadeIn {
@@ -711,6 +1054,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  animation: emptyStateBreathe 3s ease-in-out infinite;
 }
 
 .empty-state::before {
@@ -719,12 +1063,70 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   display: block;
   margin-bottom: 20px;
   opacity: 0.6;
+  animation: emptyIconFloat 2s ease-in-out infinite;
+}
+
+.empty-state::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(92, 106, 196, 0.05) 50%,
+    transparent 100%
+  );
+  animation: emptyShimmer 4s linear infinite;
 }
 
 .empty-state p {
   margin: 0;
   font-weight: 600;
   letter-spacing: 0.02em;
+  position: relative;
+  z-index: 1;
+  animation: emptyTextPulse 2s ease-in-out infinite;
+}
+
+@keyframes emptyStateBreathe {
+  0%, 100% {
+    transform: scale(1);
+    border-color: rgba(92, 106, 196, 0.3);
+  }
+  50% {
+    transform: scale(1.02);
+    border-color: rgba(92, 106, 196, 0.4);
+  }
+}
+
+@keyframes emptyIconFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+@keyframes emptyShimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+@keyframes emptyTextPulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 /* 深色模式下的加载和空状态 */
