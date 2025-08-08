@@ -42,25 +42,168 @@ const showPreview = ref(false)
 const currentPhotoIndex = ref(0)
 const previewPhotos = ref<string[]>([])
 
-const handleItemClick = (item: GalleryItem) => {
+// 悬浮状态管理
+const hoveredItemIndex = ref<number | null>(null)
+const isTransitioning = ref(false)
+const hoverTimeout = ref<number | null>(null)
+
+// 处理悬浮效果 - 重新设计为轻柔丝滑
+const handleItemHover = (index: number) => {
+  if (!isTransitioning.value) {
+    // 清除之前的延时
+    if (hoverTimeout.value) {
+      clearTimeout(hoverTimeout.value)
+    }
+
+    // 立即设置悬浮状态
+    hoveredItemIndex.value = index
+
+    // 为不支持 :has() 的浏览器添加类名
+    nextTick(() => {
+      const galleryWrapper = document.querySelector('.gallery-wrapper')
+      if (galleryWrapper) {
+        galleryWrapper.classList.add('has-hovered')
+      }
+    })
+  }
+}
+
+const handleItemLeave = () => {
+  if (!isTransitioning.value) {
+    // 立即移除悬浮状态，让CSS过渡处理动画
+    hoveredItemIndex.value = null
+
+    // 移除类名
+    nextTick(() => {
+      const galleryWrapper = document.querySelector('.gallery-wrapper')
+      if (galleryWrapper) {
+        galleryWrapper.classList.remove('has-hovered')
+      }
+    })
+  }
+}
+
+const handleItemClick = (item: GalleryItem, index: number, event: MouseEvent) => {
   if (isPhoto(item)) {
+    // 开始过渡动画
+    isTransitioning.value = true
+    hoveredItemIndex.value = null // 清除悬浮状态
+
+    const clickedElement = event.currentTarget as HTMLElement
+
+    // 获取点击元素的位置信息
+    const rect = clickedElement.getBoundingClientRect()
+    const img = clickedElement.querySelector('img') as HTMLImageElement
+
+    // 创建过渡元素
+    const transitionElement = img.cloneNode(true) as HTMLImageElement
+    transitionElement.style.position = 'fixed'
+    transitionElement.style.top = `${rect.top}px`
+    transitionElement.style.left = `${rect.left}px`
+    transitionElement.style.width = `${rect.width}px`
+    transitionElement.style.height = `${rect.height}px`
+    transitionElement.style.zIndex = '10000'
+    transitionElement.style.borderRadius = '20px'
+    transitionElement.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    transitionElement.style.objectFit = 'cover'
+    transitionElement.style.boxShadow = '0 25px 80px rgba(0, 0, 0, 0.3)'
+
+    // 创建背景遮罩
+    const backdrop = document.createElement('div')
+    backdrop.style.position = 'fixed'
+    backdrop.style.top = '0'
+    backdrop.style.left = '0'
+    backdrop.style.width = '100vw'
+    backdrop.style.height = '100vh'
+    backdrop.style.background = 'rgba(0, 0, 0, 0)'
+    backdrop.style.zIndex = '9999'
+    backdrop.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    backdrop.style.backdropFilter = 'blur(0px)'
+
+    document.body.appendChild(backdrop)
+    document.body.appendChild(transitionElement)
+
+    // 隐藏原始元素
+    clickedElement.style.opacity = '0'
+    clickedElement.style.transition = 'opacity 0.3s ease'
+
     // 保存当前滚动位置
     const scrollPosition = window.scrollY
 
-    // 打开预览前禁用滚动
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-    document.body.style.top = `-${scrollPosition}px`
-    document.body.style.overflow = 'hidden'
-    document.body.style.left = '0'
-    document.body.style.marginTop = '0'
+    // 延迟一帧后开始动画
+    requestAnimationFrame(() => {
+      // 计算目标位置（屏幕中心，保持宽高比）
+      const imgAspectRatio = img.naturalWidth / img.naturalHeight || 16/9
+      const maxWidth = window.innerWidth * 0.9
+      const maxHeight = window.innerHeight * 0.9
 
-    const photos = getCurrentGallery()
-        .filter(isPhoto)
-        .map(item => item.data.url)
-    previewPhotos.value = photos
-    currentPhotoIndex.value = photos.indexOf(item.data.url)
-    showPreview.value = true
+      let targetWidth = maxWidth
+      let targetHeight = maxWidth / imgAspectRatio
+
+      if (targetHeight > maxHeight) {
+        targetHeight = maxHeight
+        targetWidth = maxHeight * imgAspectRatio
+      }
+
+      const targetLeft = (window.innerWidth - targetWidth) / 2
+      const targetTop = (window.innerHeight - targetHeight) / 2
+
+      // 开始背景动画
+      backdrop.style.background = 'rgba(0, 0, 0, 0.95)'
+      backdrop.style.backdropFilter = 'blur(20px)'
+
+      // 开始图片过渡动画
+      transitionElement.style.top = `${targetTop}px`
+      transitionElement.style.left = `${targetLeft}px`
+      transitionElement.style.width = `${targetWidth}px`
+      transitionElement.style.height = `${targetHeight}px`
+      transitionElement.style.borderRadius = '12px'
+      transitionElement.style.boxShadow = '0 50px 120px rgba(0, 0, 0, 0.5)'
+
+      // 在动画进行到60%时开始准备预览
+      setTimeout(() => {
+        // 禁用滚动
+        document.body.style.position = 'fixed'
+        document.body.style.width = '100%'
+        document.body.style.top = `-${scrollPosition}px`
+        document.body.style.overflow = 'hidden'
+        document.body.style.left = '0'
+        document.body.style.marginTop = '0'
+
+        // 获取当前相册的所有照片
+        const photos = getCurrentGallery()
+            .filter(isPhoto)
+            .map(item => item.data.url)
+        previewPhotos.value = photos
+        currentPhotoIndex.value = photos.indexOf(item.data.url)
+
+        // 提前显示预览，但保持过渡元素在上层
+        showPreview.value = true
+      }, 600)
+
+      // 动画完成后平滑移除过渡元素
+      setTimeout(() => {
+        // 更平滑的渐隐过渡元素
+        transitionElement.style.transition = 'opacity 0.4s ease-out'
+        transitionElement.style.opacity = '0'
+        backdrop.style.transition = 'opacity 0.4s ease-out'
+        backdrop.style.opacity = '0'
+
+        // 完全移除过渡元素
+        setTimeout(() => {
+          if (document.body.contains(backdrop)) {
+            document.body.removeChild(backdrop)
+          }
+          if (document.body.contains(transitionElement)) {
+            document.body.removeChild(transitionElement)
+          }
+
+          // 恢复原始元素
+          clickedElement.style.opacity = '1'
+          isTransitioning.value = false
+        }, 400)
+      }, 1000)
+    })
   } else if (isAlbum(item)) {
     emit('update:currentPath', [...props.currentPath, item.data.id])
   }
@@ -330,6 +473,9 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
     />
 
     <div class="gallery-wrapper" :class="{ 'transitioning': isPageTransitioning }">
+      <!-- 悬浮时的背景模糊层 -->
+      <div v-if="hoveredItemIndex !== null" class="hover-backdrop" :class="{ active: hoveredItemIndex !== null }"></div>
+
       <!-- 页面切换过渡效果 -->
       <div v-if="isPageTransitioning" class="page-transition">
         <div class="transition-spinner"></div>
@@ -347,10 +493,16 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
           <div v-for="(item, index) in getCurrentGallery()"
                :key="item.type + (isPhoto(item) ? item.data.id : item.data.id)"
                class="gallery-item"
-               :class="{ visible: itemsVisible[index] }"
+               :class="{
+                 visible: itemsVisible[index],
+                 hovered: hoveredItemIndex === index,
+                 'is-transitioning': isTransitioning
+               }"
                :data-type="isAlbum(item) ? 'album' : 'photo'"
                :style="{ 'animation-delay': `${index * 0.1}s` }"
-               @click="handleItemClick(item)">
+               @click="handleItemClick(item, index, $event)"
+               @mouseenter="handleItemHover(index)"
+               @mouseleave="handleItemLeave">
             <template v-if="isAlbum(item)">
               <div v-if="!hasPhotos(item) && !item.data.coverUrl" class="default-album-cover">
                 <div class="default-album-inner">
@@ -580,26 +732,63 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   cursor: pointer !important;
 }
 
-.gallery-item:hover {
-  transform: translateY(-12px) scale(1.03) rotateY(2deg);
-  box-shadow: 0 20px 50px rgba(92, 106, 196, 0.25);
+/* 轻柔丝滑的悬浮效果 */
+.gallery-item {
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  transform-origin: center;
+}
+
+.gallery-item.hovered {
+  transform: scale(1.03);
+  z-index: 100;
+  box-shadow: 0 15px 40px rgba(92, 106, 196, 0.25);
   border-color: rgba(92, 106, 196, 0.4);
-  animation: hoverPulse 2s ease-in-out infinite;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.gallery-item:hover img {
-  transform: scale(1.1) rotateZ(1deg);
-  filter: brightness(1.15) saturate(1.2) contrast(1.1);
+.gallery-item.hovered img {
+  filter: brightness(1.05) saturate(1.08);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-@keyframes hoverPulse {
-  0%, 100% {
-    box-shadow: 0 20px 50px rgba(92, 106, 196, 0.25);
-  }
-  50% {
-    box-shadow: 0 25px 60px rgba(92, 106, 196, 0.35);
-  }
+/* 移除复杂的发光动画，保持简洁 */
+
+/* 轻柔的背景效果 */
+.hover-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
 }
+
+.hover-backdrop.active {
+  opacity: 1;
+}
+
+/* 当有悬浮项目时，其他项目轻微模糊 */
+.gallery-wrapper:has(.gallery-item.hovered) .gallery-item:not(.hovered) {
+  filter: blur(1px);
+  opacity: 0.75;
+  transform: scale(0.995);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 为不支持 :has() 的浏览器提供备用方案 */
+.gallery-wrapper.has-hovered .gallery-item:not(.hovered) {
+  filter: blur(1px);
+  opacity: 0.75;
+  transform: scale(0.995);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 移除旧的悬浮效果，保持简洁 */
 
 /* 添加点击动画 */
 .gallery-item:active {
@@ -668,10 +857,10 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   cursor: pointer !important;
 }
 
-.gallery-item:hover .item-info {
+.gallery-item.hovered .item-info {
   transform: translateY(0);
   opacity: 1;
-  animation: slideUpFade 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .item-info::before {
@@ -679,7 +868,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   font-size: 1.6em;
   line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  animation: iconBounce 2s ease-in-out infinite;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .item-info h3 {
@@ -695,29 +884,12 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   transition: transform 0.3s ease;
 }
 
-.gallery-item:hover .item-info h3 {
+.gallery-item.hovered .item-info h3 {
   transform: translateX(0);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-@keyframes slideUpFade {
-  0% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes iconBounce {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
+/* 移除复杂的关键帧动画，使用CSS过渡实现轻柔效果 */
 
 /* 响应式调整 */
 @media (max-width: 1400px) {
@@ -845,44 +1017,25 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   transition: all 0.3s ease;
 }
 
-/* 悬浮效果 */
-.gallery-item:hover .default-album-cover {
-  transform: translateY(-5px) scale(1.03) rotateY(5deg);
-  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  filter: brightness(1.15) saturate(1.2);
-  animation: albumHover 1.5s ease-in-out infinite;
+/* 轻柔的相册封面悬浮效果 */
+.gallery-item.hovered .default-album-cover {
+  filter: brightness(1.08) saturate(1.12);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.gallery-item:hover .album-icon::before {
-  transform: rotate(-15deg) scale(1.1) translateZ(10px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  animation: iconFloat 2s ease-in-out infinite;
+.gallery-item.hovered .album-icon::before {
+  transform: rotate(-8deg) scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.gallery-item:hover .album-icon::after {
-  transform: rotate(15deg) scale(1.1) translateY(-4px) translateZ(5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-  animation: iconFloat 2s ease-in-out infinite reverse;
+.gallery-item.hovered .album-icon::after {
+  transform: rotate(8deg) scale(1.05) translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-@keyframes albumHover {
-  0%, 100% {
-    filter: brightness(1.15) saturate(1.2);
-  }
-  50% {
-    filter: brightness(1.25) saturate(1.3);
-  }
-}
-
-@keyframes iconFloat {
-  0%, 100% {
-    transform: rotate(-15deg) scale(1.1) translateY(0) translateZ(10px);
-  }
-  50% {
-    transform: rotate(-15deg) scale(1.15) translateY(-2px) translateZ(15px);
-  }
-}
+/* 移除复杂的关键帧动画，保持简洁的CSS过渡 */
 
 /* 点击效果 */
 .gallery-item:active .default-album-cover {
@@ -921,9 +1074,9 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark-mode .gallery-item:hover {
-  box-shadow: 0 16px 40px rgba(102, 126, 234, 0.3);
-  border-color: rgba(102, 126, 234, 0.4);
+.dark-mode .gallery-item.hovered {
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.5);
 }
 
 .dark-mode .default-album-cover {
@@ -939,15 +1092,24 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
 }
 
-.dark-mode .gallery-item:hover .default-album-cover {
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
-  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  filter: brightness(1.2);
+.dark-mode .gallery-item.hovered .default-album-cover {
+  filter: brightness(1.15);
 }
 
 .dark-mode .item-info {
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
   backdrop-filter: blur(12px);
+}
+
+/* 深色模式下的背景模糊层 */
+.dark-mode .hover-backdrop {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(92, 106, 196, 0.1));
+}
+
+.dark-mode .gallery-wrapper:has(.gallery-item.hovered) .gallery-item:not(.hovered),
+.dark-mode .gallery-wrapper.has-hovered .gallery-item:not(.hovered) {
+  filter: blur(1px);
+  opacity: 0.6;
 }
 
 /* 加载更多样式优化 */

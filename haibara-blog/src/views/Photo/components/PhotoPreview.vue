@@ -327,26 +327,28 @@ onUnmounted(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.97);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 999;
   overscroll-behavior: none;
   touch-action: none;
   -webkit-overflow-scrolling: touch;
-  backdrop-filter: blur(20px);
-  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: previewFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@keyframes fadeIn {
+@keyframes previewFadeIn {
   from {
-    opacity: 0;
+    background: transparent;
     backdrop-filter: blur(0px);
+    opacity: 0;
   }
   to {
-    opacity: 1;
+    background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(20px);
+    opacity: 1;
   }
 }
 
@@ -382,6 +384,19 @@ onUnmounted(() => {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   touch-action: none;
+  opacity: 0;
+  animation: imageAppear 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+}
+
+@keyframes imageAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .preview-toolbar {
@@ -399,7 +414,8 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.3);
   z-index: 1001;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  animation: toolbarAppear 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
 }
 
 .preview-toolbar:hover {
@@ -407,6 +423,17 @@ onUnmounted(() => {
   transform: translateX(-50%) translateY(-4px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes toolbarAppear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 @keyframes slideUp {
@@ -542,7 +569,8 @@ onUnmounted(() => {
   outline: none;
   user-select: none;
   touch-action: manipulation;
-  animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  animation: closeButtonAppear 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
 }
 
 .close-btn:hover {
@@ -561,6 +589,17 @@ onUnmounted(() => {
   opacity: 0.9;
 }
 
+@keyframes closeButtonAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -572,47 +611,57 @@ onUnmounted(() => {
   }
 }
 
-/* 切换动画 */
+/* 优化的切换动画 */
 .preview-image.slide-prev {
-  animation: slideFromLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: smoothSlideFromLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .preview-image.slide-next {
-  animation: slideFromRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: smoothSlideFromRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@keyframes slideFromLeft {
-  from {
+@keyframes smoothSlideFromLeft {
+  0% {
     opacity: 0;
-    transform: translateX(-20%) scale(0.9) rotate(-2deg);
-    filter: blur(4px);
+    transform: translateX(-15%) scale(0.95);
+    filter: blur(2px);
   }
-  50% {
-    opacity: 0.7;
-    transform: translateX(-5%) scale(0.98) rotate(-0.5deg);
+  30% {
+    opacity: 0.6;
+    transform: translateX(-8%) scale(0.97);
     filter: blur(1px);
   }
-  to {
+  70% {
+    opacity: 0.9;
+    transform: translateX(-2%) scale(0.99);
+    filter: blur(0.5px);
+  }
+  100% {
     opacity: 1;
-    transform: translateX(0) scale(1) rotate(0deg);
+    transform: translateX(0) scale(1);
     filter: blur(0px);
   }
 }
 
-@keyframes slideFromRight {
-  from {
+@keyframes smoothSlideFromRight {
+  0% {
     opacity: 0;
-    transform: translateX(20%) scale(0.9) rotate(2deg);
-    filter: blur(4px);
+    transform: translateX(15%) scale(0.95);
+    filter: blur(2px);
   }
-  50% {
-    opacity: 0.7;
-    transform: translateX(5%) scale(0.98) rotate(0.5deg);
+  30% {
+    opacity: 0.6;
+    transform: translateX(8%) scale(0.97);
     filter: blur(1px);
   }
-  to {
+  70% {
+    opacity: 0.9;
+    transform: translateX(2%) scale(0.99);
+    filter: blur(0.5px);
+  }
+  100% {
     opacity: 1;
-    transform: translateX(0) scale(1) rotate(0deg);
+    transform: translateX(0) scale(1);
     filter: blur(0px);
   }
 }
