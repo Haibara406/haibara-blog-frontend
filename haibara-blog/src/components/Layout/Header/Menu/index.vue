@@ -273,32 +273,44 @@ onUnmounted(() => {
               {{ userStore.userInfo?.registerType === 1 ? 'Gitee登录' : 'Github登录' }}
             </div>
           </div>
-          <el-dropdown>
+          <el-dropdown
+            trigger="hover"
+            placement="bottom-end"
+            :show-timeout="200"
+            :hide-timeout="200"
+            popper-class="custom-dropdown"
+          >
             <el-avatar style="margin-right: 3rem; cursor: pointer;"
                        :src="userStore.userInfo?.avatar"></el-avatar>
             <template #dropdown>
-              <el-dropdown-item @click="router.push('/setting')">
+              <div class="dropdown-header">
+                <div class="user-avatar">
+                  <el-avatar :size="50" :src="userStore.userInfo?.avatar"/>
+                </div>
+                <div class="user-info-dropdown">
+                  <div class="username-dropdown">{{ userStore.userInfo?.username }}</div>
+                  <div class="user-detail-dropdown" v-if="userStore.userInfo?.registerType === 0">
+                    {{ userStore.userInfo?.email }}
+                  </div>
+                  <div class="user-detail-dropdown" v-else>
+                    {{ userStore.userInfo?.registerType === 1 ? 'Gitee登录' : 'Github登录' }}
+                  </div>
+                </div>
+              </div>
+              <el-dropdown-item @click="router.push('/setting')" class="custom-dropdown-item">
                 <template #default>
-                  <el-icon>
+                  <el-icon class="dropdown-icon">
                     <Setting/>
                   </el-icon>
-                  个人设置
+                  <span>个人设置</span>
                 </template>
               </el-dropdown-item>
-              <!--                  <el-dropdown-item>-->
-              <!--                    <template #default>-->
-              <!--                      <el-icon>-->
-              <!--                        <Collection/>-->
-              <!--                      </el-icon>-->
-              <!--                      我的收藏-->
-              <!--                    </template>-->
-              <!--                  </el-dropdown-item>-->
-              <el-dropdown-item @click="logoutSub">
+              <el-dropdown-item @click="logoutSub" class="custom-dropdown-item logout-item">
                 <template #default>
-                  <el-icon>
+                  <el-icon class="dropdown-icon">
                     <Promotion/>
                   </el-icon>
-                  退出登录
+                  <span>退出登录</span>
                 </template>
               </el-dropdown-item>
             </template>
@@ -957,6 +969,127 @@ nav {
   }
 }
 
+/* 自定义下拉菜单样式 */
+:deep(.custom-dropdown) {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(20px) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  padding: 8px !important;
+  min-width: 280px !important;
+  animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  transform-origin: top center !important;
 
+  .el-dropdown-menu {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .el-dropdown-menu__item {
+    border-radius: 12px !important;
+    margin: 4px 0 !important;
+    padding: 12px 16px !important;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    color: #333 !important;
+    font-size: 14px !important;
+
+    &:hover {
+      background: rgba(64, 158, 255, 0.1) !important;
+      color: #409eff !important;
+      transform: translateX(4px) !important;
+    }
+
+    &.logout-item:hover {
+      background: rgba(245, 108, 108, 0.1) !important;
+      color: #f56c6c !important;
+    }
+  }
+}
+
+.dropdown-header {
+  padding: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.05), rgba(103, 194, 58, 0.05));
+  border-radius: 12px;
+  margin: 0 0 12px 0;
+
+  .user-avatar {
+    flex-shrink: 0;
+
+    .el-avatar {
+      border: 2px solid rgba(64, 158, 255, 0.2);
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: rgba(64, 158, 255, 0.5);
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .user-info-dropdown {
+    flex: 1;
+    min-width: 0;
+
+    .username-dropdown {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+      line-height: 1.3;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .user-detail-dropdown {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.3;
+      word-break: break-all;
+      overflow-wrap: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+}
+
+.custom-dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+
+  .dropdown-icon {
+    font-size: 16px !important;
+    transition: all 0.2s ease !important;
+  }
+
+  span {
+    font-weight: 500 !important;
+  }
+
+  &:hover .dropdown-icon {
+    transform: scale(1.1) !important;
+  }
+}
+
+@keyframes dropdownFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
 </style>
