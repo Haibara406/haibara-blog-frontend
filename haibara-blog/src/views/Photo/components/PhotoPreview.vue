@@ -239,6 +239,218 @@ const toggleFlipY = () => {
   flipY.value = !flipY.value
 }
 
+// 下载相关状态
+const isDownloading = ref(false)
+const downloadProgress = ref(0)
+
+// 下载图片功能
+const downloadImage = async () => {
+  if (!currentPhotoUrl.value || isDownloading.value) return
+
+  try {
+    isDownloading.value = true
+    downloadProgress.value = 0
+
+    // 创建下载提示
+    const notification = createDownloadNotification()
+
+    // 获取图片文件名
+    const url = currentPhotoUrl.value
+    const fileName = getFileNameFromUrl(url) || `photo_${Date.now()}.jpg`
+
+    // 检查是否为同源URL，如果不是则使用代理下载
+    const isSameOrigin = url.startsWith(window.location.origin) || url.startsWith('/')
+
+    if (isSameOrigin) {
+      // 同源图片，直接下载
+      await downloadDirectly(url, fileName, notification)
+    } else {
+      // 跨域图片，使用fetch下载
+      await downloadWithFetch(url, fileName, notification)
+    }
+
+  } catch (error) {
+    console.error('下载失败:', error)
+    showDownloadError()
+  } finally {
+    isDownloading.value = false
+    downloadProgress.value = 0
+  }
+}
+
+// 直接下载（同源）
+const downloadDirectly = async (url: string, fileName: string, notification: HTMLElement) => {
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.style.display = 'none'
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  // 模拟进度
+  for (let i = 0; i <= 100; i += 10) {
+    downloadProgress.value = i
+    updateDownloadNotification(notification, i)
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+
+  showDownloadSuccess(notification, fileName)
+}
+
+// 使用fetch下载（跨域）
+const downloadWithFetch = async (url: string, fileName: string, notification: HTMLElement) => {
+  const response = await fetch(url, {
+    mode: 'cors',
+    credentials: 'omit'
+  })
+
+  if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+
+  const contentLength = response.headers.get('content-length')
+  const total = contentLength ? parseInt(contentLength, 10) : 0
+
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error('无法读取图片数据')
+
+  const chunks: Uint8Array[] = []
+  let received = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    chunks.push(value)
+    received += value.length
+
+    if (total > 0) {
+      downloadProgress.value = Math.round((received / total) * 100)
+      updateDownloadNotification(notification, downloadProgress.value)
+    }
+  }
+
+  // 合并数据
+  const blob = new Blob(chunks)
+
+  // 创建下载链接
+  const downloadUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = downloadUrl
+  link.download = fileName
+  link.style.display = 'none'
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  // 清理
+  URL.revokeObjectURL(downloadUrl)
+
+  showDownloadSuccess(notification, fileName)
+}
+
+// 从URL获取文件名
+const getFileNameFromUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url)
+    const pathname = urlObj.pathname
+    const fileName = pathname.split('/').pop()
+    return fileName || `photo_${Date.now()}.jpg`
+  } catch {
+    return `photo_${Date.now()}.jpg`
+  }
+}
+
+// 创建下载通知
+const createDownloadNotification = () => {
+  const notification = document.createElement('div')
+  notification.className = 'download-notification'
+  notification.innerHTML = `
+    <div class="download-content">
+      <div class="download-icon">📥</div>
+      <div class="download-text">准备下载...</div>
+      <div class="download-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">0%</div>
+      </div>
+    </div>
+  `
+
+  document.body.appendChild(notification)
+
+  // 显示动画
+  requestAnimationFrame(() => {
+    notification.style.transform = 'translateX(0)'
+    notification.style.opacity = '1'
+  })
+
+  return notification
+}
+
+// 更新下载进度
+const updateDownloadNotification = (notification: HTMLElement, progress: number) => {
+  const progressFill = notification.querySelector('.progress-fill') as HTMLElement
+  const progressText = notification.querySelector('.progress-text') as HTMLElement
+  const downloadText = notification.querySelector('.download-text') as HTMLElement
+
+  if (progressFill) progressFill.style.width = `${progress}%`
+  if (progressText) progressText.textContent = `${progress}%`
+  if (downloadText) downloadText.textContent = '正在下载...'
+}
+
+// 显示下载成功
+const showDownloadSuccess = (notification: HTMLElement, fileName: string) => {
+  const downloadIcon = notification.querySelector('.download-icon') as HTMLElement
+  const downloadText = notification.querySelector('.download-text') as HTMLElement
+  const progressContainer = notification.querySelector('.download-progress') as HTMLElement
+
+  if (downloadIcon) downloadIcon.textContent = '✅'
+  if (downloadText) downloadText.textContent = `下载完成: ${fileName}`
+  if (progressContainer) progressContainer.style.display = 'none'
+
+  setTimeout(() => {
+    notification.style.transform = 'translateX(100%)'
+    notification.style.opacity = '0'
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification)
+      }
+    }, 300)
+  }, 2000)
+}
+
+// 显示下载错误
+const showDownloadError = () => {
+  const notification = document.createElement('div')
+  notification.className = 'download-notification error'
+  notification.innerHTML = `
+    <div class="download-content">
+      <div class="download-icon">❌</div>
+      <div class="download-text">下载失败，请重试</div>
+    </div>
+  `
+
+  document.body.appendChild(notification)
+
+  requestAnimationFrame(() => {
+    notification.style.transform = 'translateX(0)'
+    notification.style.opacity = '1'
+  })
+
+  setTimeout(() => {
+    notification.style.transform = 'translateX(100%)'
+    notification.style.opacity = '0'
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification)
+      }
+    }, 300)
+  }, 3000)
+}
+
 // 图片加载处理
 const handleImageLoad = () => {
   // 图片加载成功，可以在这里添加一些逻辑
@@ -270,6 +482,12 @@ const handleKeydown = (e: KeyboardEvent) => {
     rotateLeft()
   } else if (e.key === '0') {
     resetTransform()
+  } else if (e.key === 'd' || e.key === 'D') {
+    e.preventDefault()
+    downloadImage()
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    downloadImage()
   }
 }
 
@@ -305,6 +523,24 @@ const handleMouseMove = (e: MouseEvent) => {
 
 const handleMouseUp = () => {
   isDragging.value = false
+}
+
+// 右键菜单相关
+const showContextMenu = ref(false)
+const contextMenuX = ref(0)
+const contextMenuY = ref(0)
+
+// 处理右键菜单
+const handleContextMenu = (e: MouseEvent) => {
+  e.preventDefault()
+  contextMenuX.value = e.clientX
+  contextMenuY.value = e.clientY
+  showContextMenu.value = true
+}
+
+// 隐藏右键菜单
+const hideContextMenu = () => {
+  showContextMenu.value = false
 }
 
 // 处理触摸事件
@@ -369,17 +605,19 @@ onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('mouseup', handleMouseUp)
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('click', hideContextMenu)
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('mouseup', handleMouseUp)
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('click', hideContextMenu)
 })
 </script>
 
 <template>
-  <div v-if="show" class="preview-modal" @click="closePreview">
+  <div v-if="show" class="preview-modal" @click="closePreview" @contextmenu.prevent="hideContextMenu">
     <button class="close-btn" @click="closePreview">×</button>
     <div class="preview-content" @click.stop>
       <div class="preview-image-container">
@@ -404,6 +642,7 @@ onUnmounted(() => {
             ]"
             @mousedown="handleMouseDown"
             @wheel.prevent="handleWheel"
+            @contextmenu="handleContextMenu"
             @touchstart.prevent="handleTouchStart"
             @touchmove.prevent="handleTouchMove"
             @touchend.prevent="handleTouchEnd"
@@ -441,14 +680,46 @@ onUnmounted(() => {
           >▶</button>
         </div>
         <div class="toolbar-group">
-          <button class="preview-btn" @click="zoomIn" title="放大">+</button>
-          <button class="preview-btn" @click="zoomOut" title="缩小">-</button>
-          <button class="preview-btn" @click="rotateLeft" title="向左旋转">↺</button>
-          <button class="preview-btn" @click="rotateRight" title="向右旋转">↻</button>
+          <button class="preview-btn" @click="zoomIn" title="放大 (+)">+</button>
+          <button class="preview-btn" @click="zoomOut" title="缩小 (-)">-</button>
+          <button class="preview-btn" @click="rotateLeft" title="向左旋转 (R)">↺</button>
+          <button class="preview-btn" @click="rotateRight" title="向右旋转 (r)">↻</button>
           <button class="preview-btn" @click="toggleFlipX" title="水平翻转">↔</button>
           <button class="preview-btn" @click="toggleFlipY" title="垂直翻转">↕</button>
-          <button class="preview-btn" @click="resetTransform" title="重置">⟲</button>
+          <button
+            class="preview-btn download-btn"
+            :class="{ 'downloading': isDownloading }"
+            :disabled="isDownloading"
+            @click="downloadImage"
+            title="下载图片 (D / Ctrl+S)"
+          >
+            <span v-if="!isDownloading" class="download-icon">📥</span>
+            <span v-else class="download-spinner">⟳</span>
+          </button>
+          <button class="preview-btn" @click="resetTransform" title="重置 (0)">⟲</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 右键菜单 -->
+    <div
+      v-if="showContextMenu"
+      class="context-menu"
+      :style="{
+        left: contextMenuX + 'px',
+        top: contextMenuY + 'px'
+      }"
+      @click.stop
+    >
+      <div class="context-menu-item" @click="downloadImage(); hideContextMenu()">
+        <span class="context-menu-icon">📥</span>
+        <span class="context-menu-text">下载图片</span>
+        <span class="context-menu-shortcut">D</span>
+      </div>
+      <div class="context-menu-item" @click="resetTransform(); hideContextMenu()">
+        <span class="context-menu-icon">⟲</span>
+        <span class="context-menu-text">重置视图</span>
+        <span class="context-menu-shortcut">0</span>
       </div>
     </div>
   </div>
@@ -757,6 +1028,174 @@ onUnmounted(() => {
   margin: 0 8px;
 }
 
+/* 下载按钮特殊样式 */
+.download-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.download-btn .download-icon {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.download-btn:hover .download-icon {
+  transform: translateY(-2px);
+}
+
+.download-btn.downloading {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.5);
+  cursor: not-allowed;
+}
+
+.download-spinner {
+  font-size: 18px;
+  animation: downloadSpin 1s linear infinite;
+}
+
+@keyframes downloadSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 下载通知样式 */
+.download-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: white;
+  font-size: 14px;
+  z-index: 10000;
+  min-width: 280px;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.download-notification.error {
+  background: rgba(244, 67, 54, 0.9);
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+.download-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.download-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.download-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.download-progress {
+  margin-top: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: right;
+}
+
+/* 右键菜单样式 */
+.context-menu {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  border-radius: 8px;
+  padding: 8px 0;
+  min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10001;
+  animation: contextMenuAppear 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes contextMenuAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  gap: 12px;
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.context-menu-item:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.context-menu-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.context-menu-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.context-menu-shortcut {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
 .preview-btn[title]::after {
   content: attr(title);
   position: absolute;
@@ -944,6 +1383,11 @@ onUnmounted(() => {
     font-size: 16px;
   }
 
+  .download-btn .download-icon,
+  .download-spinner {
+    font-size: 14px;
+  }
+
   .preview-btn[title]::after {
     bottom: 120%;
   }
@@ -954,6 +1398,26 @@ onUnmounted(() => {
     width: 40px;
     height: 40px;
     font-size: 24px;
+  }
+
+  .download-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+  }
+
+  .download-content {
+    gap: 8px;
+  }
+
+  .download-icon {
+    font-size: 18px;
+  }
+
+  .download-text {
+    font-size: 13px;
   }
 }
 
