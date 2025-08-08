@@ -29,19 +29,19 @@ const props = defineProps<Props>()
     <!-- 刷新按钮和面包屑导航 -->
     <div class="nav-controls">
       <!-- 刷新按钮 -->
-      <div class="refresh-btn" @click="emit('refresh')" title="刷新页面">
+      <button class="refresh-btn" @click="emit('refresh')" title="刷新页面" type="button">
         <span class="refresh-icon">🔄</span>
         <span class="refresh-text">刷新</span>
-      </div>
+      </button>
 
       <!-- 面包屑导航 -->
       <div class="breadcrumb-nav" v-if="props.breadcrumbs.length > 0">
-        <span class="breadcrumb-item home" @click="emit('breadcrumbClick', -1)">首页</span>
+        <button class="breadcrumb-item home" @click="emit('breadcrumbClick', -1)" type="button">首页</button>
         <template v-for="(item, index) in props.breadcrumbs" :key="item.id">
           <span class="breadcrumb-separator">/</span>
-          <span class="breadcrumb-item" @click="emit('breadcrumbClick', index)">
+          <button class="breadcrumb-item" @click="emit('breadcrumbClick', index)" type="button">
             {{ item.name }}
-          </span>
+          </button>
         </template>
       </div>
     </div>
@@ -251,17 +251,21 @@ const props = defineProps<Props>()
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(12px);
   border-radius: 24px;
+  border: none;
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
+  cursor: pointer !important;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   color: rgba(255, 255, 255, 0.95);
   font-size: 1em;
   font-weight: 500;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  user-select: none;
+  outline: none;
 }
 
 .refresh-btn:hover {
+  cursor: pointer !important;
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-3px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
@@ -309,13 +313,21 @@ const props = defineProps<Props>()
   color: rgba(255, 255, 255, 0.95);
   font-size: 1em;
   font-weight: 500;
-  cursor: pointer;
+  cursor: pointer !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 6px 12px;
   border-radius: 12px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
+  user-select: none;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.breadcrumb-item:hover {
+  cursor: pointer !important;
 }
 
 .breadcrumb-item::before {
@@ -457,4 +469,12 @@ const props = defineProps<Props>()
 .dark-mode {
   /* ... 深色模式样式 ... */
 }
-</style> 
+
+/* 强制所有可点击元素使用手型光标 */
+.album-banner .refresh-btn,
+.album-banner .refresh-btn *,
+.album-banner .breadcrumb-item,
+.album-banner .breadcrumb-item * {
+  cursor: pointer !important;
+}
+</style>

@@ -461,6 +461,10 @@ onUnmounted(() => {
   backdrop-filter: blur(10px);
 }
 
+.preview-btn:hover {
+  cursor: pointer;
+}
+
 .preview-btn::before {
   content: '';
   position: absolute;
@@ -539,6 +543,10 @@ onUnmounted(() => {
   user-select: none;
   touch-action: manipulation;
   animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.close-btn:hover {
+  cursor: pointer;
 }
 
 .close-btn:hover {
@@ -670,4 +678,12 @@ onUnmounted(() => {
   display: inline-block;
   will-change: transform;
 }
-</style> 
+
+/* 强制所有可点击元素使用手型光标 */
+.preview-modal .preview-btn,
+.preview-modal .preview-btn *,
+.preview-modal .close-btn,
+.preview-modal .close-btn * {
+  cursor: pointer !important;
+}
+</style>

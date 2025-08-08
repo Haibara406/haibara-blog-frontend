@@ -532,10 +532,14 @@ const isDark = useDark()
   margin: 6px 0;
 }
 
+.album-tree-item:hover {
+  cursor: pointer;
+}
+
 .album-name {
   display: block;
   padding: 12px 16px;
-  padding-left: 44px;
+  padding-left: 52px;
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(255, 255, 255, 0.9);
@@ -545,15 +549,21 @@ const isDark = useDark()
   position: relative;
   border: 1px solid rgba(92, 106, 196, 0.15);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  cursor: pointer !important;
+  user-select: none;
+}
+
+.album-name:hover {
+  cursor: pointer !important;
 }
 
 .album-name::before {
   content: '📁';
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1.3em;
+  font-size: 1.2em;
   line-height: 1;
   transition: all 0.3s ease;
 }
@@ -807,27 +817,32 @@ const isDark = useDark()
 .home-item {
   display: block;
   padding: 12px 16px;
-  padding-left: 44px;
+  padding-left: 52px;
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(255, 255, 255, 0.9);
   color: #5c6ac4;
   margin-bottom: 16px;
-  cursor: pointer;
+  cursor: pointer !important;
   position: relative;
   border: 1px solid rgba(92, 106, 196, 0.15);
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  user-select: none;
+}
+
+.home-item:hover {
+  cursor: pointer !important;
 }
 
 /* 主页图标 */
 .home-item::before {
   content: '🏠';
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1.3em;
+  font-size: 1.2em;
   line-height: 1;
   transition: all 0.3s ease;
 }

@@ -525,7 +525,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  cursor: pointer;
+  cursor: pointer !important;
   opacity: 0;
   transform: translateY(40px) scale(0.9) rotateX(15deg);
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -536,6 +536,14 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   backdrop-filter: blur(10px);
   filter: blur(2px);
   perspective: 1000px;
+}
+
+.gallery-item:hover {
+  cursor: pointer !important;
+}
+
+.gallery-item * {
+  cursor: pointer !important;
 }
 
 .gallery-item.visible {
@@ -569,6 +577,7 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   object-fit: cover;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 20px;
+  cursor: pointer !important;
 }
 
 .gallery-item:hover {
@@ -652,6 +661,11 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   border-radius: 0 0 20px 20px;
   transform: translateY(100%);
   opacity: 0;
+  cursor: pointer !important;
+}
+
+.item-info * {
+  cursor: pointer !important;
 }
 
 .gallery-item:hover .item-info {
@@ -765,6 +779,11 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   aspect-ratio: 1;
+  cursor: pointer !important;
+}
+
+.default-album-cover * {
+  cursor: pointer !important;
 }
 
 .default-album-cover::before {
@@ -1181,4 +1200,15 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
     transform: rotate(360deg);
   }
 }
-</style> 
+
+/* 强制所有可点击元素使用手型光标 */
+.photo-gallery .gallery-item,
+.photo-gallery .gallery-item *,
+.photo-gallery .default-album-cover,
+.photo-gallery .default-album-cover *,
+.photo-gallery .item-info,
+.photo-gallery .item-info *,
+.photo-gallery img {
+  cursor: pointer !important;
+}
+</style>

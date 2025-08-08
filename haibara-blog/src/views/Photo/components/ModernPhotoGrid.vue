@@ -121,6 +121,11 @@ const photosComputed = computed(() => props.photos)
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
+  user-select: none;
+}
+
+.grid-item:hover {
+  cursor: pointer;
 }
 
 .grid-item--visible {
@@ -226,6 +231,11 @@ const photosComputed = computed(() => props.photos)
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(8px);
+  user-select: none;
+}
+
+.action-btn:hover {
+  cursor: pointer;
 }
 
 .action-btn:hover {
