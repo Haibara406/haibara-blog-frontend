@@ -36,5 +36,14 @@ defineProps({
 </script>
 
 <style scoped lang="scss">
+svg {
+  display: block;
+  pointer-events: inherit;
+  cursor: inherit;
+}
 
+use {
+  pointer-events: none;
+  cursor: inherit;
+}
 </style>

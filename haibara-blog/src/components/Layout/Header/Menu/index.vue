@@ -249,7 +249,7 @@ onUnmounted(() => {
       <div id="search-button">
         <!-- 搜索按钮 -->
         <div class="search" @click="dialogVisible = true">
-          <SvgIcon name="search" width="30" height="30" color="#409EFF" class="icon"/>
+          <SvgIcon name="search" width="30" height="30" color="#409EFF" class="icon" style="pointer-events: none;"/>
         </div>
       </div>
       <div class="user-info">
@@ -713,11 +713,19 @@ nav {
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.2);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
+      cursor: pointer !important;
       flex-shrink: 0;
+      width: 46px;
+      height: 46px;
 
       * {
-        cursor: pointer;
+        cursor: pointer !important;
+        pointer-events: none; // 让所有子元素不阻挡点击事件
+      }
+
+      .icon {
+        cursor: pointer !important;
+        pointer-events: none !important;
       }
 
       &:hover {

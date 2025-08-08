@@ -127,7 +127,7 @@ const handleLoginClick = () => {
   <div class="move_nav" style="margin-left: 1.5rem">
     <div>
       <div @click="drawer = true" style="cursor: pointer;">
-        <SvgIcon name="directory_icon" width="30" height="30" color="#409EFF" class="icon"/>
+        <SvgIcon name="directory_icon" width="30" height="30" color="#409EFF" class="icon" style="pointer-events: none;"/>
       </div>
       <!-- 移动端日夜切换 -->
       <div style="margin-left: 5rem">
@@ -138,7 +138,7 @@ const handleLoginClick = () => {
     <!-- 搜索按钮 -->
     <div class="right_nav">
       <div class="search" @click="dialogVisible = true" style="margin-right: 2rem">
-        <SvgIcon name="search" width="30" height="30" color="#409EFF" class="icon"/>
+        <SvgIcon name="search" width="30" height="30" color="#409EFF" class="icon" style="pointer-events: none;"/>
       </div>
       <div class="user-info">
         <div v-if="userStore.userInfo == undefined">
@@ -233,13 +233,25 @@ const handleLoginClick = () => {
 
   // 移动端菜单图标样式
   > div:first-child > div:first-child {
-    cursor: pointer;
+    cursor: pointer !important;
     padding: 8px;
     border-radius: 8px;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 46px;
+    height: 46px;
+
+    * {
+      cursor: pointer !important;
+      pointer-events: none; // 让所有子元素不阻挡点击事件
+    }
+
+    .icon {
+      cursor: pointer !important;
+      pointer-events: none !important;
+    }
 
     &:hover {
       background: rgba(64, 158, 255, 0.1);
@@ -275,9 +287,11 @@ const handleLoginClick = () => {
   align-items: center;
   margin-right: 20px;
   transition: transform 0.3s linear;
-  cursor: pointer;
+  cursor: pointer !important;
   padding: 8px;
   border-radius: 8px;
+  width: 46px;
+  height: 46px;
 
   &:hover {
     transform: scale(1.1);
@@ -285,7 +299,13 @@ const handleLoginClick = () => {
   }
 
   * {
-    cursor: pointer;
+    cursor: pointer !important;
+    pointer-events: none; // 让所有子元素不阻挡点击事件
+  }
+
+  .icon {
+    cursor: pointer !important;
+    pointer-events: none !important;
   }
 }
 
