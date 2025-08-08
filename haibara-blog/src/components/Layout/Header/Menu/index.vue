@@ -753,20 +753,22 @@ nav {
 
       .profile-info {
         padding: 10px 16px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(120, 120, 120, 0.25);
         border-radius: 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         transition: all 0.3s ease;
         text-align: right;
         min-width: 160px;
         max-width: 280px;
         flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 
         &:hover {
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(120, 120, 120, 0.35);
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+          border-color: rgba(64, 158, 255, 0.4);
         }
 
         .username {
@@ -778,15 +780,17 @@ nav {
           word-break: break-word;
           overflow-wrap: break-word;
           hyphens: auto;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .user-detail {
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.95);
           line-height: 1.3;
           word-break: break-all;
           overflow-wrap: break-word;
           hyphens: auto;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 
           // 如果内容太长，显示省略号
           display: -webkit-box;
