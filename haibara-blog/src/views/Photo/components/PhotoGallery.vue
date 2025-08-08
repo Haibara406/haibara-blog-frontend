@@ -279,6 +279,8 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
                :key="item.type + (isPhoto(item) ? item.data.id : item.data.id)"
                class="gallery-item"
                :class="{ visible: itemsVisible[index] }"
+               :data-type="isAlbum(item) ? 'album' : 'photo'"
+               :style="{ 'animation-delay': `${index * 0.1}s` }"
                @click="handleItemClick(item)">
             <template v-if="isAlbum(item)">
               <div v-if="!hasPhotos(item) && !item.data.coverUrl" class="default-album-cover">
@@ -333,60 +335,66 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
 }
 
 .gallery-wrapper {
-  padding: 30px;
+  padding: 40px;
   position: relative;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 32px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
   margin-top: 0;
   flex: 1;
   min-height: 400px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 10px 0 30px 0;
-  max-width: 1400px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 20px 0 40px 0;
+  max-width: 1600px;
   margin: 0 auto;
-  min-height: calc(100vh - 350px); /* 保持最小高度，防止内容加载时页面跳动 */
+  min-height: calc(100vh - 350px);
 }
 
 .gallery-item {
   position: relative;
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
-  aspect-ratio: 1;
   cursor: pointer;
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transform: translateY(30px) scale(0.95);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   will-change: opacity, transform;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
 }
 
 .gallery-item.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .gallery-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 20px;
 }
 
 .gallery-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(92, 106, 196, 0.15);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(92, 106, 196, 0.2);
+  border-color: rgba(92, 106, 196, 0.3);
 }
 
 .gallery-item:hover img {
-  transform: scale(1.05);
+  transform: scale(1.08);
+  filter: brightness(1.1) saturate(1.1);
 }
 
 /* 相册信息样式 */
@@ -395,28 +403,33 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 15px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  padding: 20px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
   color: white;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: all 0.3s ease;
+  gap: 12px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  border-radius: 0 0 20px 20px;
 }
 
 .item-info::before {
   content: '📁';
-  font-size: 1.4em;
+  font-size: 1.6em;
   line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .item-info h3 {
   margin: 0;
-  font-size: 1.1em;
-  font-weight: 500;
+  font-size: 1.2em;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.02em;
 }
 
 /* 响应式调整 */
@@ -469,15 +482,16 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
 .default-album-cover {
   width: 100%;
   height: 100%;
-  background: linear-gradient(120deg, #e0e7ff 0%, #f5f7ff 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  aspect-ratio: 1;
 }
 
 .default-album-cover::before {
@@ -490,18 +504,27 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   background: linear-gradient(
       45deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.3) 50%,
       transparent 100%
   );
-  animation: shine 3s infinite linear;
+  animation: shine 4s infinite linear;
+  pointer-events: none;
+}
+
+.default-album-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 50%);
   pointer-events: none;
 }
 
 .album-icon {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   position: relative;
   margin: 20px;
+  z-index: 1;
 }
 
 .album-icon::before {
@@ -509,43 +532,58 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   position: absolute;
   width: 100%;
   height: 100%;
-  background: #5c6ac4;
-  border-radius: 12px;
-  transform: rotate(-10deg);
-  box-shadow: 0 3px 10px rgba(92, 106, 196, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+  border-radius: 16px;
+  transform: rotate(-8deg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
 
 .album-icon::after {
   content: '';
   position: absolute;
-  top: -5px;
-  left: 5px;
+  top: -6px;
+  left: 6px;
   width: 100%;
   height: 100%;
-  background: #7b8cd4;
-  border-radius: 12px;
-  transform: rotate(5deg);
-  box-shadow: 0 3px 10px rgba(92, 106, 196, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+  border-radius: 16px;
+  transform: rotate(8deg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
 }
 
 /* 悬浮效果 */
 .gallery-item:hover .default-album-cover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(92, 106, 196, 0.2);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  filter: brightness(1.1) saturate(1.1);
 }
 
 .gallery-item:hover .album-icon::before {
-  transform: rotate(-15deg);
+  transform: rotate(-12deg) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .gallery-item:hover .album-icon::after {
-  transform: rotate(10deg);
+  transform: rotate(12deg) scale(1.05) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* 点击效果 */
 .gallery-item:active .default-album-cover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(92, 106, 196, 0.15);
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+}
+
+/* 添加相册项目特殊样式 */
+.gallery-item[data-type="album"] {
+  aspect-ratio: 1;
+}
+
+.gallery-item[data-type="photo"] {
+  aspect-ratio: 4/3;
 }
 
 @keyframes shine {
@@ -557,50 +595,46 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   }
 }
 
-/* 修改深色模式样式，使用类选择器而不是媒体查询 */
+/* 深色模式样式 */
 .dark-mode .gallery-wrapper {
-  background: rgba(30, 30, 30, 0.98);
-  box-shadow: none;
+  background: rgba(20, 20, 25, 0.95);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .dark-mode .gallery-item {
-  background: rgba(40, 40, 40, 0.9);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  background: rgba(30, 30, 35, 0.9);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .dark-mode .gallery-item:hover {
-  box-shadow: 0 8px 20px rgba(92, 106, 196, 0.2);
-}
-
-.dark-mode .empty-state {
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 16px 40px rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.4);
 }
 
 .dark-mode .default-album-cover {
-  background: linear-gradient(120deg, #2a2f4c 0%, #1a1f35 100%);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.dark-mode .album-icon::before {
-  background: #3d4674;
-}
-
-.dark-mode .album-icon::after {
-  background: #4d5894;
-}
-
-.dark-mode .gallery-item:hover .default-album-cover {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
-.dark-mode .item-info {
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+.dark-mode .album-icon::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
 }
 
-.dark-mode .gallery-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+.dark-mode .album-icon::after {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+}
+
+.dark-mode .gallery-item:hover .default-album-cover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  filter: brightness(1.2);
+}
+
+.dark-mode .item-info {
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  backdrop-filter: blur(12px);
 }
 
 /* 加载更多样式优化 */
@@ -636,7 +670,79 @@ const isAlbum = (item: GalleryItem): item is { type: 'album', data: AlbumData } 
   border-top-color: #7b8cd4;
 }
 
-/* 添加空状态样式 */
+/* 加载状态样式 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: #666;
+  font-size: 1.2em;
+  animation: fadeIn 0.5s ease;
+}
+
+.loading-state .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(92, 106, 196, 0.1);
+  border-top: 4px solid #5c6ac4;
+  border-radius: 50%;
+  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(92, 106, 196, 0.2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 空状态样式 */
+.empty-state {
+  text-align: center;
+  padding: 100px 40px;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 1.3em;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(92, 106, 196, 0.05));
+  border-radius: 24px;
+  margin: 40px 0;
+  border: 2px dashed rgba(92, 106, 196, 0.3);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.empty-state::before {
+  content: '📷';
+  font-size: 4em;
+  display: block;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.empty-state p {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* 深色模式下的加载和空状态 */
+.dark-mode .loading-state {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dark-mode .loading-state .loading-spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: #7b8cd4;
+  box-shadow: 0 4px 12px rgba(92, 106, 196, 0.3);
+}
+
+.dark-mode .empty-state {
+  color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, rgba(40, 40, 40, 0.3), rgba(92, 106, 196, 0.1));
+  border-color: rgba(255, 255, 255, 0.2);
+}
 .empty-state {
   padding: 40px;
   color: #999;

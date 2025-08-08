@@ -69,13 +69,14 @@ const props = defineProps<Props>()
 .album-banner {
   position: relative;
   width: calc(100% - 40px);
-  height: 360px;
+  height: 400px;
   overflow: hidden;
   border-radius: 32px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
   margin: 0 20px;
   margin-bottom: 30px;
-  background: linear-gradient(45deg, #2c3e50, #3498db);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .banner-background {
@@ -86,10 +87,10 @@ const props = defineProps<Props>()
   height: 100%;
   background-size: cover;
   background-position: center;
-  filter: blur(8px);
-  transform: scale(1.1);
-  opacity: 0.85;
-  transition: all 0.5s ease;
+  filter: blur(12px);
+  transform: scale(1.15);
+  opacity: 0.8;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .banner-background::after {
@@ -141,12 +142,16 @@ const props = defineProps<Props>()
 }
 
 .banner-title {
-  font-size: 3.2em;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: 3.5em;
+  font-weight: 800;
+  margin: 0 0 20px 0;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .banner-description {
@@ -223,34 +228,37 @@ const props = defineProps<Props>()
 .refresh-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: all 0.3s ease;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1em;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .refresh-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .refresh-btn:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .refresh-icon {
-  font-size: 1.1em;
+  font-size: 1.2em;
   animation: none;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .refresh-btn:hover .refresh-icon {
@@ -258,7 +266,7 @@ const props = defineProps<Props>()
 }
 
 .refresh-btn:active .refresh-icon {
-  animation: spin 0.6s ease-in-out;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes spin {
@@ -270,23 +278,24 @@ const props = defineProps<Props>()
 .breadcrumb-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .breadcrumb-item {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95em;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1em;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 4px 8px;
-  border-radius: 8px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 6px 12px;
+  border-radius: 12px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .breadcrumb-item.home {

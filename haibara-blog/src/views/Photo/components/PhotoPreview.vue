@@ -327,7 +327,7 @@ onUnmounted(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.97);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -335,6 +335,19 @@ onUnmounted(() => {
   overscroll-behavior: none;
   touch-action: none;
   -webkit-overflow-scrolling: touch;
+  backdrop-filter: blur(20px);
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+  }
 }
 
 .preview-content {
@@ -373,25 +386,38 @@ onUnmounted(() => {
 
 .preview-toolbar {
   position: fixed;
-  bottom: 30px;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  padding: 12px 24px;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  padding: 16px 32px;
+  border-radius: 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   z-index: 1001;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .preview-toolbar:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(-50%) translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-50%) translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .toolbar-group {
@@ -412,25 +438,27 @@ onUnmounted(() => {
 }
 
 .preview-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 600;
   cursor: pointer;
-  padding: 8px;
-  width: 40px;
-  height: 40px;
+  padding: 12px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   outline: none;
   user-select: none;
   touch-action: manipulation;
+  backdrop-filter: blur(10px);
 }
 
 .preview-btn::before {
@@ -447,13 +475,19 @@ onUnmounted(() => {
 }
 
 .preview-btn:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px) scale(1.05);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .preview-btn:hover::before {
-  opacity: 0.8;
+  opacity: 0.9;
+}
+
+.preview-btn:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .preview-btn[title]::after {
@@ -483,67 +517,95 @@ onUnmounted(() => {
 
 .close-btn {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  top: 30px;
+  right: 30px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
-  font-size: 28px;
+  font-size: 32px;
+  font-weight: 300;
   cursor: pointer;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(8px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
   z-index: 1002;
   -webkit-tap-highlight-color: transparent;
   outline: none;
   user-select: none;
   touch-action: manipulation;
+  animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .close-btn:active {
-  transform: scale(0.95);
-  opacity: 0.8;
+  transform: scale(0.95) rotate(90deg);
+  opacity: 0.9;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 切换动画 */
 .preview-image.slide-prev {
-  animation: slideFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideFromLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .preview-image.slide-next {
-  animation: slideFromRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideFromRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideFromLeft {
   from {
     opacity: 0;
-    transform: translateX(-10%) scale(0.95);
+    transform: translateX(-20%) scale(0.9) rotate(-2deg);
+    filter: blur(4px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(-5%) scale(0.98) rotate(-0.5deg);
+    filter: blur(1px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1) rotate(0deg);
+    filter: blur(0px);
   }
 }
 
 @keyframes slideFromRight {
   from {
     opacity: 0;
-    transform: translateX(10%) scale(0.95);
+    transform: translateX(20%) scale(0.9) rotate(2deg);
+    filter: blur(4px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(5%) scale(0.98) rotate(0.5deg);
+    filter: blur(1px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1) rotate(0deg);
+    filter: blur(0px);
   }
 }
 
