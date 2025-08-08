@@ -42,7 +42,12 @@ const articleDetail = ref({
   createTime: '',
   updateTime: '',
   userId: 0,
-  id: "0"
+  id: "0",
+  // 添加上一篇下一篇相关字段
+  preArticleId: 0,
+  preArticleTitle: '',
+  nextArticleId: 0,
+  nextArticleTitle: ''
 })
 
 const route = useRoute();
@@ -101,6 +106,9 @@ async function getArticleDetailById() {
     res.data.createTime = res.data.createTime.split(' ')[0]
     res.data.updateTime = res.data.updateTime.split(' ')[0]
     articleDetail.value = res.data
+
+
+
     loading.value = true
     // 收藏
     isFavoriteFunc()
@@ -535,7 +543,7 @@ function togglePointerRepel() {
                   <svg-icon name="arrow_left" width="16" height="16"/>
                   <span>上一篇</span>
                 </div>
-                <div class="nav-title">
+                <div class="nav-title" :title="articleDetail.preArticleTitle">
                   {{ articleDetail.preArticleTitle }}
                 </div>
                 <div class="nav-overlay">
@@ -553,7 +561,7 @@ function togglePointerRepel() {
                   <span>下一篇</span>
                   <svg-icon name="arrow_right" width="16" height="16"/>
                 </div>
-                <div class="nav-title">
+                <div class="nav-title" :title="articleDetail.nextArticleTitle">
                   {{ articleDetail.nextArticleTitle }}
                 </div>
                 <div class="nav-overlay">
@@ -726,7 +734,7 @@ function togglePointerRepel() {
               <svg-icon name="arrow_left" width="16" height="16"/>
               <span>上一篇</span>
             </div>
-            <div class="nav-title">
+            <div class="nav-title" :title="articleDetail.preArticleTitle">
               {{ articleDetail.preArticleTitle }}
             </div>
             <div class="nav-overlay">
@@ -744,7 +752,7 @@ function togglePointerRepel() {
               <span>下一篇</span>
               <svg-icon name="arrow_right" width="16" height="16"/>
             </div>
-            <div class="nav-title">
+            <div class="nav-title" :title="articleDetail.nextArticleTitle">
               {{ articleDetail.nextArticleTitle }}
             </div>
             <div class="nav-overlay">
@@ -1155,13 +1163,18 @@ function togglePointerRepel() {
       border-radius: 20px;
       padding: 2rem;
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
+      cursor: pointer !important;
       position: relative;
       overflow: hidden;
       min-height: 120px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+
+      // 确保所有子元素都显示指针光标
+      * {
+        cursor: pointer !important;
+      }
 
       // 多层背景效果
       &::before {
@@ -1235,8 +1248,12 @@ function togglePointerRepel() {
 
       &.disabled {
         opacity: 0.6;
-        cursor: not-allowed;
+        cursor: not-allowed !important;
         transform: none !important;
+
+        * {
+          cursor: not-allowed !important;
+        }
 
         &:hover {
           background: linear-gradient(135deg,
@@ -1288,9 +1305,9 @@ function togglePointerRepel() {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         margin-bottom: 0.5rem;
         overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
       }
 
       .nav-overlay {
@@ -1457,7 +1474,9 @@ function togglePointerRepel() {
         .nav-title {
           font-size: 1rem;
           line-height: 1.3;
-          -webkit-line-clamp: 3;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .nav-overlay {
@@ -1531,7 +1550,10 @@ function togglePointerRepel() {
 
       .nav-title {
         font-size: 0.9rem;
-        -webkit-line-clamp: 2;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .nav-overlay {
