@@ -62,6 +62,11 @@ const plainTextContent = ref('')
 // HTML内容（用于保持结构的指针排斥特效）
 const htmlContent = ref('')
 
+// 文章切换动画状态
+const isArticleTransitioning = ref(false)
+const transitionDirection = ref('') // 'prev' | 'next'
+const transitionProgress = ref(0)
+
 // 监听路由变化
 watch(() => route.params.id, () => {
   getArticleDetailById()
@@ -101,7 +106,61 @@ async function getArticleDetailById() {
     isFavoriteFunc()
     // 点赞
     isLikeFunc()
+
+    // 如果是文章切换动画，完成动画
+    if (isArticleTransitioning.value) {
+      setTimeout(() => {
+        isArticleTransitioning.value = false
+        transitionDirection.value = ''
+        transitionProgress.value = 0
+      }, 300)
+    }
   })
+}
+
+// 优雅的文章切换函数
+const navigateToArticle = async (articleId: number, direction: 'prev' | 'next') => {
+  if (isArticleTransitioning.value) return
+
+  try {
+    // 开始过渡动画
+    isArticleTransitioning.value = true
+    transitionDirection.value = direction
+    transitionProgress.value = 0
+
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    // 进度动画
+    const progressAnimation = () => {
+      if (transitionProgress.value < 90 && isArticleTransitioning.value) {
+        transitionProgress.value += Math.random() * 3 + 1 // 随机增长，更自然
+        setTimeout(progressAnimation, 50)
+      }
+    }
+    progressAnimation()
+
+    // 延迟导航，让动画先开始
+    setTimeout(() => {
+      router.push(`/article/${articleId}`)
+    }, 600)
+
+    // 安全超时，防止动画卡住
+    setTimeout(() => {
+      if (isArticleTransitioning.value) {
+        isArticleTransitioning.value = false
+        transitionDirection.value = ''
+        transitionProgress.value = 0
+      }
+    }, 5000)
+
+  } catch (error) {
+    console.error('文章切换失败:', error)
+    isArticleTransitioning.value = false
+    transitionDirection.value = ''
+    transitionProgress.value = 0
+    ElMessage.error('文章切换失败，请重试')
+  }
 }
 
 function mdHtml(htmlText: string) {
@@ -279,7 +338,7 @@ function togglePointerRepel() {
 </script>
 
 <template>
-  <!-- 过渡遮罩层 -->
+  <!-- 阅读模式过渡遮罩层 -->
   <div v-if="isTransitioning" class="reading-mode-transition">
     <div class="transition-overlay">
       <div class="transition-content">
@@ -296,8 +355,32 @@ function togglePointerRepel() {
     </div>
   </div>
 
+  <!-- 文章切换过渡遮罩层 -->
+  <div v-if="isArticleTransitioning" class="article-transition-overlay">
+    <div class="transition-background" :class="transitionDirection"></div>
+    <div class="transition-content">
+      <div class="article-transition-animation">
+        <div class="page-stack">
+          <div class="page-layer" v-for="i in 3" :key="i"
+               :style="{ animationDelay: `${i * 0.1}s` }"></div>
+        </div>
+        <div class="direction-indicator">
+          <svg-icon :name="transitionDirection === 'prev' ? 'arrow_left' : 'arrow_right'"
+                    width="40" height="40"/>
+        </div>
+      </div>
+      <div class="transition-text">
+        {{ transitionDirection === 'prev' ? '正在加载上一篇文章...' : '正在加载下一篇文章...' }}
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" :style="{ width: transitionProgress + '%' }"></div>
+      </div>
+    </div>
+  </div>
+
   <transition name="reading-mode" mode="out-in">
-    <div v-if="!isReadingMode" key="normal-mode" class="normal-mode">
+    <div v-if="!isReadingMode" key="normal-mode" class="normal-mode"
+         :class="{ 'article-transitioning': isArticleTransitioning, [`transition-${transitionDirection}`]: transitionDirection }">
       <Main is-side-bar>
       <template #header>
         <Header/>
@@ -443,19 +526,39 @@ function togglePointerRepel() {
           <!-- 上/下 篇文章-->
           <div class="goOn">
             <!-- 上一篇 -->
-            <div>
-              <div v-if="articleDetail.preArticleId > 0">
-                <el-link @click="$router.push(`/article/${articleDetail.preArticleId}`)">
-                  上一篇：{{ articleDetail.preArticleTitle }}
-                </el-link>
+            <div class="article-nav-item prev-article">
+              <div v-if="articleDetail.preArticleId > 0"
+                   class="nav-content"
+                   :class="{ 'disabled': isArticleTransitioning }"
+                   @click="!isArticleTransitioning && navigateToArticle(articleDetail.preArticleId, 'prev')">
+                <div class="nav-direction">
+                  <svg-icon name="arrow_left" width="16" height="16"/>
+                  <span>上一篇</span>
+                </div>
+                <div class="nav-title">
+                  {{ articleDetail.preArticleTitle }}
+                </div>
+                <div class="nav-overlay">
+                  <svg-icon name="arrow_left" width="24" height="24"/>
+                </div>
               </div>
             </div>
             <!-- 下一篇 -->
-            <div>
-              <div v-if="articleDetail.nextArticleId > 0">
-                <el-link @click="$router.push(`/article/${articleDetail.nextArticleId}`)">
-                  下一篇：{{ articleDetail.nextArticleTitle }}
-                </el-link>
+            <div class="article-nav-item next-article">
+              <div v-if="articleDetail.nextArticleId > 0"
+                   class="nav-content"
+                   :class="{ 'disabled': isArticleTransitioning }"
+                   @click="!isArticleTransitioning && navigateToArticle(articleDetail.nextArticleId, 'next')">
+                <div class="nav-direction">
+                  <span>下一篇</span>
+                  <svg-icon name="arrow_right" width="16" height="16"/>
+                </div>
+                <div class="nav-title">
+                  {{ articleDetail.nextArticleTitle }}
+                </div>
+                <div class="nav-overlay">
+                  <svg-icon name="arrow_right" width="24" height="24"/>
+                </div>
               </div>
             </div>
           </div>
@@ -490,7 +593,8 @@ function togglePointerRepel() {
       </template>
       </Main>
     </div>
-    <div v-else key="reading-mode" class="reading-mode-container bg-white dark:bg-gray-800">
+    <div v-else key="reading-mode" class="reading-mode-container bg-white dark:bg-gray-800"
+         :class="{ 'article-transitioning': isArticleTransitioning, [`transition-${transitionDirection}`]: transitionDirection }">
     <!-- 退出按钮 -->
     <div @click="ReadingModeFunc"
          class="z-10 w-[50px] h-[50px] bg-gray-200 hover:bg-gray-300 fixed top-[2em] right-[1em] lg:right-[5em] rounded flex items-center justify-center duration-300 cursor-pointer">
@@ -613,19 +717,39 @@ function togglePointerRepel() {
       <!-- 上/下 篇文章-->
       <div class="goOn">
         <!-- 上一篇 -->
-        <div>
-          <div v-if="articleDetail.preArticleId > 0">
-            <el-link @click="$router.push(`/article/${articleDetail.preArticleId}`)">
-              上一篇：{{ articleDetail.preArticleTitle }}
-            </el-link>
+        <div class="article-nav-item prev-article">
+          <div v-if="articleDetail.preArticleId > 0"
+               class="nav-content"
+               :class="{ 'disabled': isArticleTransitioning }"
+               @click="!isArticleTransitioning && navigateToArticle(articleDetail.preArticleId, 'prev')">
+            <div class="nav-direction">
+              <svg-icon name="arrow_left" width="16" height="16"/>
+              <span>上一篇</span>
+            </div>
+            <div class="nav-title">
+              {{ articleDetail.preArticleTitle }}
+            </div>
+            <div class="nav-overlay">
+              <svg-icon name="arrow_left" width="24" height="24"/>
+            </div>
           </div>
         </div>
         <!-- 下一篇 -->
-        <div>
-          <div v-if="articleDetail.nextArticleId > 0">
-            <el-link @click="$router.push(`/article/${articleDetail.nextArticleId}`)">
-              下一篇：{{ articleDetail.nextArticleTitle }}
-            </el-link>
+        <div class="article-nav-item next-article">
+          <div v-if="articleDetail.nextArticleId > 0"
+               class="nav-content"
+               :class="{ 'disabled': isArticleTransitioning }"
+               @click="!isArticleTransitioning && navigateToArticle(articleDetail.nextArticleId, 'next')">
+            <div class="nav-direction">
+              <span>下一篇</span>
+              <svg-icon name="arrow_right" width="16" height="16"/>
+            </div>
+            <div class="nav-title">
+              {{ articleDetail.nextArticleTitle }}
+            </div>
+            <div class="nav-overlay">
+              <svg-icon name="arrow_right" width="24" height="24"/>
+            </div>
           </div>
         </div>
       </div>
@@ -1014,17 +1138,404 @@ function togglePointerRepel() {
 .goOn {
   @include flex;
   justify-content: space-between;
-  margin: 1rem 0;
+  margin: 2rem 0;
+  gap: 1rem;
 
-  div {
-    @include flex;
-    align-items: center;
-    color: var(--el-text-color-secondary);
-    cursor: pointer;
+  .article-nav-item {
+    flex: 1;
+    max-width: 48%;
 
-    div {
-      .el-link {
-        font-size: 0.6em;
+    .nav-content {
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 100%);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      // 多层背景效果
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 50%,
+          rgba(255, 255, 255, 0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+      }
+
+      // 光泽扫过效果
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left 0.8s ease;
+        pointer-events: none;
+      }
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.2) 0%,
+          rgba(255, 255, 255, 0.1) 100%);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-8px) scale(1.03);
+        box-shadow:
+          0 25px 50px rgba(0, 0, 0, 0.15),
+          0 0 0 1px rgba(255, 255, 255, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+        &::before {
+          opacity: 1;
+        }
+
+        &::after {
+          left: 100%;
+        }
+
+        .nav-direction svg {
+          transform: scale(1.2);
+          filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+        }
+
+        .nav-title {
+          color: var(--el-color-primary) !important;
+          transform: translateY(-2px);
+        }
+
+        .nav-overlay {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      &.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+
+        &:hover {
+          background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 100%);
+          border-color: rgba(255, 255, 255, 0.2);
+          box-shadow: none;
+
+          .nav-direction svg {
+            transform: none;
+            filter: none;
+          }
+
+          .nav-title {
+            color: var(--el-text-color-primary) !important;
+            transform: none;
+          }
+
+          .nav-overlay {
+            opacity: 0;
+          }
+        }
+      }
+
+      .nav-direction {
+        @include flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.9rem;
+        color: var(--el-text-color-regular);
+        margin-bottom: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        svg {
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          opacity: 0.9;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+      }
+
+      .nav-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        line-height: 1.4;
+        color: var(--el-text-color-primary) !important;
+        display: block;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .nav-overlay {
+        position: absolute;
+        top: 50%;
+        right: 1.5rem;
+        transform: translateY(-50%) scale(0.8);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--el-color-primary);
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+      }
+    }
+
+    // 上一篇文章样式
+    &.prev-article .nav-content {
+      text-align: left;
+      background: linear-gradient(135deg,
+        rgba(52, 152, 219, 0.1) 0%,
+        rgba(155, 89, 182, 0.05) 100%);
+      border-left: 3px solid rgba(52, 152, 219, 0.3);
+
+      .nav-direction svg {
+        order: -1;
+        color: rgba(52, 152, 219, 0.8);
+      }
+
+      .nav-overlay {
+        left: 1.5rem;
+        right: auto;
+      }
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(52, 152, 219, 0.2) 0%,
+          rgba(155, 89, 182, 0.1) 100%);
+        border-left-color: rgba(52, 152, 219, 0.6);
+
+        .nav-direction svg {
+          transform: translateX(-4px) scale(1.2);
+          color: rgba(52, 152, 219, 1);
+        }
+      }
+    }
+
+    // 下一篇文章样式
+    &.next-article .nav-content {
+      text-align: right;
+      background: linear-gradient(135deg,
+        rgba(231, 76, 60, 0.1) 0%,
+        rgba(230, 126, 34, 0.05) 100%);
+      border-right: 3px solid rgba(231, 76, 60, 0.3);
+
+      .nav-direction {
+        justify-content: flex-end;
+
+        svg {
+          order: 1;
+          color: rgba(231, 76, 60, 0.8);
+        }
+      }
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(231, 76, 60, 0.2) 0%,
+          rgba(230, 126, 34, 0.1) 100%);
+        border-right-color: rgba(231, 76, 60, 0.6);
+
+        .nav-direction svg {
+          transform: translateX(4px) scale(1.2);
+          color: rgba(231, 76, 60, 1);
+        }
+      }
+    }
+  }
+
+  // 深色模式适配
+  .dark & {
+    .article-nav-item .nav-content {
+      background: linear-gradient(135deg,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.2) 100%);
+      border-color: rgba(255, 255, 255, 0.1);
+
+      &::before {
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.05) 0%,
+          transparent 50%,
+          rgba(255, 255, 255, 0.02) 100%);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+      }
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(0, 0, 0, 0.5) 0%,
+          rgba(0, 0, 0, 0.3) 100%);
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow:
+          0 25px 50px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(255, 255, 255, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    // 深色模式下的上一篇样式
+    .article-nav-item.prev-article .nav-content {
+      background: linear-gradient(135deg,
+        rgba(52, 152, 219, 0.15) 0%,
+        rgba(0, 0, 0, 0.3) 100%);
+      border-left-color: rgba(52, 152, 219, 0.4);
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(52, 152, 219, 0.25) 0%,
+          rgba(0, 0, 0, 0.4) 100%);
+        border-left-color: rgba(52, 152, 219, 0.7);
+      }
+    }
+
+    // 深色模式下的下一篇样式
+    .article-nav-item.next-article .nav-content {
+      background: linear-gradient(135deg,
+        rgba(231, 76, 60, 0.15) 0%,
+        rgba(0, 0, 0, 0.3) 100%);
+      border-right-color: rgba(231, 76, 60, 0.4);
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(231, 76, 60, 0.25) 0%,
+          rgba(0, 0, 0, 0.4) 100%);
+        border-right-color: rgba(231, 76, 60, 0.7);
+      }
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 2rem 0;
+
+    .article-nav-item {
+      max-width: 100%;
+
+      .nav-content {
+        padding: 1.5rem;
+        border-radius: 16px;
+        min-height: 100px;
+
+        .nav-direction {
+          font-size: 0.85rem;
+          margin-bottom: 0.8rem;
+          gap: 0.5rem;
+        }
+
+        .nav-title {
+          font-size: 1rem;
+          line-height: 1.3;
+          -webkit-line-clamp: 3;
+        }
+
+        .nav-overlay {
+          right: 1rem;
+
+          svg {
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+
+      // 移动端统一左对齐，但保持颜色区分
+      &.next-article .nav-content {
+        text-align: left;
+        border-right: none;
+        border-left: 3px solid rgba(231, 76, 60, 0.3);
+
+        .nav-direction {
+          justify-content: flex-start;
+
+          svg {
+            order: -1;
+            margin-left: 0;
+            margin-right: 0.5rem;
+          }
+        }
+
+        .nav-overlay {
+          left: 1rem;
+          right: auto;
+        }
+
+        &:hover {
+          border-left-color: rgba(231, 76, 60, 0.6);
+
+          .nav-direction svg {
+            transform: translateX(-4px) scale(1.2);
+          }
+        }
+      }
+
+      &.prev-article .nav-content {
+        .nav-overlay {
+          left: 1rem;
+          right: auto;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    margin: 1.5rem 0;
+    gap: 1rem;
+
+    .article-nav-item .nav-content {
+      padding: 1.25rem;
+      border-radius: 14px;
+      min-height: 90px;
+
+      .nav-direction {
+        font-size: 0.8rem;
+        margin-bottom: 0.6rem;
+        gap: 0.4rem;
+
+        svg {
+          width: 14px;
+          height: 14px;
+        }
+      }
+
+      .nav-title {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 2;
+      }
+
+      .nav-overlay {
+        display: none; // 小屏幕隐藏装饰箭头
       }
     }
   }
@@ -1447,6 +1958,276 @@ function togglePointerRepel() {
   50% {
     transform: rotateY(-90deg);
     opacity: 0.7;
+  }
+}
+
+// 文章切换过渡动画样式
+.article-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: article-overlay-fade-in 0.4s ease-out forwards;
+
+  .transition-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg,
+      rgba(74, 108, 247, 0.95) 0%,
+      rgba(107, 70, 193, 0.95) 50%,
+      rgba(255, 105, 180, 0.95) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+
+    &.prev {
+      background: linear-gradient(135deg,
+        rgba(52, 152, 219, 0.95) 0%,
+        rgba(155, 89, 182, 0.95) 100%);
+    }
+
+    &.next {
+      background: linear-gradient(135deg,
+        rgba(231, 76, 60, 0.95) 0%,
+        rgba(230, 126, 34, 0.95) 100%);
+    }
+  }
+
+  .transition-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: white;
+    animation: article-content-slide-up 0.6s ease-out 0.2s both;
+  }
+
+  .article-transition-animation {
+    margin-bottom: 2rem;
+    position: relative;
+
+    .page-stack {
+      position: relative;
+      width: 120px;
+      height: 160px;
+      margin: 0 auto 1.5rem;
+
+      .page-layer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        animation: page-stack-flip 1.5s ease-in-out infinite;
+
+        &:nth-child(1) {
+          z-index: 3;
+          animation-delay: 0s;
+        }
+
+        &:nth-child(2) {
+          z-index: 2;
+          animation-delay: 0.2s;
+          transform: translateY(4px) scale(0.95);
+        }
+
+        &:nth-child(3) {
+          z-index: 1;
+          animation-delay: 0.4s;
+          transform: translateY(8px) scale(0.9);
+        }
+      }
+    }
+
+    .direction-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: direction-pulse 2s ease-in-out infinite;
+
+      svg {
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+      }
+    }
+  }
+
+  .transition-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: text-glow 2s ease-in-out infinite alternate;
+  }
+
+  .progress-bar {
+    width: 300px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 auto;
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(255, 255, 255, 1) 50%,
+        rgba(255, 255, 255, 0.8) 100%);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  // 移动端优化
+  @media (max-width: 768px) {
+    .transition-content {
+      padding: 0 1rem;
+    }
+
+    .article-transition-animation {
+      margin-bottom: 1.5rem;
+
+      .page-stack {
+        width: 100px;
+        height: 140px;
+      }
+
+      .direction-indicator {
+        width: 60px;
+        height: 60px;
+
+        svg {
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+
+    .transition-text {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .progress-bar {
+      width: 250px;
+      height: 3px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .article-transition-animation {
+      .page-stack {
+        width: 80px;
+        height: 120px;
+      }
+
+      .direction-indicator {
+        width: 50px;
+        height: 50px;
+
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+
+    .transition-text {
+      font-size: 0.9rem;
+    }
+
+    .progress-bar {
+      width: 200px;
+    }
+  }
+}
+
+// 文章内容过渡动画
+.normal-mode, .reading-mode-container {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.article-transitioning {
+    opacity: 0.3;
+    transform: scale(0.98);
+    filter: blur(2px);
+
+    &.transition-prev {
+      transform: scale(0.98) translateX(20px);
+    }
+
+    &.transition-next {
+      transform: scale(0.98) translateX(-20px);
+    }
+  }
+}
+
+// 动画关键帧
+@keyframes article-overlay-fade-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+  }
+}
+
+@keyframes article-content-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes page-stack-flip {
+  0%, 100% {
+    transform: rotateY(0deg) translateY(var(--offset, 0px)) scale(var(--scale, 1));
+  }
+  50% {
+    transform: rotateY(-15deg) translateY(var(--offset, 0px)) scale(var(--scale, 1));
+  }
+}
+
+@keyframes direction-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes text-glow {
+  0% {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.3);
   }
 }
 
