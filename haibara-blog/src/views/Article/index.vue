@@ -521,7 +521,7 @@ function togglePointerRepel() {
                   <div>
                     支付宝
                     <el-image
-                        src="https://sherry.haikari.top/haibara-blog/pay%2Fzfb.jpg"/>
+                        src="https://minio.haikari.top/haibara-blog/pay%2Fzfb.jpg"/>
                   </div>
                 </div>
               </template>
@@ -712,7 +712,7 @@ function togglePointerRepel() {
               <div>
                 支付宝
                 <el-image
-                    src="hhttps://sherry.haikari.top/haibara-blog/pay%2Fzfb.jpg"/>
+                    src="hhttps://minio.haikari.top/haibara-blog/pay%2Fzfb.jpg"/>
               </div>
             </div>
           </template>

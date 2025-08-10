@@ -19,7 +19,7 @@ const goToPage = (path: string) => {
         <!-- 图片 -->
         <div class="image-container">
           <img
-            src="https://sherry.haikari.top/haibara-blog/login%2Fareyouserious.png"
+            src="https://minio.haikari.top/haibara-blog/login%2Fareyouserious.png"
             alt="Are you serious?"
             class="main-image"
           />

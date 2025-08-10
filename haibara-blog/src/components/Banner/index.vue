@@ -26,7 +26,7 @@ defineProps({
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  background-image: url("https://sherry.haikari.top/haibara-blog/link%26timeline%2Fsdf.jpg");
+  background-image: url("https://minio.haikari.top/haibara-blog/link%26timeline%2Fsdf.jpg");
   background-size: cover;
   background-position: center;
 

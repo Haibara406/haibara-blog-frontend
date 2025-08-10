@@ -1,1 +1,1 @@
-export const loadingImg = "https://sherry.haikari.top/haibara-blog/loading%2Ficon%20loading%20GIF.gif"
+export const loadingImg = "https://minio.haikari.top/haibara-blog/loading%2Ficon%20loading%20GIF.gif"
