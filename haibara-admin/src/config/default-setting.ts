@@ -3,7 +3,7 @@ import type { LayoutSetting } from '~@/stores/app'
 export default {
   'title': 'haibara-blog',
   'theme': 'light',
-  'logo': 'http://45.204.4.56:9000/haibara-blog/logo%2FblogAvatar.svg',
+  'logo': 'https://blog.admin.haikari.top/haibara-blog/logo%2FblogAvatar.svg',
   'collapsed': false,
   'drawerVisible': true,
   'colorPrimary': '#1890ff',

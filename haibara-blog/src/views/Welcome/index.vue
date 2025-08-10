@@ -19,12 +19,12 @@ const mySwitch = () => {
     // 切换到注册页面
     preBoxRef.value.style.transform = 'translateX(100%)'
     preBoxRef.value.style.backgroundColor = '#c9e0ed'
-    imgRef.value.src = 'http://45.204.4.56:9000/haibara-blog/login%2Faaa.png'
+    imgRef.value.src = 'https://sherry.haikari.top/haibara-blog/login%2Faaa.png'
   } else {
     // 切换到登录页面
     preBoxRef.value.style.transform = 'translateX(0%)'
     preBoxRef.value.style.backgroundColor = '#edd4dc'
-    imgRef.value.src = 'http://45.204.4.56:9000/haibara-blog/login%2FEMO.png'
+    imgRef.value.src = 'https://sherry.haikari.top/haibara-blog/login%2FEMO.png'
   }
   flag.value = !flag.value
 }
@@ -105,7 +105,7 @@ defineExpose({
         <h1>WELCOME</h1>
         <p>JOIN US!</p>
         <div class="img-box">
-          <img ref="imgRef" src="http://45.204.4.56:9000/haibara-blog/login%2FEMO.png" alt="">
+          <img ref="imgRef" src="https://sherry.haikari.top/haibara-blog/login%2FEMO.png" alt="">
         </div>
       </div>
 

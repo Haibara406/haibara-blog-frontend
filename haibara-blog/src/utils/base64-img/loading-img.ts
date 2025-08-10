@@ -1,1 +1,1 @@
-export const loadingImg = "http://45.204.4.56:9000/haibara-blog/loading%2Ficon%20loading%20GIF.gif"
+export const loadingImg = "https://sherry.haikari.top/haibara-blog/loading%2Ficon%20loading%20GIF.gif"

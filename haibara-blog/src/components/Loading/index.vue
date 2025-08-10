@@ -1,7 +1,7 @@
 <template>
   <div class="loading loading-active" v-show="loadingStore.isLoading">
     <div class="load-box">
-      <img class="loading-img" src="http://45.204.4.56:9000/haibara-blog/run%2Frun%2Fns.gif" alt="Loading">
+      <img class="loading-img" src="https://sherry.haikari.top/haibara-blog/run%2Frun%2Fns.gif" alt="Loading">
       <span>鸣佐正带着数据走向你[邪魅]~~</span>
     </div>
   </div>
