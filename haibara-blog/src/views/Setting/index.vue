@@ -313,7 +313,7 @@ function getEmailCode(){
                   <el-form-item label="用户昵称" prop="nickname" class="form-item">
                     <el-input
                       placeholder="请输入用户昵称"
-                      maxlength="10"
+                      maxlength="32"
                       v-model="accountForm.nickname"
                       size="large"
                       show-word-limit

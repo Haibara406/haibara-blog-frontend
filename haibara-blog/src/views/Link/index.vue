@@ -44,7 +44,7 @@ const rules = reactive<FormRules<any>>({
   ],
   description: [
     {required: true, message: '请填写网站描述', trigger: 'blur'},
-    {min: 3, max: 30, message: '长度最小3，最大15', trigger: 'blur'},
+    {min: 3, max: 30, message: '长度最小3，最大30', trigger: 'blur'},
   ],
   background: [
     {required: true, message: '请填写友链背景图链接', trigger: 'blur'},
@@ -52,7 +52,7 @@ const rules = reactive<FormRules<any>>({
   ],
   email: [
     {required: true, message: '请填写电子邮件地址', trigger: 'blur'},
-    {min: 4, max: 20, message: '长度最小4，最大15', trigger: 'blur'},
+    {min: 4, max: 40, message: '长度最小4，最大20', trigger: 'blur'},
   ]
 })
 
@@ -118,14 +118,14 @@ function applyLinkFunc() {
             </el-input>
           </el-form-item>
           <el-form-item prop="background">
-            <el-input v-model="form.background" placeholder="请提供http地址" maxlength="100" show-word-limit>
+            <el-input v-model="form.background" placeholder="请提供http地址" maxlength="200" show-word-limit>
               <template #prepend>
                 背景图片
               </template>
             </el-input>
           </el-form-item>
           <el-form-item prop="email">
-            <el-input v-model="form.email" placeholder="填写邮箱地址" maxlength="20" show-word-limit>
+            <el-input v-model="form.email" placeholder="填写邮箱地址" maxlength="40" show-word-limit>
               <template #prepend>
                 邮箱地址
               </template>

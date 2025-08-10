@@ -74,7 +74,7 @@ function goToReset() {
             v-model="form.username"
             type="text"
             placeholder="用户名/邮箱"
-            maxlength="20"
+            maxlength="100"
             @keyup.enter="userLogin()"
           >
         </el-form-item>
@@ -83,7 +83,7 @@ function goToReset() {
             v-model="form.password"
             type="password"
             placeholder="密码"
-            maxlength="20"
+            maxlength="100"
             @keyup.enter="userLogin()"
           >
         </el-form-item>
