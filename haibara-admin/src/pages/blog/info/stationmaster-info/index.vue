@@ -65,9 +65,9 @@ async function beforeUploadAvatar(file: UploadProps['fileList'][number]) {
   }
 
   const compressedFile = await compressImage(file)
-  const isLt03M = compressedFile.size / 1024 / 1024 < 0.3
-  if (!isLt03M) {
-    message.error('图片压缩后大小必须小于 0.3MB')
+  const isLt5M = compressedFile.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    message.error('图片压缩后大小必须小于 5MB')
     return
   }
 
@@ -98,9 +98,9 @@ async function beforeUploadAckgroundImag(file: UploadProps['fileList'][number]) 
   }
 
   const compressedFile = await compressImage(file)
-  const isLt03M = compressedFile.size / 1024 / 1024 < 0.3
-  if (!isLt03M){
-    message.error('图片压缩后大小必须小于 0.3MB')
+  const isLt5M = compressedFile.size / 1024 / 1024 < 5
+  if (!isLt5M){
+    message.error('图片压缩后大小必须小于 5MB')
     return
   }
 
