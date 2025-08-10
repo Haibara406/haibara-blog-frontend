@@ -10,7 +10,7 @@ public class UserConst {
     /**
      * 用户默认头像
      */
-    public static final String DEFAULT_AVATAR = "http://45.204.4.56:9000/haibara-blog/lol%2FAli2.jpg";
+    public static final String DEFAULT_AVATAR = "https://minio.haikari.top/haibara-blog/lol%2FAli2.jpg";
 
     /**
      * 用户默认性别
