@@ -13,6 +13,8 @@ import com.blog.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContext;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -87,13 +89,8 @@ public class LogAspect {
             User user = userMapper.selectById(SecurityUtils.getUserId());
 
             Object[] args = joinPoint.getArgs();
-            List<Object> multipartFile = new ArrayList<>();
-            for (Object arg : args) {
-                if (arg instanceof MultipartFile) {
-                    // 这个arg是MultipartFile类型
-                    multipartFile.add(arg);
-                }
-            }
+            List<Object> filteredArgs = filterServletObjects(args);
+
             Log logEntity = Log.builder()
                     .module(logAnnotation.module())
                     .operation(logAnnotation.operation())
@@ -104,7 +101,7 @@ public class LogAspect {
                     .state(2)
                     .exception(e.getMessage())
                     .method(className + "." + methodName + "()")
-                    .reqParameter(!multipartFile.isEmpty() ? multipartFile.toString() : JSON.toJSONString(joinPoint.getArgs()))
+                    .reqParameter(safeToJSONString(filteredArgs))
                     .reqAddress(request.getRequestURI())
                     .time(time)
                     .build();
@@ -114,6 +111,47 @@ public class LogAspect {
             throw e;
         }
 
+    }
+
+    /**
+     * 过滤参数中的 Servlet 对象，避免序列化时出现问题
+     *
+     * @param args 原始参数数组
+     * @return 过滤后的参数列表
+     */
+    private List<Object> filterServletObjects(Object[] args) {
+        List<Object> filteredArgs = new ArrayList<>();
+        for (Object arg : args) {
+            if (arg instanceof HttpServletRequest ||
+                arg instanceof HttpServletResponse ||
+                arg instanceof ServletContext) {
+                // 对于 Servlet 对象，只记录类型名
+                filteredArgs.add(arg.getClass().getSimpleName());
+            } else if (arg instanceof MultipartFile) {
+                // 对于文件上传对象，记录文件信息而不是对象本身
+                MultipartFile file = (MultipartFile) arg;
+                filteredArgs.add("MultipartFile{name=" + file.getOriginalFilename() +
+                               ", size=" + file.getSize() + "}");
+            } else {
+                filteredArgs.add(arg);
+            }
+        }
+        return filteredArgs;
+    }
+
+    /**
+     * 安全地序列化对象为 JSON 字符串
+     *
+     * @param obj 要序列化的对象
+     * @return JSON 字符串，如果序列化失败则返回错误信息
+     */
+    private String safeToJSONString(Object obj) {
+        try {
+            return JSON.toJSONString(obj);
+        } catch (Exception e) {
+            log.warn("JSON序列化失败: {}", e.getMessage());
+            return "序列化失败: " + e.getMessage();
+        }
     }
 
     private void recordLog(ProceedingJoinPoint joinPoint, long time,Object result) {
@@ -133,13 +171,7 @@ public class LogAspect {
         User user = userMapper.selectById(SecurityUtils.getUserId());
 
         Object[] args = joinPoint.getArgs();
-        List<Object> multipartFile = new ArrayList<>();
-        for (Object arg : args) {
-            if (arg instanceof MultipartFile) {
-                // 这个arg是MultipartFile类型
-                multipartFile.add(arg);
-            }
-        }
+        List<Object> filteredArgs = filterServletObjects(args);
 
         Log log = Log.builder()
                 .module(logAnnotation.module())
@@ -149,8 +181,8 @@ public class LogAspect {
                 .reqMapping(request.getMethod())
                 .userName(StringUtils.isNull(user) ? FunctionConst.UNKNOWN_USER : user.getUsername())
                 .method(className + "." + methodName + "()")
-                .reqParameter(!multipartFile.isEmpty() ? multipartFile.toString() : JSON.toJSONString(joinPoint.getArgs()))
-                .returnParameter(JSON.toJSONString(result))
+                .reqParameter(safeToJSONString(filteredArgs))
+                .returnParameter(safeToJSONString(result))
                 .reqAddress(request.getRequestURI())
                 .time(time)
                 .build();

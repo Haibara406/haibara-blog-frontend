@@ -71,14 +71,17 @@ spring:
       log-system: log_routing_key_system
   mail:
     host: smtp.qq.com
+    port: 587
     username:  haibaraiii@foxmail.com
-    password:  miyfztrqalctbhgf
+    password:  nznzfftfblfncabg
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+          ssl:
+            trust: smtp.qq.com
   servlet:
     multipart:
       max-file-size: 10MB
@@ -176,7 +179,7 @@ http_pool:
   validate_after_inactivity: 2000
 # 链接 minio
 minio:
-  endpoint: http://45.204.4.56:9000
+  endpoint: https://minio.haikari.top
   accessKey: minioadmin
   secretKey: minioadmin123
   bucketName: haibara-blog
