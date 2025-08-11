@@ -51,7 +51,7 @@
             </div>
             <div class="feature-info">
               <h3 class="feature-title">鼠标跟随特效</h3>
-              <p class="feature-desc">炫酷的鼠标跟随动画，尾部对着尾部</p>
+              <p class="feature-desc">炫酷的鼠标跟随动画，开启后需刷新页面才会生效</p>
             </div>
             <div class="feature-toggle">
               <el-switch

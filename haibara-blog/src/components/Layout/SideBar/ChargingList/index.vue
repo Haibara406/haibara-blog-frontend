@@ -2,75 +2,90 @@
 
 import Card from "@/components/Card/index.vue";
 
-const chargingList = ref([
+const achievementList = ref([
   {
-    name: "One",
-    money: "200",
-    message: "全网最美博客haibara-blog，期待新功能"
+    name: "起点",
+    money: "2024-03-20",
+    message: "在CSDN发布了第一篇博客，并收获了2000+阅读量，9点赞和12收藏"
   },
   {
-    name: "李貌",
-    money: "100",
-    message: "随心"
+    name: "再续",
+    money: "2024-04-12",
+    message: "发布第一篇随心记--关于丢脸"
   },
   {
-    name: "白菜豆腐汤",
-    money: "50",
-    message: "在线膜拜大佬"
+    name: "缘起",
+    money: "2024-04-24",
+    message: "在Gitee上解锁第一次代码提交"
   },
   {
     name: "曦月",
-    money: "30",
-    message: "仰天大笑出门去，我辈岂是蓬蒿人"
+    money: "2024-07-12",
+    message: "在Github上解锁第一次代码提交"
   },
   {
-    name: "sn",
-    money: "6",
-    message: "膜拜大佬，学习了"
+    name: "萌芽",
+    money: "2024-11-09",
+    message: "除此有了想做一个属于自己的网站的想法，但由于彼时实力一般，搁浅了.."
   },
   {
-    name: "venus",
-    money: "50",
-    message: "感谢您的开源项目，致敬用爱发电!"
+    name: "初鸣",
+    money: "2025-04-12",
+    message: "正式开始为个人网站收集资料与素材"
   },
   {
-    name: "SmallL-U",
-    money: "10",
-    message: "加油"
+    name: "筑基",
+    money: "2025-07-15",
+    message: "个人网站的第一段代码正式打响"
   },
   {
-    name: "御坂10086号",
-    money: "10",
-    message: "感谢开源，未来希望能看到更多的作品"
+    name: "破晓",
+    money: "2025-08-11",
+    message: "后端正式部署在服务器上"
+  },
+  {
+    name: "充盈",
+    money: "2025-08-17",
+    message: "管理端页面正式部署在服务器上"
+  },
+  {
+    name: "启航",
+    money: "2025-09-01",
+    message: "前台页面正式部署在服务器上"
+  },
+  {
+    name: "远航",
+    money: "直至今日",
+    message: "迈向更广阔的未来，梦想在路上持续闪耀"
   }
 ])
 </script>
 
 <template>
   <div>
-    <!-- TODO 充电榜-->
-    <Card title="项目充电榜" prefix-icon="edit" :isScale="true">
+    <!-- TODO 重构榜单-->
+    <Card title="个人里程碑" prefix-icon="edit" :isScale="true">
       <div class="text-[12px] text-left">
-        你们的每一次充电，不仅仅是电量的累积，更是对我们项目的信任和对未来的期待。每一份捐赠，无论大小，都承载着你们对我们的鼓励和对改变世界的信念。是你们，让项目持续更新得到了进一步保障，非常感谢大家！！！
+        在这段旅程中，我用心记录下个人与网站成长的每一个珍贵瞬间。这里不仅是冷冰冰的数据堆砌，更是一段段饱含欢笑、泪水与坚持的故事。每一次进步，都是岁月留下的温暖印记；每一次回望，都是对初心的深情呼唤。感谢一路陪伴、鼓励和支持我的每一位朋友，因为有你们，这段旅途变得更加丰富而美好。让我们一同见证，这个小小角落如何在时光中逐渐生长，绽放属于它的光芒。
         <br>（以下榜单时间排序）
       </div>
       <div class="flex items-center justify-between bg-[--mao-charging-bg-color] rounded">
         <div class="item-div">
-          <div>姓名</div>
+          <div>成就</div>
           <hr>
-          <div v-for="charging in chargingList" :key="charging.name">
+          <div v-for="charging in achievementList" :key="charging.name">
             {{ charging.name }}
           </div>
         </div>
         <div class="item-div">
-          <div>金额</div>
+          <div>日期</div>
           <hr>
-          <div v-for="charging in chargingList" :key="charging.name">{{ '*'.repeat(charging.money.length) }}</div>
+          <div v-for="charging in achievementList" :key="charging.name">{{ '*'.repeat(charging.money.length) }}</div>
         </div>
         <div class="item-div">
-          <div>留言</div>
+          <div>备注</div>
           <hr>
-          <div v-for="charging in chargingList" :key="charging.name">
+          <div v-for="charging in achievementList" :key="charging.name">
             <template v-if="charging.message.length <= 4">
               {{ charging.message }}
             </template>
@@ -92,7 +107,7 @@ const chargingList = ref([
         </div>
       </div>
       <div class="text-left text-[12px] mt-2 font-bold">
-        <span class="text-[#999]">为项目充电：联系站长</span>
+        <span class="text-[#999]">新的成就，等你见证</span>
       </div>
     </Card>
   </div>
