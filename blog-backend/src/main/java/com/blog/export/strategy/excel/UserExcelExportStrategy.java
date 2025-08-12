@@ -202,12 +202,12 @@ public class UserExcelExportStrategy implements ExportStrategy<UserListVO> {
         if (registerType == null) {
             return "未知";
         }
-        switch (registerType) {
-            case 0: return "邮箱注册";
-            case 1: return "Gitee";
-            case 2: return "Github";
-            default: return "未知";
-        }
+        return switch (registerType) {
+            case 0 -> "邮箱注册";
+            case 1 -> "Gitee";
+            case 2 -> "Github";
+            default -> "未知";
+        };
     }
     
     /**

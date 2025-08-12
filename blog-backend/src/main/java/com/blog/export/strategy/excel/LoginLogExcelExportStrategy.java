@@ -127,13 +127,15 @@ public class LoginLogExcelExportStrategy implements ExportStrategy<LoginLogVO> {
     }
     
     private String getLoginTypeText(Integer type) {
-        if (type == null) return "未知";
-        switch (type) {
-            case 0: return "前台登录";
-            case 1: return "后台登录";
-            case 2: return "非法登录";
-            default: return "未知";
+        if (type == null) {
+            return "未知";
         }
+        return switch (type) {
+            case 0 -> "前台登录";
+            case 1 -> "后台登录";
+            case 2 -> "非法登录";
+            default -> "未知";
+        };
     }
     
     private void createCell(Row row, int columnIndex, Object value, CellStyle style) {

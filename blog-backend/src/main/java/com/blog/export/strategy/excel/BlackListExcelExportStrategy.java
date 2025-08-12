@@ -124,12 +124,14 @@ public class BlackListExcelExportStrategy implements ExportStrategy<BlackListVO>
     }
     
     private String getTypeText(Integer type) {
-        if (type == null) return "未知";
-        switch (type) {
-            case 0: return "手动封禁";
-            case 1: return "自动封禁";
-            default: return "未知";
+        if (type == null) {
+            return "未知";
         }
+        return switch (type) {
+            case 0 -> "手动封禁";
+            case 1 -> "自动封禁";
+            default -> "未知";
+        };
     }
     
     private void createCell(Row row, int columnIndex, Object value, CellStyle style) {
