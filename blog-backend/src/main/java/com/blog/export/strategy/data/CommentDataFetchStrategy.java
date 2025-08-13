@@ -26,7 +26,11 @@ public class CommentDataFetchStrategy implements DataFetchStrategy<CommentListVO
     @Override
     public List<CommentListVO> fetchData() {
         // 调用CommentService的getBackCommentList方法获取后台评论列表
-        return commentService.getBackCommentList(null);
+        // 限制导出数量为最新的1000条记录，避免数据量过大
+        List<CommentListVO> allComments = commentService.getBackCommentList(null);
+        
+        // 由于数据已经按照创建时间倒序排列，直接取前1000条
+        return allComments.size() > 1000 ? allComments.subList(0, 1000) : allComments;
     }
     
     @Override

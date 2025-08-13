@@ -26,7 +26,11 @@ public class LoginLogDataFetchStrategy implements DataFetchStrategy<LoginLogVO> 
     @Override
     public List<LoginLogVO> fetchData() {
         // 调用LoginLogService的searchLoginLog方法获取登录日志列表
-        return loginLogService.searchLoginLog(null);
+        // 限制导出数量为最新的1000条记录，避免数据量过大
+        List<LoginLogVO> allLogs = loginLogService.searchLoginLog(null);
+        
+        // 由于数据已经按照创建时间倒序排列，直接取前1000条
+        return allLogs.size() > 1000 ? allLogs.subList(0, 1000) : allLogs;
     }
     
     @Override
