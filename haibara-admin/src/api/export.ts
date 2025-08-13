@@ -32,7 +32,9 @@ export class ExportService {
    */
   static exportToNewWindow(businessType: string, exportType: string, fileName?: string): void {
     const baseUrl = import.meta.env.VITE_APP_BASE_API ?? '/'
-    const url = `${baseUrl}export/${businessType}/${exportType}`
+    // 确保URL路径正确拼接，避免 /apiexport/ 的问题
+    const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'
+    const url = `${normalizedBaseUrl}export/${businessType}/${exportType}`
     const params = fileName ? `?fileName=${encodeURIComponent(fileName)}` : ''
     
     // 在新窗口打开
@@ -45,7 +47,9 @@ export class ExportService {
   static async downloadExportFile(businessType: string, exportType: string, fileName?: string): Promise<void> {
     try {
       const baseUrl = import.meta.env.VITE_APP_BASE_API ?? '/'
-      const url = `${baseUrl}export/${businessType}/${exportType}`
+      // 确保URL路径正确拼接，避免 /apiexport/ 的问题
+      const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'
+      const url = `${normalizedBaseUrl}export/${businessType}/${exportType}`
       const params = new URLSearchParams()
       if (fileName) {
         params.append('fileName', fileName)
@@ -110,16 +114,17 @@ export class ExportService {
         throw new Error('您没有导出该数据的权限')
       }
       
-      // 2. 检查支持的导出格式 - 后端返回 ResponseResult<List<ExportType>> 格式
+      // 2. 检查支持的导出格式 - 后端返回 ResponseResult<string[]> 格式
+      // 后端返回: {"code":200,"msg":"success","data":["HTML","EXCEL"]}
       const typesResult = await this.getExportTypes(businessType)
-      const supportedTypes = typesResult.data.map((type: any) => type.code)
+      const supportedTypes = typesResult.data.map((type: string) => type.toLowerCase()) // 转为小写进行比较
       
-      if (!supportedTypes.includes(exportType)) {
+      if (!supportedTypes.includes(exportType.toLowerCase())) {
         throw new Error(`该业务模块不支持${exportType}格式导出`)
       }
       
       // 3. 执行导出
-      if (exportType === 'html') {
+      if (exportType.toLowerCase() === 'html') {
         this.exportToNewWindow(businessType, exportType, fileName)
       } else {
         await this.downloadExportFile(businessType, exportType, fileName)
@@ -127,6 +132,22 @@ export class ExportService {
       
     } catch (error) {
       console.error('导出过程失败:', error)
+      throw error
+    }
+  }
+  
+  /**
+   * 简化的导出功能（跳过权限检查，适用于已知有权限的场景）
+   */
+  static async exportDirect(businessType: string, exportType: string, fileName?: string): Promise<void> {
+    try {
+      if (exportType.toLowerCase() === 'html') {
+        this.exportToNewWindow(businessType, exportType, fileName)
+      } else {
+        await this.downloadExportFile(businessType, exportType, fileName)
+      }
+    } catch (error) {
+      console.error('直接导出失败:', error)
       throw error
     }
   }
