@@ -2,13 +2,17 @@
 import type {Ref, UnwrapRef} from 'vue'
 import {createVNode} from 'vue'
 import {message, Modal} from 'ant-design-vue'
-import {ExclamationCircleOutlined} from '@ant-design/icons-vue'
+import {ExclamationCircleOutlined, FileExcelOutlined, FileTextOutlined, DownOutlined} from '@ant-design/icons-vue'
 import {deleteCategoryByIds,} from '~/api/blog/category'
 import {addCategory} from '~/api/blog/article'
 import {addBlackList, blackList, deleteBlackList, updateBlackList} from "~/api/blog/black-list";
 import dayjs, {Dayjs} from "dayjs";
 import {debounce} from 'lodash-es';
 import {userSearch} from "~/api/user";
+import { useExport } from '@/composables/useExport'
+
+// 导出功能
+const { exportLoading, handleExportMenuClick } = useExport('blackList')
 
 interface FormState {
   userName: string,
@@ -324,12 +328,27 @@ watch(userState.value, () => {
         </template>
         删除
       </a-button>
-      <a-button class="orange" @click="message.warn('别点了，有空再写')">
-        <template #icon>
-          <VerticalAlignBottomOutlined/>
+      <a-dropdown>
+        <template #overlay>
+          <a-menu @click="handleExportMenuClick">
+            <a-menu-item key="excel">
+              <FileExcelOutlined />
+              Excel
+            </a-menu-item>
+            <a-menu-item key="html">
+              <FileTextOutlined />
+              HTML
+            </a-menu-item>
+          </a-menu>
         </template>
-        导出
-      </a-button>
+        <a-button class="orange" :loading="exportLoading">
+          <template #icon>
+            <VerticalAlignBottomOutlined />
+          </template>
+          导出
+          <DownOutlined />
+        </a-button>
+      </a-dropdown>
     </template>
     <template #table-content>
       <a-modal v-model:open="modalInfo.open" :title="modalInfo.title" :confirm-loading="modalInfo.loading" width="400px"

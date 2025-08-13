@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Modal, message } from 'ant-design-vue'
 import { createVNode } from 'vue'
-import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+import { ExclamationCircleOutlined, FileExcelOutlined, FileTextOutlined, DownOutlined } from '@ant-design/icons-vue'
 import { deleteLogByIds, logList, searchLog } from '~/api/log/operate'
+import { useExport } from '@/composables/useExport'
+
+// 导出功能
+const { exportLoading, handleExportMenuClick } = useExport('operateLog')
 
 const formState = reactive({
   ip: undefined,
@@ -297,12 +301,27 @@ const state = reactive<{
         </template>
         清空
       </a-button>
-      <a-button class="orange" @click="message.warn('别点了，有空再写')">
-        <template #icon>
-          <VerticalAlignBottomOutlined />
+      <a-dropdown>
+        <template #overlay>
+          <a-menu @click="handleExportMenuClick">
+            <a-menu-item key="excel">
+              <FileExcelOutlined />
+              Excel
+            </a-menu-item>
+            <a-menu-item key="html">
+              <FileTextOutlined />
+              HTML
+            </a-menu-item>
+          </a-menu>
         </template>
-        导出
-      </a-button>
+        <a-button class="orange" :loading="exportLoading">
+          <template #icon>
+            <VerticalAlignBottomOutlined />
+          </template>
+          导出
+          <DownOutlined />
+        </a-button>
+      </a-dropdown>
     </template>
     <template #table-content>
       <a-table

@@ -3,9 +3,14 @@ import type { Ref, UnwrapRef } from 'vue'
 import { h } from 'vue'
 import type { TableColumnsType } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
+import { FileExcelOutlined, FileTextOutlined, DownOutlined } from '@ant-design/icons-vue'
 import type { MenuData } from '~/layouts/basic-layout/typing.ts'
 import type { MenuDataItem } from '~/pages/system/menu/type.ts'
 import { commentList, deleteComment, isCheckComment, searchComment } from '~/api/blog/comment'
+import { useExport } from '@/composables/useExport'
+
+// 导出功能
+const { exportLoading, handleExportMenuClick } = useExport('comment')
 
 defineExpose({ h })
 
@@ -241,12 +246,27 @@ const domain = import.meta.env.VITE_APP_DOMAIN_NAME_FRONT
 
     <template #operate-btn>
       <div>
-        <a-button class="orange" @click="message.warn('别点了，有空再写')">
-          <template #icon>
-            <VerticalAlignBottomOutlined />
+        <a-dropdown>
+          <template #overlay>
+            <a-menu @click="handleExportMenuClick">
+              <a-menu-item key="excel">
+                <FileExcelOutlined />
+                Excel
+              </a-menu-item>
+              <a-menu-item key="html">
+                <FileTextOutlined />
+                HTML
+              </a-menu-item>
+            </a-menu>
           </template>
-          导出
-        </a-button>
+          <a-button class="orange" :loading="exportLoading">
+            <template #icon>
+              <VerticalAlignBottomOutlined />
+            </template>
+            导出
+            <DownOutlined />
+          </a-button>
+        </a-dropdown>
         <a-button type="dashed" style="margin-bottom: 10px;color: grey" @click="onExpandAll">
           <template #icon>
             <ArrowsAltOutlined />

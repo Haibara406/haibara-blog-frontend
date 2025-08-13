@@ -2,11 +2,15 @@
 import type { Ref, UnwrapRef } from 'vue'
 import { Modal, message } from 'ant-design-vue'
 import { createVNode } from 'vue'
-import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+import { ExclamationCircleOutlined, FileExcelOutlined, FileTextOutlined, DownOutlined } from '@ant-design/icons-vue'
 import MyModal from './my-modal.vue'
 import { roleDelete, roleInfoById, roleList, roleSearch, roleUpdateStatus } from '~/api/role'
 import { getMenusApi } from '~/api/common/menu.ts'
 import { buildTree } from '~/utils/tree.ts'
+import { useExport } from '@/composables/useExport'
+
+// 导出功能
+const { exportLoading, handleExportMenuClick } = useExport('role')
 
 const formState = reactive({
   roleName: undefined,
@@ -267,12 +271,27 @@ async function updateOrInsertRole(id?: string) {
         </template>
         删除
       </a-button>
-      <a-button class="orange" @click="message.warn('别点了，有空再写')">
-        <template #icon>
-          <VerticalAlignBottomOutlined />
+      <a-dropdown>
+        <template #overlay>
+          <a-menu @click="handleExportMenuClick">
+            <a-menu-item key="excel">
+              <FileExcelOutlined />
+              Excel
+            </a-menu-item>
+            <a-menu-item key="html">
+              <FileTextOutlined />
+              HTML
+            </a-menu-item>
+          </a-menu>
         </template>
-        导出
-      </a-button>
+        <a-button class="orange" :loading="exportLoading">
+          <template #icon>
+            <VerticalAlignBottomOutlined />
+          </template>
+          导出
+          <DownOutlined />
+        </a-button>
+      </a-dropdown>
     </template>
     <template #table-content>
       <a-table
