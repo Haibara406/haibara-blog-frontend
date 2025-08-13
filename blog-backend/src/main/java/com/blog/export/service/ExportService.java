@@ -1,5 +1,6 @@
 package com.blog.export.service;
 
+import com.blog.constants.ErrorConst;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
 import com.blog.export.enums.ExportType;
@@ -63,7 +64,7 @@ public class ExportService {
             List<?> data = dataStrategy.fetchData();
             if (data == null) {
                 log.warn("获取到的数据为null: {}", businessType.getName());
-                return ExportResult.failure("获取数据失败");
+                return ExportResult.failure(ErrorConst.FETCH_DATA_FAILED);
             }
             
             log.info("成功获取数据，条数: {}", data.size());
@@ -91,10 +92,10 @@ public class ExportService {
             
         } catch (IllegalArgumentException e) {
             log.error("导出参数错误: {}", e.getMessage());
-            return ExportResult.failure("导出参数错误: " + e.getMessage());
+            return ExportResult.failure(ErrorConst.EXPORT_VALIDATION_ERROR + e.getMessage());
         } catch (Exception e) {
-            log.error("导出过程中发生异常", e);
-            return ExportResult.failure("导出失败: " + e.getMessage());
+            log.error(ErrorConst.EXPORT_UNKNOWN_ERROR, e);
+            return ExportResult.failure(ErrorConst.EXPORT_FAILED + e.getMessage());
         }
     }
     

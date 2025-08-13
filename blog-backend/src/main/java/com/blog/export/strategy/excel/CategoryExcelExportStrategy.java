@@ -1,5 +1,6 @@
 package com.blog.export.strategy.excel;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.CategoryVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -73,8 +74,8 @@ public class CategoryExcelExportStrategy implements ExportStrategy<CategoryVO> {
             );
             
         } catch (IOException e) {
-            log.error("分类Excel导出失败", e);
-            return ExportResult.failure("Excel导出失败: " + e.getMessage());
+            log.error(ErrorConst.CATEGORY_EXCEL_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.EXCEL_EXPORT_FAILED + e.getMessage());
         }
     }
     

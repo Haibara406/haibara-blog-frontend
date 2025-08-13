@@ -1,5 +1,6 @@
 package com.blog.export.strategy.html;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.CommentListVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -65,8 +66,8 @@ public class CommentHtmlExportStrategy implements ExportStrategy<CommentListVO> 
             );
             
         } catch (Exception e) {
-            log.error("评论HTML导出失败", e);
-            return ExportResult.failure("HTML导出失败: " + e.getMessage());
+            log.error(ErrorConst.COMMENT_HTML_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.HTML_EXPORT_FAILED + e.getMessage());
         }
     }
     

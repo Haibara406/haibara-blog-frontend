@@ -1,5 +1,6 @@
 package com.blog.export.strategy.excel;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.UserListVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -73,8 +74,8 @@ public class UserExcelExportStrategy implements ExportStrategy<UserListVO> {
             );
             
         } catch (IOException e) {
-            log.error("用户Excel导出失败", e);
-            return ExportResult.failure("Excel导出失败: " + e.getMessage());
+            log.error(ErrorConst.USER_EXCEL_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.EXCEL_EXPORT_FAILED + e.getMessage());
         }
     }
     

@@ -1,5 +1,6 @@
 package com.blog.export.strategy.html;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.LoginLogVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -65,8 +66,8 @@ public class LoginLogHtmlExportStrategy implements ExportStrategy<LoginLogVO> {
             );
             
         } catch (Exception e) {
-            log.error("登录日志HTML导出失败", e);
-            return ExportResult.failure("HTML导出失败: " + e.getMessage());
+            log.error(ErrorConst.LOGIN_LOG_HTML_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.HTML_EXPORT_FAILED + e.getMessage());
         }
     }
     

@@ -1,5 +1,6 @@
 package com.blog.export.strategy.html;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.BlackListVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -65,8 +66,8 @@ public class BlackListHtmlExportStrategy implements ExportStrategy<BlackListVO> 
             );
             
         } catch (Exception e) {
-            log.error("黑名单HTML导出失败", e);
-            return ExportResult.failure("HTML导出失败: " + e.getMessage());
+            log.error(ErrorConst.BLACK_LIST_HTML_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.HTML_EXPORT_FAILED + e.getMessage());
         }
     }
     

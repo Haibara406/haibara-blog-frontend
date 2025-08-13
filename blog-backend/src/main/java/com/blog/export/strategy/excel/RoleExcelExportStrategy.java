@@ -1,5 +1,6 @@
 package com.blog.export.strategy.excel;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.RoleAllVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -73,8 +74,8 @@ public class RoleExcelExportStrategy implements ExportStrategy<RoleAllVO> {
             );
             
         } catch (IOException e) {
-            log.error("角色Excel导出失败", e);
-            return ExportResult.failure("Excel导出失败: " + e.getMessage());
+            log.error(ErrorConst.ROLE_EXCEL_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.EXCEL_EXPORT_FAILED + e.getMessage());
         }
     }
     

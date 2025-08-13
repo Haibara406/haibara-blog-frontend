@@ -1,5 +1,6 @@
 package com.blog.export.strategy.excel;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.LoginLogVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -57,8 +58,8 @@ public class LoginLogExcelExportStrategy implements ExportStrategy<LoginLogVO> {
             return ExportResult.success(contentBytes, finalFileName, getExportType().getContentType(), data.size());
             
         } catch (IOException e) {
-            log.error("登录日志Excel导出失败", e);
-            return ExportResult.failure("Excel导出失败: " + e.getMessage());
+            log.error(ErrorConst.LOGIN_LOG_EXCEL_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.EXCEL_EXPORT_FAILED + e.getMessage());
         }
     }
     

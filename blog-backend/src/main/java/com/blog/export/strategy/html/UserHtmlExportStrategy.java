@@ -1,5 +1,6 @@
 package com.blog.export.strategy.html;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.UserListVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -65,8 +66,8 @@ public class UserHtmlExportStrategy implements ExportStrategy<UserListVO> {
             );
             
         } catch (Exception e) {
-            log.error("用户HTML导出失败", e);
-            return ExportResult.failure("HTML导出失败: " + e.getMessage());
+            log.error(ErrorConst.USER_HTML_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.HTML_EXPORT_FAILED + e.getMessage());
         }
     }
     

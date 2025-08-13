@@ -41,4 +41,67 @@ public class ErrorConst {
 
     public static final String ALBUM_HAS_CHILDREN = "删除失败，该相册下存在子相册或照片";
 
+    public static final String EXPORT_FILE_IO_ERROR = "导出文件写入响应失败";
+
+    public static final String EXPORT_VALIDATION_ERROR = "导出参数错误: ";
+
+    public static final String FILE_DOWNLOAD_FAILED = "文件下载失败";
+
+    public static final String EXPORT_UNKNOWN_ERROR = "导出过程中发生未知异常";
+
+    public static final String EXPORT_FAILED_SYSTEM_ERROR = "导出失败：系统异常";
+
+    public static final String GET_SUPPORTED_BUSINESS_TYPE_FAILED = "获取支持的业务类型失败";
+
+    public static final String GET_BUSINESS_TYPE_LIST_FAILED = "获取业务类型列表失败";
+
+    public static final String UNKNOWN_BUSINESS_TYPE = "无效的业务类型";
+
+    public static final String GET_SUPPORTED_EXPORT_TYPE_FAILED = "获取支持的导出类型失败";
+
+    public static final String GET_EXPORT_TYPE_LIST_FAILED = "获取导出类型列表失败";
+
+    public static final String CHECK_EXPORT_PERMISSION_FAILED = "检查导出权限失败";
+
+    public static final String ERROR_RESPONSE_INPUT_FAILED = "写入错误响应失败";
+
+    public static final String EXPORT_FAILED = "导出失败: ";
+
+    public static final String FETCH_DATA_FAILED = "获取数据失败";
+
+    public static final String EXCEL_EXPORT_FAILED = "Excel导出失败: ";
+
+    public static final String BLACK_LIST_EXCEL_EXPORT_FAILED = "黑名单Excel导出失败";
+
+    public static final String CATEGORY_EXCEL_EXPORT_FAILED = "分类Excel导出失败";
+
+    public static final String USER_EXCEL_EXPORT_FAILED = "用户Excel导出失败";
+
+    public static final String ROLE_EXCEL_EXPORT_FAILED = "角色Excel导出失败";
+
+    public static final String LOGIN_LOG_EXCEL_EXPORT_FAILED = "登录日志Excel导出失败";
+
+    public static final String OPERATE_LOG_EXCEL_EXPORT_FAILED = "操作日志Excel导出失败";
+
+    public static final String TAG_EXCEL_EXPORT_FAILED = "标签Excel导出失败";
+
+    public static final String COMMENT_EXCEL_EXPORT_FAILED = "评论Excel导出失败";
+
+    public static final String HTML_EXPORT_FAILED = "html导出失败: ";
+
+    public static final String BLACK_LIST_HTML_EXPORT_FAILED = "黑名单html导出失败";
+
+    public static final String CATEGORY_HTML_EXPORT_FAILED = "分类html导出失败";
+
+    public static final String USER_HTML_EXPORT_FAILED = "用户html导出失败";
+
+    public static final String ROLE_HTML_EXPORT_FAILED = "角色html导出失败";
+
+    public static final String LOGIN_LOG_HTML_EXPORT_FAILED = "登录日志html导出失败";
+
+    public static final String OPERATE_LOG_HTML_EXPORT_FAILED = "操作日志html导出失败";
+
+    public static final String TAG_HTML_EXPORT_FAILED = "标签html导出失败";
+
+    public static final String COMMENT_HTML_EXPORT_FAILED = "评论html导出失败";
 }

@@ -3,6 +3,7 @@ package com.blog.export.controller;
 import com.blog.annotation.AccessLimit;
 import com.blog.annotation.LogAnnotation;
 import com.blog.constants.AccessLimitConst;
+import com.blog.constants.ErrorConst;
 import com.blog.constants.LogConst;
 import com.blog.domain.response.ResponseResult;
 import com.blog.export.dto.ExportResult;
@@ -115,13 +116,13 @@ public class ExportController {
             
         } catch (IllegalArgumentException e) {
             log.error("导出参数错误: {}", e.getMessage());
-            handleExportError(response, "导出参数错误: " + e.getMessage());
+            handleExportError(response, ErrorConst.EXPORT_VALIDATION_ERROR + e.getMessage());
         } catch (IOException e) {
-            log.error("导出文件写入响应失败", e);
-            handleExportError(response, "文件下载失败");
+            log.error(ErrorConst.EXPORT_FILE_IO_ERROR, e);
+            handleExportError(response, ErrorConst.FILE_DOWNLOAD_FAILED);
         } catch (Exception e) {
-            log.error("导出过程中发生未知异常", e);
-            handleExportError(response, "导出失败：系统异常");
+            log.error(ErrorConst.EXPORT_UNKNOWN_ERROR, e);
+            handleExportError(response, ErrorConst.EXPORT_FAILED_SYSTEM_ERROR);
         }
     }
     
@@ -147,8 +148,8 @@ public class ExportController {
             List<BusinessType> businessTypes = exportService.getSupportedBusinessTypes();
             return ResponseResult.success(businessTypes);
         } catch (Exception e) {
-            log.error("获取支持的业务类型失败", e);
-            return ResponseResult.failure("获取业务类型列表失败");
+            log.error(ErrorConst.GET_SUPPORTED_BUSINESS_TYPE_FAILED, e);
+            return ResponseResult.failure(ErrorConst.GET_BUSINESS_TYPE_LIST_FAILED);
         }
     }
     
@@ -175,10 +176,10 @@ public class ExportController {
             return ResponseResult.success(exportTypes);
         } catch (IllegalArgumentException e) {
             log.error("无效的业务类型: {}", businessType);
-            return ResponseResult.failure("无效的业务类型");
+            return ResponseResult.failure(ErrorConst.UNKNOWN_BUSINESS_TYPE);
         } catch (Exception e) {
-            log.error("获取支持的导出类型失败", e);
-            return ResponseResult.failure("获取导出类型列表失败");
+            log.error(ErrorConst.GET_SUPPORTED_EXPORT_TYPE_FAILED, e);
+            return ResponseResult.failure(ErrorConst.GET_EXPORT_TYPE_LIST_FAILED);
         }
     }
     
@@ -205,10 +206,10 @@ public class ExportController {
             return ResponseResult.success(hasPermission);
         } catch (IllegalArgumentException e) {
             log.error("无效的业务类型: {}", businessType);
-            return ResponseResult.failure("无效的业务类型");
+            return ResponseResult.failure(ErrorConst.UNKNOWN_BUSINESS_TYPE);
         } catch (Exception e) {
-            log.error("检查导出权限失败", e);
-            return ResponseResult.failure("权限检查失败");
+            log.error(ErrorConst.CHECK_EXPORT_PERMISSION_FAILED, e);
+            return ResponseResult.failure(ErrorConst.CHECK_EXPORT_PERMISSION_FAILED);
         }
     }
     
@@ -252,7 +253,7 @@ public class ExportController {
             response.getWriter().write(errorJson);
             response.getWriter().flush();
         } catch (IOException e) {
-            log.error("写入错误响应失败", e);
+            log.error(ErrorConst.ERROR_RESPONSE_INPUT_FAILED, e);
         }
     }
 }

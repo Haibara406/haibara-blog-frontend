@@ -1,5 +1,6 @@
 package com.blog.export.strategy.excel;
 
+import com.blog.constants.ErrorConst;
 import com.blog.domain.vo.TagVO;
 import com.blog.export.dto.ExportResult;
 import com.blog.export.enums.BusinessType;
@@ -73,8 +74,8 @@ public class TagExcelExportStrategy implements ExportStrategy<TagVO> {
             );
             
         } catch (IOException e) {
-            log.error("标签Excel导出失败", e);
-            return ExportResult.failure("Excel导出失败: " + e.getMessage());
+            log.error(ErrorConst.TAG_EXCEL_EXPORT_FAILED, e);
+            return ExportResult.failure(ErrorConst.EXCEL_EXPORT_FAILED + e.getMessage());
         }
     }
     
