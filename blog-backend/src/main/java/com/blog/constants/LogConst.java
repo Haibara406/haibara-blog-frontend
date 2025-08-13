@@ -34,4 +34,6 @@ public class LogConst {
     public static final String MONITOR = "监控";
     
     public static final String EXPORT = "导出";
+    
+    public static final String CLEANUP = "清理";
 }

@@ -98,4 +98,10 @@ public class AccessLimitConst {
     public static final int BACK_GET_BANNERS_MAX_COUNT = 60;
 
     public static final int SELECT_UPDATE_MENU_ROLE_MAX_COUNT = 5;
+
+    public static final int MANUAL_CLEAN_LOG_MAX_COUNT = 1;
+
+    public static final int MANUAL_CLEAN_LOGIN_LOG_MAX_COUNT = 1;
+
+    public static final int MANUAL_CLEAN_OPERATE_LOG_MAX_COUNT = 1;
 }

@@ -104,4 +104,27 @@ public class ErrorConst {
     public static final String TAG_HTML_EXPORT_FAILED = "标签html导出失败";
 
     public static final String COMMENT_HTML_EXPORT_FAILED = "评论html导出失败";
+
+    public static final String LOGIN_LOG_KEEP_COUNT_MUST_GT_ZERO = "登录日志保留数量必须大于0";
+
+    public static final String LOGIN_LOG_KEEP_COUNT_SUGGEST_MIN_1000 = "登录日志建议保留数量不少于1000条，以确保基本的审计需求";
+
+    public static final String OPERATE_LOG_KEEP_COUNT_MUST_GT_ZERO = "操作日志保留数量必须大于0";
+
+    public static final String OPERATE_LOG_KEEP_COUNT_SUGGEST_MIN_2000 = "操作日志建议保留数量不少于2000条，以确保基本的审计需求";
+    
+    // 日志清理相关错误常量
+    public static final String LOGIN_LOG_CLEANUP_ERROR = "清理登录日志时发生错误";
+    
+    public static final String LOGIN_LOG_CLEANUP_FAILED = "登录日志清理失败: ";
+    
+    public static final String OPERATE_LOG_CLEANUP_ERROR = "清理操作日志时发生错误";
+    
+    public static final String OPERATE_LOG_CLEANUP_FAILED = "操作日志清理失败: ";
+    
+    public static final String LOG_CLEANUP_TASK_FAILED = "日志清理任务执行失败: ";
+    
+    public static final String GET_LOG_STATISTICS_FAILED = "获取日志统计信息失败";
+    
+    public static final String LOG_STATISTICS_GET_FAILED = "统计信息获取失败: ";
 }

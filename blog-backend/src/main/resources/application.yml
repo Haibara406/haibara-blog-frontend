@@ -183,3 +183,13 @@ minio:
   accessKey: minioadmin
   secretKey: minioadmin123
   bucketName: haibara-blog
+# 日志清理配置
+log:
+  cleanup:
+    # 登录日志配置
+    login-log:
+      keep-count: 5000  # 保留最新的5000条登录日志
+    # 操作日志配置  
+    operate-log:
+      keep-count: 8000        # 保留最新的8000条普通操作日志
+      protected-keep-count: 20000  # 受保护日志的总体上限
