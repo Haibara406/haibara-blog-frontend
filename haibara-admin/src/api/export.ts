@@ -123,12 +123,8 @@ export class ExportService {
         throw new Error(`该业务模块不支持${exportType}格式导出`)
       }
       
-      // 3. 执行导出
-      if (exportType.toLowerCase() === 'html') {
-        this.exportToNewWindow(businessType, exportType, fileName)
-      } else {
-        await this.downloadExportFile(businessType, exportType, fileName)
-      }
+      // 3. 执行导出 - 统一使用下载方式
+      await this.downloadExportFile(businessType, exportType, fileName)
       
     } catch (error) {
       console.error('导出过程失败:', error)
@@ -141,11 +137,8 @@ export class ExportService {
    */
   static async exportDirect(businessType: string, exportType: string, fileName?: string): Promise<void> {
     try {
-      if (exportType.toLowerCase() === 'html') {
-        this.exportToNewWindow(businessType, exportType, fileName)
-      } else {
-        await this.downloadExportFile(businessType, exportType, fileName)
-      }
+      // 统一使用下载方式，不管是Excel还是HTML
+      await this.downloadExportFile(businessType, exportType, fileName)
     } catch (error) {
       console.error('直接导出失败:', error)
       throw error
