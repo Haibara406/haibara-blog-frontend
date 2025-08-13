@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>操作日志列表导出</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        
+        /* 容器样式 */
+        .export-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        /* 头部样式 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 信息栏样式 */
+        .export-info {
+            background-color: #f8f9fc;
+            padding: 25px 30px;
+            border-bottom: 1px solid #e3e6f0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-item .icon {
+            width: 20px;
+            height: 20px;
+            background-color: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .info-item .label {
+            font-weight: 600;
+            color: #5a5c69;
+        }
+        
+        .info-item .value {
+            font-weight: 400;
+            color: #858796;
+        }
+        
+        /* 表格容器 */
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        /* 表格样式 */
+        .export-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .export-table thead {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+        }
+        
+        .export-table th {
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .export-table th:last-child {
+            border-right: none;
+        }
+        
+        .export-table tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        .export-table tbody tr:nth-child(even) {
+            background-color: #f8f9fc;
+        }
+        
+        .export-table tbody tr:hover {
+            background-color: #e8f1ff;
+        }
+        
+        .export-table td {
+            padding: 8px 6px;
+            text-align: center;
+            border-bottom: 1px solid #e3e6f0;
+            vertical-align: middle;
+            font-size: 11px;
+        }
+        
+        /* 序号列样式 */
+        .row-number {
+            font-weight: 600;
+            color: #5a5c69;
+            background-color: #f1f3f4;
+            font-size: 11px;
+            width: 50px;
+        }
+        
+        /* 模块名样式 */
+        .module-name {
+            font-weight: 600;
+            color: #2c3e50;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* 操作类型样式 */
+        .operation {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            background-color: #667eea;
+            color: white;
+        }
+        
+        /* 用户名样式 */
+        .username {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        /* IP地址样式 */
+        .ip-address {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-size: 10px;
+        }
+        
+        /* 地址样式 */
+        .address {
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 10px;
+            color: #6c757d;
+        }
+        
+        /* 操作状态样式 */
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background-color: #1cc88a;
+            color: white;
+        }
+        
+        .status-failed {
+            background-color: #e74a3b;
+            color: white;
+        }
+        
+        .status-exception {
+            background-color: #f6c23e;
+            color: white;
+        }
+        
+        /* 方法名样式 */
+        .method-name {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #495057;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: left;
+        }
+        
+        /* 请求方式样式 */
+        .req-method {
+            font-weight: bold;
+            font-size: 10px;
+        }
+        
+        .method-get { color: #28a745; }
+        .method-post { color: #007bff; }
+        .method-put { color: #ffc107; }
+        .method-delete { color: #dc3545; }
+        
+        /* 参数列样式 */
+        .parameter {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 9px;
+            color: #6c757d;
+            text-align: left;
+        }
+        
+        /* 时间消耗样式 */
+        .time-cost {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        /* 日期样式 */
+        .date-time {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #6c757d;
+        }
+        
+        /* 页脚样式 */
+        .footer {
+            background-color: #f8f9fc;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #858796;
+            border-top: 1px solid #e3e6f0;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .export-info {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .table-container {
+                padding: 15px;
+            }
+            
+            .export-table {
+                font-size: 10px;
+            }
+            
+            .export-table th,
+            .export-table td {
+                padding: 4px 2px;
+            }
+        }
+        
+        /* 打印样式 */
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            
+            .export-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .export-container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="export-container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>操作日志列表导出</h1>
+            <div class="subtitle">Operation Log Export Report</div>
+        </div>
+        
+        <!-- 导出信息 -->
+        <div class="export-info">
+            <div class="info-item">
+                <div class="icon">⏰</div>
+                <div class="label">导出时间：</div>
+                <div class="value" th:text="${exportTime}">2025-01-21 14:30:25</div>
+            </div>
+            <div class="info-item">
+                <div class="icon">📊</div>
+                <div class="label">数据总数：</div>
+                <div class="value"><span th:text="${totalCount}">1000</span> 条（最多导出1000条最新记录）</div>
+            </div>
+            <div class="info-item">
+                <div class="icon">📁</div>
+                <div class="label">文件名称：</div>
+                <div class="value" th:text="${fileName}">操作日志列表</div>
+            </div>
+            <div class="info-item">
+                <div class="icon">🏷️</div>
+                <div class="label">业务类型：</div>
+                <div class="value" th:text="${businessType}">操作日志</div>
+            </div>
+        </div>
+        
+        <!-- 表格容器 -->
+        <div class="table-container">
+            <table class="export-table">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>日志ID</th>
+                        <th>模块名称</th>
+                        <th>操作</th>
+                        <th>操作人员</th>
+                        <th>操作IP</th>
+                        <th>操作地址</th>
+                        <th>操作状态</th>
+                        <th>操作方法</th>
+                        <th>请求方式</th>
+                        <th>请求参数</th>
+                        <th>返回参数</th>
+                        <th>请求地址</th>
+                        <th>耗时(ms)</th>
+                        <th>操作描述</th>
+                        <th>操作时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="operateLog,iterStat : ${operateLogList}">
+                        <td class="row-number" th:text="${iterStat.count}">1</td>
+                        <td th:text="${operateLog.id}">1</td>
+                        <td class="module-name" 
+                            th:text="${operateLog.module}"
+                            th:title="${operateLog.module}">
+                            用户管理
+                        </td>
+                        <td>
+                            <span class="operation" th:text="${operateLog.operation}">
+                                新增
+                            </span>
+                        </td>
+                        <td class="username" th:text="${operateLog.userName}">admin</td>
+                        <td class="ip-address" th:text="${operateLog.ip}">192.168.1.100</td>
+                        <td class="address" 
+                            th:text="${operateLog.address}"
+                            th:title="${operateLog.address}">
+                            北京市朝阳区
+                        </td>
+                        <td>
+                            <span th:class="${operateLog.state == 0 ? 'status status-success' : 
+                                           operateLog.state == 1 ? 'status status-failed' : 
+                                           'status status-exception'}"
+                                  th:text="${operateLog.state == 0 ? '成功' : 
+                                           operateLog.state == 1 ? '失败' : '异常'}">
+                                成功
+                            </span>
+                        </td>
+                        <td class="method-name" 
+                            th:text="${operateLog.method}"
+                            th:title="${operateLog.method}">
+                            com.blog.controller.UserController.addUser()
+                        </td>
+                        <td>
+                            <span th:class="${'req-method method-' + #strings.toLowerCase(operateLog.reqMapping)}"
+                                  th:text="${operateLog.reqMapping}">
+                                POST
+                            </span>
+                        </td>
+                        <td class="parameter" 
+                            th:text="${operateLog.reqParameter}"
+                            th:title="${operateLog.reqParameter}">
+                            {"username":"test"}
+                        </td>
+                        <td class="parameter" 
+                            th:text="${operateLog.returnParameter}"
+                            th:title="${operateLog.returnParameter}">
+                            {"code":200,"msg":"success"}
+                        </td>
+                        <td class="parameter" 
+                            th:text="${operateLog.reqAddress}"
+                            th:title="${operateLog.reqAddress}">
+                            /api/user/add
+                        </td>
+                        <td class="time-cost" th:text="${operateLog.time}">125</td>
+                        <td class="parameter" 
+                            th:text="${operateLog.description}"
+                            th:title="${operateLog.description}">
+                            添加用户
+                        </td>
+                        <td class="date-time" 
+                            th:text="${#dates.format(operateLog.loginTime, 'yyyy-MM-dd HH:mm:ss')}">
+                            2025-01-21 14:30:25
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>本报表由系统自动生成 | Haibara-Blog-Admin-System | 导出时间：<span th:text="${exportTime}"></span></p>
+        </div>
+    </div>
+</body>
+</html>
