@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { Modal, message } from 'ant-design-vue'
 import { h } from 'vue'
-import { 
-  DeleteOutlined, 
-  BarChartOutlined, 
+import {
+  DeleteOutlined,
   ReloadOutlined,
   DatabaseOutlined,
-  FileTextOutlined,
   UserOutlined,
   ToolOutlined,
+  InfoCircleOutlined,
+  SafetyOutlined,
+  ExclamationCircleOutlined,
+  WarningOutlined,
+  CheckCircleOutlined,
   ClockCircleOutlined,
-  HddOutlined,
-  InfoCircleOutlined
+  FileOutlined,
+  BarChartOutlined,
+  SecurityScanOutlined
 } from '@ant-design/icons-vue'
 import { getLogStatistics, performFullCleanup, cleanupLoginLogs, cleanupOperateLogs } from '~/api/log/cleanup'
 import dayjs from 'dayjs'
@@ -21,42 +25,56 @@ const fullCleanupLoading = ref(false)
 const loginCleanupLoading = ref(false)
 const operateCleanupLoading = ref(false)
 
-const statistics = ref('')
-const parsedStatistics = ref({
+// 统计数据
+const statistics = ref({
   loginLogCount: 0,
   operateLogCount: 0,
+  protectedLogCount: 0,
+  unprotectedLogCount: 0,
   totalLogCount: 0,
-  estimatedSize: '',
-  lastCleanupTime: '',
-  oldestRecord: '',
-  newestRecord: ''
+  lastCleanupTime: null,
+  estimatedSize: '未知',
+  protectedOperationStats: {},
+  unprotectedOperationStats: {},
+  protectedOperations: [],
+  unprotectedOperations: []
 })
-const loginLogKeepCount = ref(5000)
-const operateLogKeepCount = ref(8000)
+
+// 清理配置
+const cleanupConfig = ref({
+  loginKeepCount: 5000,
+  operateKeepCount: 8000
+})
+
 const lastUpdateTime = ref('')
 
-// 解析统计信息文本
-const parseStatistics = (statisticsText: string) => {
-  if (!statisticsText) return
-
-  // 使用正则表达式解析统计信息
-  const loginLogMatch = statisticsText.match(/登录日志数量[：:]\s*(\d+)/)
-  const operateLogMatch = statisticsText.match(/操作日志数量[：:]\s*(\d+)/)
-  const totalLogMatch = statisticsText.match(/总日志数量[：:]\s*(\d+)/)
-  const sizeMatch = statisticsText.match(/预估存储大小[：:]\s*([^\n\r]+)/)
-  const lastCleanupMatch = statisticsText.match(/最后清理时间[：:]\s*([^\n\r]+)/)
-  const oldestMatch = statisticsText.match(/最早记录时间[：:]\s*([^\n\r]+)/)
-  const newestMatch = statisticsText.match(/最新记录时间[：:]\s*([^\n\r]+)/)
-
-  parsedStatistics.value = {
-    loginLogCount: loginLogMatch ? parseInt(loginLogMatch[1]) : 0,
-    operateLogCount: operateLogMatch ? parseInt(operateLogMatch[1]) : 0,
-    totalLogCount: totalLogMatch ? parseInt(totalLogMatch[1]) : 0,
-    estimatedSize: sizeMatch ? sizeMatch[1].trim() : '未知',
-    lastCleanupTime: lastCleanupMatch ? lastCleanupMatch[1].trim() : '从未清理',
-    oldestRecord: oldestMatch ? oldestMatch[1].trim() : '无数据',
-    newestRecord: newestMatch ? newestMatch[1].trim() : '无数据'
+// 格式化最后清理时间
+const formatLastCleanupTime = (lastCleanupTime) => {
+  if (!lastCleanupTime) {
+    return '从未清理'
   }
+  return dayjs(lastCleanupTime).format('YYYY-MM-DD HH:mm:ss')
+}
+
+// 计算清理预览数据
+const getCleanupPreview = () => {
+  const loginWillDelete = Math.max(0, (statistics.value.loginLogCount || 0) - cleanupConfig.value.loginKeepCount)
+  const operateWillDelete = Math.max(0, (statistics.value.unprotectedLogCount || 0) - cleanupConfig.value.operateKeepCount)
+
+  return {
+    loginWillDelete,
+    operateWillDelete,
+    totalWillDelete: loginWillDelete + operateWillDelete,
+    protectedCount: statistics.value.protectedLogCount || 0
+  }
+}
+
+// 获取日志健康状态
+const getLogHealthStatus = () => {
+  const total = statistics.value.totalLogCount || 0
+  if (total < 10000) return { status: 'success', text: '良好', color: '#52c41a' }
+  if (total < 50000) return { status: 'warning', text: '注意', color: '#faad14' }
+  return { status: 'error', text: '需要清理', color: '#ff4d4f' }
 }
 
 // 加载统计信息
@@ -66,7 +84,6 @@ const loadStatistics = async () => {
     const response = await getLogStatistics()
     if (response.code === 200) {
       statistics.value = response.data
-      parseStatistics(response.data)
       lastUpdateTime.value = dayjs().format('YYYY-MM-DD HH:mm:ss')
     } else {
       message.error(response.message || '获取统计信息失败')
@@ -81,18 +98,45 @@ const loadStatistics = async () => {
 
 // 执行完整清理
 const handleFullCleanup = () => {
+  const preview = getCleanupPreview()
+
   Modal.confirm({
     title: '确认执行完整清理？',
-    content: '此操作将清理所有超出配置数量的日志记录，无法撤销！',
-    okText: '确认',
+    width: 520,
+    content: h('div', { class: 'cleanup-confirm-content' }, [
+      h('div', { class: 'alert-info' }, [
+        h(ExclamationCircleOutlined, { class: 'alert-icon' }),
+        h('span', '此操作将按照默认配置清理所有类型的日志，操作不可撤销！')
+      ]),
+      h('div', { class: 'cleanup-summary' }, [
+        h('h4', '清理预览'),
+        h('div', { class: 'summary-grid' }, [
+          h('div', { class: 'summary-item' }, [
+            h('div', { class: 'item-label' }, '登录日志'),
+            h('div', { class: 'item-value delete' }, `将删除 ${preview.loginWillDelete.toLocaleString()} 条`)
+          ]),
+          h('div', { class: 'summary-item' }, [
+            h('div', { class: 'item-label' }, '操作日志'),
+            h('div', { class: 'item-value delete' }, `将删除 ${preview.operateWillDelete.toLocaleString()} 条`)
+          ]),
+          h('div', { class: 'summary-item' }, [
+            h('div', { class: 'item-label' }, '受保护记录'),
+            h('div', { class: 'item-value protected' }, `保留 ${preview.protectedCount.toLocaleString()} 条`)
+          ])
+        ])
+      ])
+    ]),
+    okText: '确认执行',
     cancelText: '取消',
+    okButtonProps: { danger: true, size: 'large' },
+    cancelButtonProps: { size: 'large' },
     onOk: async () => {
       try {
         fullCleanupLoading.value = true
         const response = await performFullCleanup()
         if (response.code === 200) {
-          message.success(response.data || '清理成功')
-          loadStatistics() // 刷新统计信息
+          message.success('完整清理执行成功')
+          await loadStatistics()
         } else {
           message.error(response.message || '清理失败')
         }
@@ -108,23 +152,31 @@ const handleFullCleanup = () => {
 
 // 清理登录日志
 const handleCleanupLoginLogs = () => {
-  if (!loginLogKeepCount.value) {
-    message.warning('请输入要保留的日志数量')
+  const willDelete = Math.max(0, (statistics.value.loginLogCount || 0) - cleanupConfig.value.loginKeepCount)
+
+  if (willDelete === 0) {
+    message.info('当前登录日志数量未超出保留配置，无需清理')
     return
   }
 
   Modal.confirm({
     title: '确认清理登录日志？',
-    content: `将清理登录日志，仅保留最新的 ${loginLogKeepCount.value} 条记录`,
-    okText: '确认',
+    content: h('div', { class: 'cleanup-confirm-content' }, [
+      h('p', `将保留最新的 ${cleanupConfig.value.loginKeepCount.toLocaleString()} 条登录日志记录`),
+      h('div', { class: 'cleanup-warning' }, [
+        h(WarningOutlined, { class: 'warning-icon' }),
+        h('span', `预计删除 ${willDelete.toLocaleString()} 条记录`)
+      ])
+    ]),
+    okText: '确认清理',
     cancelText: '取消',
     onOk: async () => {
       try {
         loginCleanupLoading.value = true
-        const response = await cleanupLoginLogs(loginLogKeepCount.value)
+        const response = await cleanupLoginLogs(cleanupConfig.value.loginKeepCount)
         if (response.code === 200) {
-          message.success(response.data || '清理成功')
-          loadStatistics()
+          message.success(response.data || '登录日志清理成功')
+          await loadStatistics()
         } else {
           message.error(response.message || '清理失败')
         }
@@ -140,23 +192,37 @@ const handleCleanupLoginLogs = () => {
 
 // 清理操作日志
 const handleCleanupOperateLogs = () => {
-  if (!operateLogKeepCount.value) {
-    message.warning('请输入要保留的日志数量')
+  const willDelete = Math.max(0, (statistics.value.unprotectedLogCount || 0) - cleanupConfig.value.operateKeepCount)
+
+  if (willDelete === 0) {
+    message.info('当前可清理的操作日志数量未超出保留配置，无需清理')
     return
   }
 
   Modal.confirm({
     title: '确认清理操作日志？',
-    content: `将清理操作日志，仅保留最新的 ${operateLogKeepCount.value} 条记录`,
-    okText: '确认',
+    content: h('div', { class: 'cleanup-confirm-content' }, [
+      h('p', `将保留最新的 ${cleanupConfig.value.operateKeepCount.toLocaleString()} 条可清理的操作日志记录`),
+      h('div', { class: 'cleanup-info' }, [
+        h('div', { class: 'info-item' }, [
+          h(DeleteOutlined, { class: 'info-icon delete' }),
+          h('span', `预计删除：${willDelete.toLocaleString()} 条记录`)
+        ]),
+        h('div', { class: 'info-item' }, [
+          h(SafetyOutlined, { class: 'info-icon protected' }),
+          h('span', `受保护记录：${statistics.value.protectedLogCount?.toLocaleString() || '0'} 条将被保留`)
+        ])
+      ])
+    ]),
+    okText: '确认清理',
     cancelText: '取消',
     onOk: async () => {
       try {
         operateCleanupLoading.value = true
-        const response = await cleanupOperateLogs(operateLogKeepCount.value)
+        const response = await cleanupOperateLogs(cleanupConfig.value.operateKeepCount)
         if (response.code === 200) {
-          message.success(response.data || '清理成功')
-          loadStatistics()
+          message.success(response.data || '操作日志清理成功')
+          await loadStatistics()
         } else {
           message.error(response.message || '清理失败')
         }
@@ -177,301 +243,329 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="log-cleanup-container">
+  <div class="log-cleanup-page">
+    <!-- 页面头部 -->
     <div class="page-header">
-      <div class="header-content">
-        <h1><DatabaseOutlined /> 日志清理管理</h1>
-        <p>管理和清理系统日志，保持数据库高效运行</p>
-        <div class="update-time" v-if="lastUpdateTime">
-          <InfoCircleOutlined />
-          最后更新: {{ lastUpdateTime }}
-        </div>
+      <div class="header-left">
+        <h1>
+          <DatabaseOutlined />
+          日志清理管理
+        </h1>
+        <p>智能管理和清理系统日志，保持数据库高效运行</p>
       </div>
-      <a-button
-        type="primary"
-        :icon="h(ReloadOutlined)"
-        @click="loadStatistics"
-        :loading="statisticsLoading"
-        size="large"
-      >
-        刷新数据
-      </a-button>
+      <div class="header-right">
+        <a-button
+            type="primary"
+            size="large"
+            :icon="h(ReloadOutlined)"
+            @click="loadStatistics"
+            :loading="statisticsLoading"
+        >
+          刷新数据
+        </a-button>
+      </div>
     </div>
 
-    <!-- 统计信息概览 -->
-    <div class="statistics-overview">
-      <a-row :gutter="[16, 16]">
-        <a-col :xs="24" :sm="12" :md="8" :lg="6">
-          <div class="stat-card total-logs">
-            <div class="stat-icon">
-              <FileTextOutlined />
+    <!-- 系统概览 -->
+    <div class="system-overview">
+      <a-row :gutter="[24, 24]">
+        <!-- 总览卡片 -->
+        <a-col :xs="24" :md="12" :lg="6">
+          <div class="overview-card total">
+            <div class="card-icon">
+              <FileOutlined />
             </div>
-            <div class="stat-content">
-              <div class="stat-number">{{ parsedStatistics.totalLogCount.toLocaleString() }}</div>
-              <div class="stat-label">总日志数量</div>
-              <div class="stat-progress">
-                <a-progress 
-                  :percent="Math.min((parsedStatistics.totalLogCount / 50000) * 100, 100)" 
-                  size="small" 
-                  :show-info="false"
-                  stroke-color="#1890ff"
-                />
-              </div>
+            <div class="card-content">
+              <div class="card-title">总日志数</div>
+              <div class="card-value">{{ statistics.totalLogCount?.toLocaleString() || '0' }}</div>
+              <div class="card-desc">所有类型日志记录</div>
             </div>
           </div>
         </a-col>
-        
-        <a-col :xs="24" :sm="12" :md="8" :lg="6">
-          <div class="stat-card login-logs">
-            <div class="stat-icon">
-              <UserOutlined />
+
+        <!-- 存储占用 -->
+        <a-col :xs="24" :md="12" :lg="6">
+          <div class="overview-card storage">
+            <div class="card-icon">
+              <DatabaseOutlined />
             </div>
-            <div class="stat-content">
-              <div class="stat-number">{{ parsedStatistics.loginLogCount.toLocaleString() }}</div>
-              <div class="stat-label">登录日志</div>
-              <div class="stat-progress">
-                <a-progress 
-                  :percent="parsedStatistics.totalLogCount > 0 ? (parsedStatistics.loginLogCount / parsedStatistics.totalLogCount) * 100 : 0" 
-                  size="small" 
-                  :show-info="false"
-                  stroke-color="#52c41a"
-                />
-              </div>
+            <div class="card-content">
+              <div class="card-title">存储占用</div>
+              <div class="card-value">{{ statistics.estimatedSize || '未知' }}</div>
+              <div class="card-desc">预估数据库空间</div>
             </div>
           </div>
         </a-col>
-        
-        <a-col :xs="24" :sm="12" :md="8" :lg="6">
-          <div class="stat-card operate-logs">
-            <div class="stat-icon">
-              <ToolOutlined />
+
+        <!-- 系统状态 -->
+        <a-col :xs="24" :md="12" :lg="6">
+          <div class="overview-card" :class="getLogHealthStatus().status">
+            <div class="card-icon">
+              <component :is="getLogHealthStatus().status === 'success' ? CheckCircleOutlined :
+                              getLogHealthStatus().status === 'warning' ? WarningOutlined :
+                              ExclamationCircleOutlined" />
             </div>
-            <div class="stat-content">
-              <div class="stat-number">{{ parsedStatistics.operateLogCount.toLocaleString() }}</div>
-              <div class="stat-label">操作日志</div>
-              <div class="stat-progress">
-                <a-progress 
-                  :percent="parsedStatistics.totalLogCount > 0 ? (parsedStatistics.operateLogCount / parsedStatistics.totalLogCount) * 100 : 0" 
-                  size="small" 
-                  :show-info="false"
-                  stroke-color="#fa8c16"
-                />
+            <div class="card-content">
+              <div class="card-title">系统状态</div>
+              <div class="card-value" :style="{ color: getLogHealthStatus().color }">
+                {{ getLogHealthStatus().text }}
               </div>
+              <div class="card-desc">日志健康状态</div>
             </div>
           </div>
         </a-col>
-        
-        <a-col :xs="24" :sm="12" :md="8" :lg="6">
-          <div class="stat-card storage-size">
-            <div class="stat-icon">
-              <HddOutlined />
+
+        <!-- 最后清理 -->
+        <a-col :xs="24" :md="12" :lg="6">
+          <div class="overview-card cleanup">
+            <div class="card-icon">
+              <ClockCircleOutlined />
             </div>
-            <div class="stat-content">
-              <div class="stat-number">{{ parsedStatistics.estimatedSize }}</div>
-              <div class="stat-label">预估存储</div>
-              <div class="stat-progress">
-                <a-progress 
-                  :percent="75" 
-                  size="small" 
-                  :show-info="false"
-                  stroke-color="#722ed1"
-                />
-              </div>
+            <div class="card-content">
+              <div class="card-title">最后清理</div>
+              <div class="card-value small">{{ formatLastCleanupTime(statistics.lastCleanupTime) }}</div>
+              <div class="card-desc">上次清理时间</div>
             </div>
           </div>
         </a-col>
       </a-row>
     </div>
 
-    <!-- 详细信息卡片 -->
-    <a-row :gutter="16" class="detail-section">
+    <!-- 详细统计 -->
+    <a-row :gutter="[24, 24]" class="detail-section">
+      <!-- 登录日志统计 -->
       <a-col :xs="24" :lg="12">
-        <a-card title="时间范围信息" class="detail-card">
+        <a-card title="登录日志统计" class="stat-card login-card">
           <template #extra>
-            <ClockCircleOutlined />
+            <UserOutlined />
           </template>
-          <div class="time-info">
-            <div class="time-item">
-              <span class="time-label">最早记录:</span>
-              <span class="time-value">{{ parsedStatistics.oldestRecord }}</span>
+
+          <div class="stat-content">
+            <div class="stat-header">
+              <div class="count-display">
+                <span class="count">{{ statistics.loginLogCount?.toLocaleString() || '0' }}</span>
+                <span class="unit">条记录</span>
+              </div>
+              <div class="progress-info">
+                <a-progress
+                    :percent="statistics.totalLogCount > 0 ? Math.round((statistics.loginLogCount / statistics.totalLogCount) * 100) : 0"
+                    :show-info="false"
+                    stroke-color="#1890ff"
+                    size="small"
+                />
+                <span class="percentage">
+                  {{ statistics.totalLogCount > 0 ? Math.round((statistics.loginLogCount / statistics.totalLogCount) * 100) : 0 }}%
+                </span>
+              </div>
             </div>
-            <div class="time-item">
-              <span class="time-label">最新记录:</span>
-              <span class="time-value">{{ parsedStatistics.newestRecord }}</span>
+
+            <div class="cleanup-config">
+              <div class="config-item">
+                <label>保留记录数量</label>
+                <a-input-number
+                    v-model:value="cleanupConfig.loginKeepCount"
+                    :min="1000"
+                    :max="20000"
+                    :step="500"
+                    size="large"
+                    style="width: 100%"
+                />
+              </div>
+              <div class="preview-info">
+                <div class="preview-item delete">
+                  预计删除：{{ Math.max(0, (statistics.loginLogCount || 0) - cleanupConfig.loginKeepCount).toLocaleString() }} 条
+                </div>
+              </div>
             </div>
-            <div class="time-item">
-              <span class="time-label">最后清理:</span>
-              <span class="time-value" :class="{ 'never-cleaned': parsedStatistics.lastCleanupTime === '从未清理' }">
-                {{ parsedStatistics.lastCleanupTime }}
-              </span>
-            </div>
+
+            <a-button
+                type="primary"
+                size="large"
+                block
+                @click="handleCleanupLoginLogs"
+                :loading="loginCleanupLoading"
+                :disabled="Math.max(0, (statistics.loginLogCount || 0) - cleanupConfig.loginKeepCount) === 0"
+            >
+              清理登录日志
+            </a-button>
           </div>
         </a-card>
       </a-col>
-      
+
+      <!-- 操作日志统计 -->
       <a-col :xs="24" :lg="12">
-        <a-card title="原始统计数据" class="detail-card">
+        <a-card title="操作日志统计" class="stat-card operate-card">
           <template #extra>
-            <BarChartOutlined />
+            <ToolOutlined />
           </template>
-          <div v-if="statistics" class="raw-statistics">
-            <pre>{{ statistics }}</pre>
-          </div>
-          <div v-else class="empty-statistics">
-            <a-empty description="暂无统计数据" />
+
+          <div class="stat-content">
+            <div class="stat-header">
+              <div class="count-display">
+                <span class="count">{{ statistics.operateLogCount?.toLocaleString() || '0' }}</span>
+                <span class="unit">条记录</span>
+              </div>
+            </div>
+
+            <div class="operation-breakdown">
+              <div class="breakdown-row">
+                <div class="breakdown-item protected">
+                  <SafetyOutlined />
+                  <span>受保护：{{ statistics.protectedLogCount?.toLocaleString() || '0' }} 条</span>
+                </div>
+                <div class="breakdown-item unprotected">
+                  <DeleteOutlined />
+                  <span>可清理：{{ statistics.unprotectedLogCount?.toLocaleString() || '0' }} 条</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cleanup-config">
+              <div class="config-item">
+                <label>保留记录数量</label>
+                <a-input-number
+                    v-model:value="cleanupConfig.operateKeepCount"
+                    :min="2000"
+                    :max="50000"
+                    :step="1000"
+                    size="large"
+                    style="width: 100%"
+                />
+              </div>
+              <div class="preview-info">
+                <div class="preview-item delete">
+                  预计删除：{{ Math.max(0, (statistics.unprotectedLogCount || 0) - cleanupConfig.operateKeepCount).toLocaleString() }} 条
+                </div>
+                <div class="preview-item protected">
+                  受保护记录将被保留
+                </div>
+              </div>
+            </div>
+
+            <a-button
+                type="primary"
+                size="large"
+                block
+                @click="handleCleanupOperateLogs"
+                :loading="operateCleanupLoading"
+                :disabled="Math.max(0, (statistics.unprotectedLogCount || 0) - cleanupConfig.operateKeepCount) === 0"
+            >
+              清理操作日志
+            </a-button>
           </div>
         </a-card>
       </a-col>
     </a-row>
 
-    <!-- 清理操作区域 -->
-    <div class="cleanup-operations">
-      <h2><DeleteOutlined /> 清理操作</h2>
-      <a-row :gutter="[16, 16]">
-        <a-col :xs="24" :lg="8">
-          <div class="operation-card danger-operation">
-            <div class="operation-header">
-              <div class="operation-icon danger">
-                <DeleteOutlined />
+    <!-- 操作详情分析 -->
+    <a-row :gutter="[24, 24]" class="analysis-section" v-if="Object.keys(statistics.protectedOperationStats || {}).length > 0 || Object.keys(statistics.unprotectedOperationStats || {}).length > 0">
+      <!-- 受保护操作 -->
+      <a-col :xs="24" :lg="12" v-if="Object.keys(statistics.protectedOperationStats || {}).length > 0">
+        <a-card title="受保护操作分布" class="analysis-card protected-analysis">
+          <template #extra>
+            <SafetyOutlined style="color: #52c41a;" />
+          </template>
+
+          <div class="operation-list">
+            <div
+                v-for="(count, operation) in statistics.protectedOperationStats"
+                :key="operation"
+                class="operation-item"
+            >
+              <div class="operation-info">
+                <a-tag color="green" size="small">{{ operation }}</a-tag>
+                <span class="operation-desc">重要系统操作</span>
               </div>
-              <div class="operation-title">
-                <h3>完整清理</h3>
-                <p>执行完整的日志清理任务</p>
+              <div class="operation-count">{{ count?.toLocaleString() || '0' }}</div>
+            </div>
+          </div>
+
+          <div class="protection-note">
+            <InfoCircleOutlined />
+            <span>这些操作涉及系统安全和数据完整性，将优先保护</span>
+          </div>
+        </a-card>
+      </a-col>
+
+      <!-- 可清理操作 -->
+      <a-col :xs="24" :lg="12" v-if="Object.keys(statistics.unprotectedOperationStats || {}).length > 0">
+        <a-card title="可清理操作分布" class="analysis-card cleanable-analysis">
+          <template #extra>
+            <BarChartOutlined style="color: #fa8c16;" />
+          </template>
+
+          <div class="operation-list">
+            <div
+                v-for="(count, operation) in statistics.unprotectedOperationStats"
+                :key="operation"
+                class="operation-item"
+            >
+              <div class="operation-info">
+                <a-tag color="orange" size="small">{{ operation }}</a-tag>
+                <span class="operation-desc">常规日常操作</span>
+              </div>
+              <div class="operation-count">{{ count?.toLocaleString() || '0' }}</div>
+            </div>
+          </div>
+
+          <div class="cleanup-note">
+            <InfoCircleOutlined />
+            <span>这些操作对系统影响较小，清理时优先删除</span>
+          </div>
+        </a-card>
+      </a-col>
+    </a-row>
+
+    <!-- 快速操作面板 -->
+    <div class="quick-actions">
+      <a-card title="快速操作" class="actions-card">
+        <template #extra>
+          <DeleteOutlined />
+        </template>
+
+        <div class="actions-content">
+          <div class="action-item full-cleanup">
+            <div class="action-info">
+              <h3>
+                <DeleteOutlined />
+                完整清理
+              </h3>
+              <p>使用默认配置一键清理所有类型日志，采用智能保护策略</p>
+              <div class="cleanup-preview">
+                <div class="preview-stats">
+                  <span>预计总删除：{{ getCleanupPreview().totalWillDelete.toLocaleString() }} 条</span>
+                  <span>保护记录：{{ getCleanupPreview().protectedCount.toLocaleString() }} 条</span>
+                </div>
               </div>
             </div>
-            <div class="operation-content">
-              <div class="operation-description">
-                <ul>
-                  <li>按配置自动清理所有类型的日志</li>
-                  <li>清理后无法恢复，请谨慎操作</li>
-                  <li>建议在系统维护期间执行</li>
-                </ul>
-              </div>
-              <div class="operation-actions">
-                <a-button
+            <div class="action-button">
+              <a-button
                   type="primary"
                   danger
                   size="large"
                   @click="handleFullCleanup"
                   :loading="fullCleanupLoading"
-                  block
-                >
-                  <DeleteOutlined />
-                  执行完整清理
-                </a-button>
-              </div>
+              >
+                执行完整清理
+              </a-button>
             </div>
           </div>
-        </a-col>
+        </div>
+      </a-card>
+    </div>
 
-        <a-col :xs="24" :lg="8">
-          <div class="operation-card login-operation">
-            <div class="operation-header">
-              <div class="operation-icon login">
-                <UserOutlined />
-              </div>
-              <div class="operation-title">
-                <h3>登录日志清理</h3>
-                <p>清理用户登录记录</p>
-              </div>
-            </div>
-            <div class="operation-content">
-              <div class="operation-stats">
-                <div class="stat">
-                  <span class="label">当前数量:</span>
-                  <span class="value">{{ parsedStatistics.loginLogCount.toLocaleString() }}</span>
-                </div>
-                <div class="stat">
-                  <span class="label">将删除:</span>
-                  <span class="value delete-count">
-                    {{ Math.max(0, parsedStatistics.loginLogCount - loginLogKeepCount).toLocaleString() }}
-                  </span>
-                </div>
-              </div>
-              <div class="operation-control">
-                <label>保留数量:</label>
-                <a-input-number
-                  v-model:value="loginLogKeepCount"
-                  :min="100"
-                  :max="10000"
-                  size="large"
-                  style="width: 100%; margin-top: 8px;"
-                />
-              </div>
-              <div class="operation-actions">
-                <a-button
-                  type="primary"
-                  size="large"
-                  @click="handleCleanupLoginLogs"
-                  :loading="loginCleanupLoading"
-                  block
-                >
-                  <UserOutlined />
-                  清理登录日志
-                </a-button>
-              </div>
-            </div>
-          </div>
-        </a-col>
-
-        <a-col :xs="24" :lg="8">
-          <div class="operation-card operate-operation">
-            <div class="operation-header">
-              <div class="operation-icon operate">
-                <ToolOutlined />
-              </div>
-              <div class="operation-title">
-                <h3>操作日志清理</h3>
-                <p>清理系统操作记录</p>
-              </div>
-            </div>
-            <div class="operation-content">
-              <div class="operation-stats">
-                <div class="stat">
-                  <span class="label">当前数量:</span>
-                  <span class="value">{{ parsedStatistics.operateLogCount.toLocaleString() }}</span>
-                </div>
-                <div class="stat">
-                  <span class="label">将删除:</span>
-                  <span class="value delete-count">
-                    {{ Math.max(0, parsedStatistics.operateLogCount - operateLogKeepCount).toLocaleString() }}
-                  </span>
-                </div>
-              </div>
-              <div class="operation-control">
-                <label>保留数量:</label>
-                <a-input-number
-                  v-model:value="operateLogKeepCount"
-                  :min="100"
-                  :max="20000"
-                  size="large"
-                  style="width: 100%; margin-top: 8px;"
-                />
-              </div>
-              <div class="operation-actions">
-                <a-button
-                  type="primary"
-                  size="large"
-                  @click="handleCleanupOperateLogs"
-                  :loading="operateCleanupLoading"
-                  block
-                >
-                  <ToolOutlined />
-                  清理操作日志
-                </a-button>
-              </div>
-            </div>
-          </div>
-        </a-col>
-      </a-row>
+    <!-- 页脚信息 -->
+    <div class="page-footer" v-if="lastUpdateTime">
+      <InfoCircleOutlined />
+      <span>数据最后更新：{{ lastUpdateTime }}</span>
     </div>
   </div>
 </template>
 
 <style scoped>
-.log-cleanup-container {
+.log-cleanup-page {
   padding: 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #f5f5f5;
   min-height: 100vh;
 }
 
@@ -479,404 +573,555 @@ onMounted(() => {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  padding: 32px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding: 24px 32px;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.header-content h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a202c;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-content p {
-  margin: 8px 0 16px 0;
-  color: #64748b;
-  font-size: 16px;
-}
-
-.update-time {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #94a3b8;
-  font-size: 14px;
-}
-
-/* 统计概览卡片 */
-.statistics-overview {
-  margin-bottom: 32px;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  border: 1px solid #f1f5f9;
-  height: 100%;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  margin-bottom: 16px;
-}
-
-.total-logs .stat-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.login-logs .stat-icon {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-}
-
-.operate-logs .stat-icon {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
-}
-
-.storage-size .stat-icon {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: white;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-number {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  color: #64748b;
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
-.stat-progress {
-  margin-top: 12px;
-}
-
-/* 详细信息区域 */
-.detail-section {
-  margin-bottom: 32px;
-}
-
-.detail-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: none;
-  overflow: hidden;
-}
-
-.time-info {
-  padding: 16px 0;
-}
-
-.time-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background: #f8fafc;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.time-label {
-  color: #64748b;
-  font-weight: 500;
-}
-
-.time-value {
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.never-cleaned {
-  color: #ef4444 !important;
-}
-
-.raw-statistics {
-  background: #1e293b;
-  border-radius: 12px;
-  padding: 20px;
-  margin: 16px 0;
-}
-
-.raw-statistics pre {
-  color: #e2e8f0;
-  margin: 0;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-/* 清理操作区域 */
-.cleanup-operations {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.cleanup-operations h2 {
-  margin: 0 0 24px 0;
+.header-left h1 {
+  margin: 0 0 8px 0;
   font-size: 24px;
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 600;
+  color: #262626;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.operation-card {
-  background: #f8fafc;
-  border-radius: 16px;
-  padding: 24px;
-  height: 100%;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+.header-left p {
+  margin: 0;
+  color: #8c8c8c;
+  font-size: 14px;
 }
 
-.operation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+/* 系统概览 */
+.system-overview {
+  margin-bottom: 24px;
 }
 
-.danger-operation {
-  background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
-  border-color: #fecaca;
-}
-
-.danger-operation:hover {
-  border-color: #ef4444;
-}
-
-.login-operation {
-  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
-  border-color: #bfdbfe;
-}
-
-.login-operation:hover {
-  border-color: #3b82f6;
-}
-
-.operate-operation {
-  background: linear-gradient(135deg, #f0fdf4 0%, #f7fee7 100%);
-  border-color: #bbf7d0;
-}
-
-.operate-operation:hover {
-  border-color: #22c55e;
-}
-
-.operation-header {
+.overview-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  height: 100%;
 }
 
-.operation-icon {
+.overview-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.card-icon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  margin-right: 16px;
+  flex-shrink: 0;
 }
 
-.operation-icon.danger {
-  background: #ef4444;
+.overview-card.total .card-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
-.operation-icon.login {
-  background: #3b82f6;
+.overview-card.storage .card-icon {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
 }
 
-.operation-icon.operate {
-  background: #22c55e;
+.overview-card.success .card-icon {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   color: white;
 }
 
-.operation-title h3 {
-  margin: 0;
-  font-size: 18px;
+.overview-card.warning .card-icon {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #fa8c16;
+}
+
+.overview-card.error .card-icon {
+  background: linear-gradient(135deg, #ffafbd 0%, #ffc3a0 100%);
+  color: #ff4d4f;
+}
+
+.overview-card.cleanup .card-icon {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #722ed1;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+}
+
+.card-value {
+  font-size: 20px;
   font-weight: 600;
-  color: #1e293b;
+  color: #262626;
+  margin-bottom: 4px;
 }
 
-.operation-title p {
-  margin: 4px 0 0 0;
-  color: #64748b;
+.card-value.small {
   font-size: 14px;
+  font-weight: 500;
 }
 
-.operation-content {
+.card-desc {
+  font-size: 12px;
+  color: #bfbfbf;
+}
+
+/* 详细统计 */
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: none;
+  height: 100%;
+}
+
+.login-card {
+  border-left: 4px solid #1890ff;
+}
+
+.operate-card {
+  border-left: 4px solid #fa8c16;
+}
+
+.stat-content {
+  padding: 8px 0;
+}
+
+.stat-header {
+  margin-bottom: 24px;
+}
+
+.count-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.count {
+  font-size: 32px;
+  font-weight: 700;
+  color: #262626;
+}
+
+.unit {
+  font-size: 14px;
+  color: #8c8c8c;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-info .ant-progress {
+  flex: 1;
+}
+
+.percentage {
+  font-size: 13px;
+  color: #8c8c8c;
+  font-weight: 500;
+}
+
+.operation-breakdown {
+  margin-bottom: 24px;
+}
+
+.breakdown-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+
+.breakdown-item.protected {
+  background: #f6ffed;
+  color: #389e0d;
+}
+
+.breakdown-item.unprotected {
+  background: #fff7e6;
+  color: #d46b08;
+}
+
+.cleanup-config {
+  margin-bottom: 24px;
+}
+
+.config-item {
+  margin-bottom: 12px;
+}
+
+.config-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.preview-info {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 6px;
 }
 
-.operation-description ul {
-  margin: 0;
-  padding-left: 20px;
-  color: #64748b;
+.preview-item {
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-.operation-description li {
-  margin-bottom: 8px;
-  font-size: 14px;
-  line-height: 1.5;
+.preview-item.delete {
+  background: #fff2f0;
+  color: #a8071a;
 }
 
-.operation-stats {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid #e2e8f0;
+.preview-item.protected {
+  background: #f6ffed;
+  color: #389e0d;
 }
 
-.stat {
+/* 分析区域 */
+.analysis-section {
+  margin-bottom: 24px;
+}
+
+.analysis-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: none;
+}
+
+.protected-analysis {
+  border-left: 4px solid #52c41a;
+}
+
+.cleanable-analysis {
+  border-left: 4px solid #fa8c16;
+}
+
+.operation-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.operation-item {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
 }
 
-.stat:last-child {
-  margin-bottom: 0;
+.operation-item:last-child {
+  border-bottom: none;
 }
 
-.stat .label {
-  color: #64748b;
-  font-weight: 500;
+.operation-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
-.stat .value {
-  color: #1e293b;
+.operation-desc {
+  font-size: 12px;
+  color: #bfbfbf;
+}
+
+.operation-count {
   font-weight: 600;
+  color: #262626;
 }
 
-.delete-count {
-  color: #ef4444 !important;
+.protection-note,
+.cleanup-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #8c8c8c;
 }
 
-.operation-control label {
-  color: #374151;
-  font-weight: 500;
+/* 快速操作 */
+.quick-actions {
+  margin-bottom: 24px;
+}
+
+.actions-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: none;
+}
+
+.actions-content {
+  padding: 8px 0;
+}
+
+.action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  border-left: 4px solid #ff4d4f;
+}
+
+.action-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-info p {
+  margin: 0 0 12px 0;
+  color: #8c8c8c;
   font-size: 14px;
 }
 
-.operation-actions {
+.cleanup-preview {
+  margin-top: 8px;
+}
+
+.preview-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.preview-stats span {
+  padding: 4px 8px;
+  background: white;
+  border-radius: 4px;
+  color: #595959;
+}
+
+/* 页脚 */
+.page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: #bfbfbf;
+  font-size: 13px;
+}
+
+/* 确认弹窗样式 */
+.cleanup-confirm-content {
   margin-top: 16px;
 }
 
-.empty-statistics {
-  padding: 40px 0;
+.alert-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #e6f7ff;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  color: #0958d9;
+}
+
+.alert-icon {
+  font-size: 16px;
+}
+
+.cleanup-summary h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #262626;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.summary-item {
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
   text-align: center;
+}
+
+.item-label {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+}
+
+.item-value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.item-value.delete {
+  color: #ff4d4f;
+}
+
+.item-value.protected {
+  color: #52c41a;
+}
+
+.cleanup-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fff7e6;
+  border-radius: 6px;
+  color: #d46b08;
+  margin-top: 12px;
+}
+
+.warning-icon {
+  font-size: 16px;
+}
+
+.cleanup-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.info-icon.delete {
+  color: #ff4d4f;
+}
+
+.info-icon.protected {
+  color: #52c41a;
 }
 
 /* 响应式设计 */
 @media (max-width: 1200px) {
   .page-header {
     flex-direction: column;
-    gap: 20px;
-    text-align: center;
+    gap: 16px;
+    align-items: stretch;
   }
-  
-  .cleanup-operations {
-    padding: 20px;
+
+  .action-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .action-button {
+    align-self: stretch;
   }
 }
 
 @media (max-width: 768px) {
-  .log-cleanup-container {
+  .log-cleanup-page {
     padding: 16px;
   }
-  
+
   .page-header {
     padding: 20px;
   }
-  
-  .header-content h1 {
-    font-size: 24px;
-  }
-  
-  .stat-number {
-    font-size: 24px;
-  }
-  
-  .operation-header {
+
+  .breakdown-row {
     flex-direction: column;
-    text-align: center;
-    gap: 12px;
+  }
+
+  .preview-stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-/* 覆盖 Ant Design 样式 */
+/* Ant Design 样式覆盖 */
 :deep(.ant-card-head) {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f0f0f0;
   padding: 16px 24px;
 }
 
 :deep(.ant-card-head-title) {
   font-weight: 600;
-  color: #1e293b;
+  color: #262626;
+  font-size: 16px;
 }
 
 :deep(.ant-card-body) {
   padding: 24px;
 }
 
-:deep(.ant-progress-bg) {
-  border-radius: 4px;
-}
-
-:deep(.ant-btn-large) {
-  height: 48px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 16px;
+:deep(.ant-btn-lg) {
+  height: 40px;
+  border-radius: 6px;
+  font-weight: 500;
 }
 
 :deep(.ant-input-number-lg) {
-  border-radius: 8px;
-  border: 2px solid #e2e8f0;
+  border-radius: 6px;
 }
 
-:deep(.ant-input-number-lg:focus) {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+:deep(.ant-tag) {
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+:deep(.ant-progress-bg) {
+  border-radius: 2px;
 }
 </style>
