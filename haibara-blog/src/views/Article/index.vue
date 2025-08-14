@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ref} from 'vue'
-import {MdPreview} from 'md-editor-v3';
+import {MdPreview, MdCatalog} from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import {
   addArticleVisit,
@@ -14,6 +14,7 @@ import router from "@/router";
 import useWebsiteStore from "@/store/modules/website.ts";
 import {useColorMode, useTitle} from "@vueuse/core";
 import MobileDirectoryCard from "./MobileDirectoryCard/index.vue";
+import ReadingModeTocTree from "./ReadingModeTocTree/index.vue";
 import {throttle} from "@/utils/optimize.ts";
 import {ARTICLE_VISIT_PREFIX} from "@/const/Visits";
 import PointerRepelText from "@/components/PointerRepelText/index.vue";
@@ -69,6 +70,14 @@ const htmlContent = ref('')
 
 // 文章切换动画状态
 const isArticleTransitioning = ref(false)
+
+// 阅读模式目录显示状态
+const isReadingModeTocVisible = ref(true)
+
+// 切换阅读模式目录显示状态
+function toggleReadingModeToc() {
+  isReadingModeTocVisible.value = !isReadingModeTocVisible.value
+}
 const transitionDirection = ref('') // 'prev' | 'next'
 const transitionProgress = ref(0)
 
@@ -484,21 +493,21 @@ function togglePointerRepel() {
           <div style="display: flex;justify-content: space-between">
             <div class="tag">
               <template v-for="tag in articleDetail.tags" :key="tag.id">
-                <div @click="$router.push(`/tags/${tag.id}`)"># {{ tag.tagName }}</div>
+                <div @click="$router.push(`/tags/${tag.id}`)" class="cursor-pointer"># {{ tag.tagName }}</div>
               </template>
             </div>
             <div class="like">
-              <div @click="likeBtn(articleDetail)">
+              <div @click="likeBtn(articleDetail)" class="cursor-pointer">
                 <SvgIcon v-show="!like" name="like"/>
                 <SvgIcon v-show="like" name="like-selected"/>
                 <span>{{ articleDetail.likeCount }}</span>
               </div>
-              <div @click="collectionBtn(articleDetail)">
+              <div @click="collectionBtn(articleDetail)" class="cursor-pointer">
                 <SvgIcon v-show="!collection" name="collection"/>
                 <SvgIcon v-show="collection" name="collection-selected"/>
                 <span>{{ articleDetail.favoriteCount }}</span>
               </div>
-              <div @click="copyToClipboard">
+              <div @click="copyToClipboard" class="cursor-pointer">
                 <SvgIcon name="share"/>
                 <span>分享</span>
               </div>
@@ -506,7 +515,7 @@ function togglePointerRepel() {
           </div>
           <div>
             <div class="tag" style="display: flex;justify-content: left;">
-              <div @click="$router.push(`/category/${articleDetail.categoryId}`)">{{ articleDetail.categoryName }}</div>
+              <div @click="$router.push(`/category/${articleDetail.categoryId}`)" class="cursor-pointer">{{ articleDetail.categoryName }}</div>
             </div>
           </div>
           <!-- 打赏 -->
@@ -608,7 +617,24 @@ function togglePointerRepel() {
          class="z-10 w-[50px] h-[50px] bg-gray-200 hover:bg-gray-300 fixed top-[2em] right-[1em] lg:right-[5em] rounded flex items-center justify-center duration-300 cursor-pointer">
       <svg-icon name="exit_icon" style="width: 25px;height: 25px;"/>
     </div>
-    <div class="sm:px-1 md:px-[5rem] lg:px-[10rem] xl:px-[15rem] py-3" style="transition: all .5s ease">
+    <!-- 阅读模式目录框 - 左侧树形结构 -->
+    <div class="reading-mode-toc-left fixed top-[2em] left-[1em] z-20 w-[300px] max-h-[calc(100vh-4em)] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-2xl overflow-hidden">
+      <div class="toc-header bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <SvgIcon name="directory" width="20" height="20" class="mr-2 text-blue-600 dark:text-blue-400"/>
+            <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">目录大纲</span>
+          </div>
+          <div @click="toggleReadingModeToc" class="cursor-pointer p-1.5 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-colors">
+            <span class="text-sm font-bold text-gray-600 dark:text-gray-300">{{ isReadingModeTocVisible ? '−' : '+' }}</span>
+          </div>
+        </div>
+      </div>
+      <div v-show="isReadingModeTocVisible" class="toc-content max-h-[calc(100vh-8em)] overflow-y-auto">
+        <ReadingModeTocTree :editor-id="id" :scroll-element="scrollElement"/>
+      </div>
+    </div>
+    <div class="py-3 reading-mode-content" style="transition: all .5s ease; padding-left: 340px; padding-right: 2rem;">
       <div class="head_title" :style="`background-image: url('${articleDetail.articleCover}')`">
         <div class="head_title_text">
           <div class="classify">
@@ -675,21 +701,21 @@ function togglePointerRepel() {
       <div style="display: flex;justify-content: space-between">
         <div class="tag">
           <template v-for="tag in articleDetail.tags" :key="tag.id">
-            <div @click="$router.push(`/tags/${tag.id}`)"># {{ tag.tagName }}</div>
+            <div @click="$router.push(`/tags/${tag.id}`)" class="cursor-pointer"># {{ tag.tagName }}</div>
           </template>
         </div>
         <div class="like">
-          <div @click="likeBtn(articleDetail)">
+          <div @click="likeBtn(articleDetail)" class="cursor-pointer">
             <SvgIcon v-show="!like" name="like"/>
             <SvgIcon v-show="like" name="like-selected"/>
             <span>{{ articleDetail.likeCount }}</span>
           </div>
-          <div @click="collectionBtn(articleDetail)">
+          <div @click="collectionBtn(articleDetail)" class="cursor-pointer">
             <SvgIcon v-show="!collection" name="collection"/>
             <SvgIcon v-show="collection" name="collection-selected"/>
             <span>{{ articleDetail.favoriteCount }}</span>
           </div>
-          <div @click="copyToClipboard">
+          <div @click="copyToClipboard" class="cursor-pointer">
             <SvgIcon name="share"/>
             <span>分享</span>
           </div>
@@ -697,7 +723,7 @@ function togglePointerRepel() {
       </div>
       <div>
         <div class="tag" style="display: flex;justify-content: left;">
-          <div @click="$router.push(`/category/${articleDetail.categoryId}`)">{{ articleDetail.categoryName }}</div>
+          <div @click="$router.push(`/category/${articleDetail.categoryId}`)" class="cursor-pointer">{{ articleDetail.categoryName }}</div>
         </div>
       </div>
       <!-- 打赏 -->
@@ -1934,6 +1960,56 @@ function togglePointerRepel() {
 .normal-mode,
 .reading-mode-container {
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// 阅读模式左侧目录样式
+.reading-mode-toc-left {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  .toc-header {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  
+  .toc-content {
+    background: rgba(255, 255, 255, 0.95);
+    
+    .dark & {
+      background: rgba(17, 24, 39, 0.95);
+    }
+    
+    // 自定义滚动条
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.3);
+      border-radius: 2px;
+      
+      &:hover {
+        background: rgba(156, 163, 175, 0.5);
+      }
+    }
+  }
+  
+  // 响应式隐藏
+  @media (max-width: 1024px) {
+    display: none;
+  }
+}
+
+// 阅读模式内容区域样式
+.reading-mode-content {
+  @media (max-width: 1024px) {
+    padding-left: 1rem !important;
+    margin-left: 0 !important;
+  }
 }
 
 // 过渡动画关键帧

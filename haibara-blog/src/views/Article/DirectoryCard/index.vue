@@ -14,7 +14,7 @@ const id = 'preview-only';
         <span style="margin-left: 10px">目录</span>
       </div>
     </div>
-    <div class="min-h-[16em] max-h-[40em] overflow-y-auto">
+    <div class="min-h-[16em] max-h-[24em] overflow-y-auto">
       <MdCatalog :editorId="id" :scrollElement="scrollElement"/>
     </div>
   </div>

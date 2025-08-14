@@ -86,7 +86,7 @@ function loadContent(){
         <img v-if="randomArticle.articleCover" :src="imgRefresh ? randomArticle.articleCover: ''" :data-src="randomArticle.articleCover" v-lazy="true"  alt="文章封面"/>
       </div>
       <div class="random_text" :key="randomArticle.id">
-        <div>{{ randomArticle.articleTitle }}</div>
+        <div @click="$router.push('/article/'+randomArticle.id)" class="cursor-pointer hover:text-[#409EFF] transition-colors">{{ randomArticle.articleTitle }}</div>
         <div>{{ randomArticle.createTime }}</div>
       </div>
     </div>

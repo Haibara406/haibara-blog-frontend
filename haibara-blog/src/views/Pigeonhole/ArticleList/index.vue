@@ -18,11 +18,11 @@ defineProps({
         <div class="article_right">
           <span class="article_time">{{ article.createTime }}</span>
           <span @click="$router.push(`/article/${article.id}`)"
-                class="article_title"><span>{{ article.articleTitle }}</span> <span><SvgIcon
+                class="article_title cursor-pointer"><span>{{ article.articleTitle }}</span> <span><SvgIcon
               name="heat"/>{{ article.visitCount }}</span></span>
           <div class="article_tag">
             <template v-for="tag in article.tags" :key="tag.id">
-              <span @click="$router.push(`/tags/${tag.id}`)" >#{{ tag.tagName }}</span>
+              <span @click="$router.push(`/tags/${tag.id}`)" class="cursor-pointer">#{{ tag.tagName }}</span>
             </template>
           </div>
         </div>
