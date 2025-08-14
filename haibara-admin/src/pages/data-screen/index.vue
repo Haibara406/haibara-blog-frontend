@@ -3,6 +3,11 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import dayjs from 'dayjs'
 import { websiteInfo } from '~/api/blog/webInfo'
+import { articleList } from '~/api/blog/article'
+import { categoryList } from '~/api/blog/category'
+import { commentList } from '~/api/blog/comment'
+import { logList } from '~/api/log/operate'
+import { userList } from '~/api/user'
 import {
   FileTextOutlined,
   EyeOutlined,
@@ -29,6 +34,15 @@ const websiteData = ref({
   visitCount: 0,
   commentCount: 0,
   categoryCount: 0
+})
+
+// 真实统计数据
+const realStatData = ref({
+  articles: [],
+  categories: [],
+  comments: [],
+  logs: [],
+  users: []
 })
 
 // 核心指标数据
@@ -85,18 +99,50 @@ const commentChart = ref<echarts.ECharts>()
 const timeTimer = ref<NodeJS.Timeout>()
 const refreshTimer = ref<NodeJS.Timeout>()
 
+// 获取真实统计数据
+const fetchRealData = async () => {
+  try {
+    // 并行获取所有数据
+    const [articlesRes, categoriesRes, commentsRes, logsRes, usersRes] = await Promise.all([
+      articleList(),
+      categoryList(), 
+      commentList(),
+      logList(1, 1000), // 获取更多日志数据用于统计
+      userList()
+    ])
+
+    if (articlesRes?.code === 200) realStatData.value.articles = articlesRes.data || []
+    if (categoriesRes?.code === 200) realStatData.value.categories = categoriesRes.data || []
+    if (commentsRes?.code === 200) realStatData.value.comments = commentsRes.data || []
+    if (logsRes?.code === 200) realStatData.value.logs = logsRes.data?.page || []
+    if (usersRes?.code === 200) realStatData.value.users = usersRes.data || []
+
+    console.log('获取到的真实数据:', realStatData.value)
+  } catch (error) {
+    console.error('获取真实数据失败:', error)
+  }
+}
+
 // 获取网站数据
 const fetchWebsiteData = async () => {
   try {
     loading.value = true
+    
+    // 先获取基础网站信息
     const res = await websiteInfo()
     if (res.code === 200) {
       websiteData.value = res.data
-      updateCoreMetrics()
-      // 如果图表已经初始化，则更新图表
-      if (visitTrendChart.value) {
-        updateCharts()
-      }
+    }
+    
+    // 获取真实统计数据
+    await fetchRealData()
+    
+    // 更新核心指标
+    updateCoreMetrics()
+    
+    // 如果图表已经初始化，则更新图表
+    if (visitTrendChart.value) {
+      updateCharts()
     }
   } catch (error) {
     console.error('获取网站数据失败:', error)
@@ -107,70 +153,177 @@ const fetchWebsiteData = async () => {
 
 // 更新核心指标
 const updateCoreMetrics = () => {
-  coreMetrics.value[0].value = websiteData.value.articleCount || 0
-  coreMetrics.value[1].value = websiteData.value.visitCount || 0
-  coreMetrics.value[2].value = websiteData.value.commentCount || 0
-  coreMetrics.value[3].value = websiteData.value.categoryCount || 0
+  // 使用真实数据更新指标
+  const realArticleCount = realStatData.value.articles.length || websiteData.value.articleCount || 0
+  const realCategoryCount = realStatData.value.categories.length || websiteData.value.categoryCount || 0
+  const realCommentCount = realStatData.value.comments.length || websiteData.value.commentCount || 0
+  const realUserCount = realStatData.value.users.length || 0
+
+  coreMetrics.value[0].value = realArticleCount
+  coreMetrics.value[1].value = websiteData.value.visitCount || realStatData.value.logs.length || 0
+  coreMetrics.value[2].value = realCommentCount
+  coreMetrics.value[3].value = realCategoryCount
+
+  // 动态更新趋势数据
+  updateMetricsTrends()
 }
 
-// 生成智能模拟数据
-const generateSmartMockData = () => {
-  // 访问量趋势数据（最近30天）
+// 更新指标趋势
+const updateMetricsTrends = () => {
+  // 计算最近一周和上周的数据对比来生成趋势
+  const currentWeekLogs = realStatData.value.logs.filter(log => {
+    if (!log.loginTime) return false
+    const logDate = dayjs(log.loginTime)
+    const weekAgo = dayjs().subtract(7, 'day')
+    return logDate.isAfter(weekAgo)
+  })
+
+  const lastWeekLogs = realStatData.value.logs.filter(log => {
+    if (!log.loginTime) return false
+    const logDate = dayjs(log.loginTime)
+    const twoWeeksAgo = dayjs().subtract(14, 'day')
+    const weekAgo = dayjs().subtract(7, 'day')
+    return logDate.isAfter(twoWeeksAgo) && logDate.isBefore(weekAgo)
+  })
+
+  // 计算活跃度趋势
+  const currentWeekActivity = currentWeekLogs.length
+  const lastWeekActivity = lastWeekLogs.length
+
+  if (lastWeekActivity > 0) {
+    const trendPercentage = ((currentWeekActivity - lastWeekActivity) / lastWeekActivity * 100).toFixed(1)
+    const isPositive = parseFloat(trendPercentage) >= 0
+    
+    // 更新访问量趋势
+    coreMetrics.value[1].trend = `${isPositive ? '+' : ''}${trendPercentage}%`
+    coreMetrics.value[1].trendType = isPositive ? 'up' : 'down'
+    coreMetrics.value[1].description = isPositive ? '较上周增长' : '较上周下降'
+  }
+
+  // 计算最近评论趋势
+  const recentComments = realStatData.value.comments.filter(comment => {
+    if (!comment.createTime) return false
+    const commentDate = dayjs(comment.createTime)
+    const weekAgo = dayjs().subtract(7, 'day')
+    return commentDate.isAfter(weekAgo)
+  })
+
+  if (recentComments.length > 0) {
+    const commentTrend = Math.min(50, recentComments.length * 5) // 限制在合理范围内
+    coreMetrics.value[2].trend = `+${commentTrend.toFixed(1)}%`
+    coreMetrics.value[2].trendType = 'up'
+    coreMetrics.value[2].description = '活跃度良好'
+  }
+}
+
+// 生成基于真实数据的智能图表数据
+const generateRealBasedData = () => {
+  // 访问量趋势数据（基于操作日志）
   const visitTrendData = {
     dates: [],
     visits: []
   }
 
-  for (let i = 29; i >= 0; i--) {
-    const date = dayjs().subtract(i, 'day').format('MM-DD')
-    visitTrendData.dates.push(date)
-    // 基于真实访问量生成趋势数据
-    const baseVisit = Math.floor((websiteData.value.visitCount || 1000) / 30)
-    const randomFactor = 0.6 + Math.random() * 0.8 // 0.6-1.4的随机因子
-    visitTrendData.visits.push(Math.floor(baseVisit * randomFactor))
+  // 分析最近30天的操作日志
+  const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const date = dayjs().subtract(29 - i, 'day')
+    return {
+      date: date.format('MM-DD'),
+      fullDate: date.format('YYYY-MM-DD')
+    }
+  })
+
+  last30Days.forEach(day => {
+    visitTrendData.dates.push(day.date)
+    // 统计当天的操作日志数量作为访问量指标
+    const dayLogs = realStatData.value.logs.filter(log => {
+      if (!log.loginTime) return false
+      const logDate = dayjs(log.loginTime).format('YYYY-MM-DD')
+      return logDate === day.fullDate
+    })
+    visitTrendData.visits.push(dayLogs.length || 0)
+  })
+
+  // 真实文章分类数据
+  const categoryData = []
+  const categoryStats = {}
+  
+  // 统计真实分类数据
+  realStatData.value.categories.forEach(category => {
+    categoryStats[category.categoryName] = 0
+  })
+  
+  realStatData.value.articles.forEach(article => {
+    if (article.categoryName && categoryStats.hasOwnProperty(article.categoryName)) {
+      categoryStats[article.categoryName]++
+    }
+  })
+
+  // 转换为图表数据格式
+  Object.keys(categoryStats).forEach(name => {
+    if (categoryStats[name] > 0) {
+      categoryData.push({
+        name,
+        value: categoryStats[name]
+      })
+    }
+  })
+
+  // 如果没有真实数据，使用默认数据
+  if (categoryData.length === 0) {
+    categoryData.push(
+      { name: '技术分享', value: Math.floor((websiteData.value.articleCount || 10) * 0.4) },
+      { name: '生活随笔', value: Math.floor((websiteData.value.articleCount || 10) * 0.3) },
+      { name: '项目总结', value: Math.floor((websiteData.value.articleCount || 10) * 0.2) },
+      { name: '其他', value: Math.floor((websiteData.value.articleCount || 10) * 0.1) }
+    )
   }
 
-  // 文章分类数据
-  const categoryData = [
-    { name: '技术分享', value: Math.floor((websiteData.value.articleCount || 50) * 0.4) },
-    { name: '生活随笔', value: Math.floor((websiteData.value.articleCount || 50) * 0.25) },
-    { name: '项目总结', value: Math.floor((websiteData.value.articleCount || 50) * 0.2) },
-    { name: '学习笔记', value: Math.floor((websiteData.value.articleCount || 50) * 0.1) },
-    { name: '其他', value: Math.floor((websiteData.value.articleCount || 50) * 0.05) }
-  ]
-
-  // 24小时访问分布
+  // 24小时访问分布（基于操作日志时间）
   const hourlyData = {
     hours: [],
     visits: []
   }
 
+  const hourStats = Array(24).fill(0)
+  
+  // 统计操作日志的小时分布
+  realStatData.value.logs.forEach(log => {
+    if (log.loginTime) {
+      const hour = dayjs(log.loginTime).hour()
+      hourStats[hour]++
+    }
+  })
+
   for (let i = 0; i < 24; i++) {
     hourlyData.hours.push(i + ':00')
-    // 模拟访问高峰：9-11点，14-16点，20-22点
-    let factor = 0.3
-    if ((i >= 9 && i <= 11) || (i >= 14 && i <= 16) || (i >= 20 && i <= 22)) {
-      factor = 0.8 + Math.random() * 0.4
-    } else if (i >= 0 && i <= 6) {
-      factor = 0.1 + Math.random() * 0.2
-    } else {
-      factor = 0.4 + Math.random() * 0.4
-    }
-    hourlyData.visits.push(Math.floor(100 * factor))
+    hourlyData.visits.push(hourStats[i] || 0)
   }
 
-  // 评论活跃度（最近7天）
+  // 评论活跃度（基于真实评论数据）
   const commentData = {
     dates: [],
     comments: []
   }
 
-  for (let i = 6; i >= 0; i--) {
-    const date = dayjs().subtract(i, 'day').format('MM-DD')
-    commentData.dates.push(date)
-    const baseComment = Math.floor((websiteData.value.commentCount || 100) / 30)
-    commentData.comments.push(Math.floor(baseComment * (0.5 + Math.random())))
-  }
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const date = dayjs().subtract(6 - i, 'day')
+    return {
+      date: date.format('MM-DD'),
+      fullDate: date.format('YYYY-MM-DD')
+    }
+  })
+
+  last7Days.forEach(day => {
+    commentData.dates.push(day.date)
+    // 统计当天的评论数量
+    const dayComments = realStatData.value.comments.filter(comment => {
+      if (!comment.createTime) return false
+      const commentDate = dayjs(comment.createTime).format('YYYY-MM-DD')
+      return commentDate === day.fullDate
+    })
+    commentData.comments.push(dayComments.length || 0)
+  })
 
   return { visitTrendData, categoryData, hourlyData, commentData }
 }
@@ -258,11 +411,11 @@ const handleResize = () => {
 
 // 更新所有图表
 const updateCharts = () => {
-  const mockData = generateSmartMockData()
-  updateVisitTrendChart(mockData.visitTrendData)
-  updateCategoryChart(mockData.categoryData)
-  updateHourlyChart(mockData.hourlyData)
-  updateCommentChart(mockData.commentData)
+  const realData = generateRealBasedData()
+  updateVisitTrendChart(realData.visitTrendData)
+  updateCategoryChart(realData.categoryData)
+  updateHourlyChart(realData.hourlyData)
+  updateCommentChart(realData.commentData)
 }
 
 // 更新访问量趋势图

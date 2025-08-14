@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import type { Ref, UnwrapRef } from 'vue'
 import { createVNode } from 'vue'
-import 'md-editor-v3/lib/style.css'
-import { MdPreview } from 'md-editor-v3'
 import { Modal, message } from 'ant-design-vue'
 import { ExclamationCircleOutlined, MessageOutlined } from '@ant-design/icons-vue'
 import dayjs from 'dayjs'
+import EnhancedContentModal from '~/components/enhanced-content-modal.vue'
 
 import { deleteLeaveMessage, isCheckLeaveMessage, leaveMessageList, searchLeaveMessage } from '~/api/blog/leave-word'
 
@@ -162,6 +161,7 @@ function onDelete(ids?: string[]) {
 const contentModel = reactive({
   show: false,
   content: '',
+  currentData: {} as any
 })
 
 // 查看
@@ -169,8 +169,12 @@ function viewFunc(id?: string) {
   if (!id)
     id = state.selectedRowKeys[0] as string
 
-  contentModel.show = true
-  contentModel.content = tabData.value.find((item: any) => item.id === id)?.content as string
+  const foundItem = tabData.value.find((item: any) => item.id === id)
+  if (foundItem) {
+    contentModel.currentData = foundItem
+    contentModel.content = foundItem.content
+    contentModel.show = true
+  }
 }
 // 前台域名
 const domain = import.meta.env.VITE_APP_DOMAIN_NAME_FRONT
@@ -220,18 +224,14 @@ const domain = import.meta.env.VITE_APP_DOMAIN_NAME_FRONT
         </template>
         删除
       </a-button>
-      <!-- 查看框 -->
-      <a-modal v-model:open="contentModel.show" width="700px">
-        <template #title>
-          <span style="color: #1677FF"><MessageOutlined /></span><span style="margin-left: 0.2rem">查看留言</span>
-        </template>
-        <template #footer>
-          <a-button @click="contentModel.show = false">
-            关闭
-          </a-button>
-        </template>
-        <MdPreview v-model="contentModel.content" />
-      </a-modal>
+      <!-- 增强型查看弹窗 -->
+      <EnhancedContentModal
+        v-model:open="contentModel.show"
+        :content="contentModel.content"
+        :contentData="contentModel.currentData"
+        title="留言详情"
+        type="message"
+      />
     </template>
     <template #table-content>
       <a-table

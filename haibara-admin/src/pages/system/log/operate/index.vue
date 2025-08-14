@@ -1,7 +1,20 @@
 <script setup lang="ts">
 import { Modal, message } from 'ant-design-vue'
 import { createVNode } from 'vue'
-import { ExclamationCircleOutlined, FileExcelOutlined, FileTextOutlined, DownOutlined } from '@ant-design/icons-vue'
+import { 
+  ExclamationCircleOutlined, 
+  FileExcelOutlined, 
+  FileTextOutlined, 
+  DownOutlined,
+  InfoCircleOutlined,
+  UserOutlined,
+  GlobalOutlined,
+  CodeOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+  EnvironmentOutlined
+} from '@ant-design/icons-vue'
 import { deleteLogByIds, logList, searchLog } from '~/api/log/operate'
 import { useExport } from '@/composables/useExport'
 
@@ -76,6 +89,37 @@ const loading = ref(false)
 const tabData = ref([]) as any
 // 类型
 const operations = ref()
+
+// 格式化JSON
+const formatJson = (jsonString: string) => {
+  try {
+    if (!jsonString) return ''
+    const parsed = JSON.parse(jsonString)
+    return JSON.stringify(parsed, null, 2)
+  } catch {
+    return jsonString
+  }
+}
+
+// 获取操作类型颜色
+const getOperationColor = (operation: string) => {
+  const colorMap = {
+    '新增': '#52c41a',
+    '修改': '#1890ff',
+    '删除': '#ff4d4f',
+    '查询': '#13c2c2',
+    '登录': '#722ed1',
+    '登出': '#fa8c16'
+  }
+  return colorMap[operation] || '#666666'
+}
+
+// 获取用户头像（可以根据实际情况修改）
+const getUserAvatar = (userName: string) => {
+  // 这里可以根据实际需求返回用户头像URL
+  // 暂时返回空，让Avatar组件显示用户名首字母
+  return null
+}
 
 onMounted(() => {
   refreshFunc()
@@ -377,121 +421,695 @@ const state = reactive<{
           </template>
         </template>
       </a-table>
-      <a-modal v-model:open="modalOpen" width="900px" @cancel="handleClose">
+          <a-modal
+        v-model:open="modalOpen"
+        width="1000px"
+        :bodyStyle="{ padding: '0' }"
+        @cancel="handleClose"
+        class="operation-log-modal"
+      >
         <template #footer>
-          <a-button @click="handleClose">
-            关闭
-          </a-button>
+          <div class="modal-footer">
+            <a-button size="large" @click="handleClose">
+              关闭
+            </a-button>
+          </div>
         </template>
         <template #title>
-          <span style="font-size: 1.2rem">操作日志详细</span>
+          <div class="modal-header">
+            <FileTextOutlined />
+            <span>操作日志详情</span>
+          </div>
         </template>
-        <div class="log-detail">
-          <div>
-            <div>
-              <label>操作模块：</label><div>{{ logDetail.module }}</div>
-            </div>
-            <div><label>请求地址：</label><div>{{ logDetail.reqAddress }}</div></div>
-          </div>
-          <div>
-            <div><label>登录信息：</label><div>{{ logDetail.userName }} / {{ logDetail.ip }} / {{ logDetail.address }}</div></div>
-            <div><label>请求方式：</label><div>{{ logDetail.reqMapping }}</div></div>
-          </div>
-          <div>
-            <div><label>操作方法：</label><div>{{ logDetail.method }}</div></div>
-          </div>
-          <div>
-            <div>
-              <label>
-                请求参数：
-              </label><div>{{ logDetail.reqParameter }}</div>
-            </div>
-          </div>
-          <div>
-            <div><label>返回参数：</label><div>{{ logDetail.returnParameter }}</div></div>
-          </div>
-          <div>
-            <div>
-              <label>操作类型：</label>
-              <div>
-                <a-tag color="orange">
-                  {{ logDetail.operation }}
-                </a-tag>
+        <template v-if="logDetail">
+          <div class="log-detail-container">
+            <div class="log-detail-scroll">
+              <!-- 操作概览区域 -->
+              <div class="operation-overview">
+                              <div class="operation-icon">
+                <div class="avatar-container" v-if="logDetail.userName && logDetail.userName !== 'unknown-1702606997'">
+                  <a-avatar :size="80" :src="getUserAvatar(logDetail.userName)">
+                    {{ logDetail.userName?.charAt(0)?.toUpperCase() }}
+                  </a-avatar>
+                </div>
+                <div v-else class="icon-container" :style="{ background: getOperationColor(logDetail.operation) }">
+                  <FileTextOutlined />
+                </div>
+                  <div class="status-badge">
+                    <a-tag v-if="logDetail.state === 0" color="#52c41a" class="status-tag">
+                      <CheckCircleOutlined />
+                      成功
+                    </a-tag>
+                    <a-tag v-else-if="logDetail.state === 1" color="#ff4d4f" class="status-tag">
+                      <CloseCircleOutlined />
+                      失败
+                    </a-tag>
+                    <a-tag v-else-if="logDetail.state === 2" color="#fa8c16" class="status-tag">
+                      <ExclamationCircleOutlined />
+                      异常
+                    </a-tag>
+                  </div>
+                </div>
+                <div class="operation-summary">
+                  <h2 class="operation-title">{{ logDetail.module || '未知模块' }}</h2>
+                  <p class="operation-type">{{ logDetail.operation || '未知操作' }}</p>
+                  <div class="operation-meta">
+                    <span class="meta-item">
+                      <ClockCircleOutlined />
+                      耗时: {{ logDetail.time }}ms
+                    </span>
+                    <span class="meta-item">
+                      <UserOutlined />
+                      操作者: {{ logDetail.userName || '未知用户' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 详细信息网格 -->
+              <div class="details-grid">
+                <!-- 基础信息 -->
+                <div class="detail-card">
+                  <div class="card-header">
+                    <InfoCircleOutlined />
+                    <h3>基础信息</h3>
+                  </div>
+                  <div class="card-content">
+                    <div class="info-item">
+                      <span class="label">操作时间</span>
+                      <span class="value">{{ logDetail.loginTime || '未知时间' }}</span>
+                    </div>
+                    <div class="info-item method-item">
+                      <span class="label">操作方法</span>
+                      <div class="value method-value">
+                        <a-tooltip 
+                          :title="logDetail.method || '未知方法'" 
+                          placement="topLeft"
+                          :overlayStyle="{ maxWidth: '500px', fontSize: '12px' }"
+                          color="#1f2937"
+                        >
+                          <span class="method-text">{{ logDetail.method || '未知方法' }}</span>
+                        </a-tooltip>
+                      </div>
+                    </div>
+                    <div class="info-item">
+                      <span class="label">消耗时间</span>
+                      <span class="value">
+                        <a-tag color="blue">
+                          <ClockCircleOutlined />
+                          {{ logDetail.time }}ms
+                        </a-tag>
+                      </span>
+                    </div>
+                    <div class="info-item">
+                      <span class="label">操作描述</span>
+                      <span class="value">{{ logDetail.description || '无描述' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 用户信息 -->
+                <div class="detail-card">
+                  <div class="card-header">
+                    <UserOutlined />
+                    <h3>用户信息</h3>
+                  </div>
+                  <div class="card-content">
+                    <div class="info-item">
+                      <span class="label">操作用户</span>
+                      <span class="value">{{ logDetail.userName || '未知用户' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="label">IP地址</span>
+                      <span class="value">{{ logDetail.ip || '未知IP' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="label">地理位置</span>
+                      <span class="value">
+                        <EnvironmentOutlined />
+                        {{ logDetail.address || '未知位置' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 请求信息 -->
+                <div class="detail-card full-width">
+                  <div class="card-header">
+                    <GlobalOutlined />
+                    <h3>请求信息</h3>
+                  </div>
+                  <div class="card-content">
+                    <div class="info-item">
+                      <span class="label">请求地址</span>
+                      <span class="value url-value">{{ logDetail.reqAddress || '未知地址' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="label">请求映射</span>
+                      <span class="value url-value">{{ logDetail.reqMapping || '未知映射' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 参数信息 -->
+                <div class="detail-card full-width">
+                  <div class="card-header">
+                    <CodeOutlined />
+                    <h3>参数信息</h3>
+                  </div>
+                  <div class="card-content">
+                    <div class="params-section">
+                      <div class="param-item">
+                        <span class="label">请求参数</span>
+                        <div class="param-content">
+                          <pre v-if="logDetail.reqParameter">{{ formatJson(logDetail.reqParameter) }}</pre>
+                          <div v-else class="no-data">无请求参数</div>
+                        </div>
+                      </div>
+                      <div class="param-item">
+                        <span class="label">返回参数</span>
+                        <div class="param-content">
+                          <pre v-if="logDetail.returnParameter">{{ formatJson(logDetail.returnParameter) }}</pre>
+                          <div v-else class="no-data">无返回参数</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 异常信息 -->
+                <div v-if="logDetail.state === 2 && logDetail.exception" class="detail-card full-width exception-card">
+                  <div class="card-header">
+                    <ExclamationCircleOutlined />
+                    <h3>异常信息</h3>
+                  </div>
+                  <div class="card-content">
+                    <div class="exception-content">
+                      <pre>{{ logDetail.exception }}</pre>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <label>操作描述：</label>
-              <div>
-                {{ logDetail.description }}
-              </div>
-            </div>
           </div>
-          <div>
-            <div v-if="logDetail.state === 2">
-              <label>异常信息：</label>
-              <div>
-                {{ logDetail.exception }}
-              </div>
-            </div>
+        </template>
+        <template v-else>
+          <div class="loading-container">
+            <a-skeleton active :paragraph="{ rows: 8 }" />
           </div>
-          <div>
-            <div>
-              <label>操作状态：</label>
-              <div v-if="logDetail.state === 0">
-                <a-tag color="#87d068">
-                  成功
-                </a-tag>
-              </div>
-              <div v-if="logDetail.state === 1">
-                <a-tag color="#f50">
-                  失败
-                </a-tag>
-              </div>
-              <div v-if="logDetail.state === 2">
-                <a-tag color="#a46244">
-                  异常
-                </a-tag>
-              </div>
-            </div>
-            <div>
-              <label>消耗时间：</label><div>
-                <a-tag color="blue">
-                  {{ logDetail.time }}毫秒
-                </a-tag>
-              </div>
-            </div>
-            <div><label>操作时间：</label><div>{{ logDetail.loginTime }}</div></div>
-          </div>
-        </div>
+        </template>
       </a-modal>
     </template>
   </layout>
 </template>
 
 <style scoped lang="scss">
-.log-detail{
+// 操作日志弹窗样式
+:deep(.operation-log-modal) {
+  .ant-modal-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 16px 24px;
+  }
+  
+  .ant-modal-body {
+    max-height: 85vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #d9d9d9 transparent;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #d9d9d9;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-footer {
+  text-align: right;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.log-detail-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 500px;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+.log-detail-scroll {
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d9d9d9 transparent;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #d9d9d9;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #bfbfbf;
+    }
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.loading-container {
+  padding: 40px;
+  background: #f8fafc;
+}
+
+// 操作概览区域
+.operation-overview {
+  background: white;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  }
+}
+
+.operation-icon {
+  position: relative;
   display: flex;
   flex-direction: column;
-  // 文本自动换行
-  word-break: break-all;
-  div{
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-container {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 4px solid white;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  }
+}
+
+.avatar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  :deep(.ant-avatar) {
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 4px solid white;
+    transition: all 0.3s ease;
+    font-size: 24px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    }
+  }
+}
+
+.status-badge {
+  .status-tag {
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-weight: 600;
     display: flex;
-    margin-top: 1rem;
-    @media(max-width: 768px) {
-      display: block;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.operation-summary {
+  flex: 1;
+}
+
+.operation-title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.operation-type {
+  margin: 0 0 16px 0;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.operation-meta {
+  display: flex;
+  gap: 24px;
+  
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #374151;
+    font-weight: 500;
+    font-size: 14px;
+  }
+}
+
+// 详细信息网格
+.details-grid {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.detail-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+  
+  &.exception-card {
+    border-color: #fca5a5;
+  }
+}
+
+.card-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+
+// 为不同卡片设置不同的颜色
+.detail-card:nth-child(1) .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.detail-card:nth-child(2) .card-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.detail-card:nth-child(3) .card-header {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.detail-card:nth-child(4) .card-header {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.exception-card .card-header {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.card-content {
+  padding: 20px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &.method-item {
+    .value {
+      text-align: right;
+      max-width: 350px;
     }
-    div{
-      display: flex;
-      width: 100%;
-      label{
-        font-weight: bold;
-        width: 7em;
-        font-size: 1rem;
-      }
-      div{
-        margin-top: 0;
+  }
+
+  .label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+    min-width: 80px;
+    text-align: left;
+  }
+
+  .value {
+    flex: 1;
+    text-align: right;
+    color: #1e293b;
+    font-weight: 500;
+    
+    &.method-value {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      color: #7c3aed;
+      font-weight: 600;
+      max-width: 300px;
+      word-break: break-all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      
+      .method-text {
+        cursor: help;
+        position: relative;
+        
+        &:hover {
+          color: #1890ff;
+          text-decoration: underline;
+          text-decoration-style: dashed;
+        }
       }
     }
+
+    &.url-value {
+      color: #0ea5e9;
+      font-weight: 500;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      word-break: break-all;
+    }
+  }
+}
+
+.params-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.param-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .param-content {
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #334155;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #1e293b;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+
+    pre {
+      margin: 0;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .no-data {
+      color: #94a3b8;
+      font-style: italic;
+      text-align: center;
+      padding: 20px;
+    }
+  }
+}
+
+.exception-content {
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #334155;
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #1e293b;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+
+  pre {
+    margin: 0;
+    color: #fca5a5;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+}
+
+// 标签样式优化
+:deep(.ant-tag) {
+  border-radius: 8px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .operation-overview {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px 16px;
+    gap: 20px;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .operation-title {
+    font-size: 24px;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    
+    .value {
+      text-align: left;
+    }
+  }
+  
+  .card-content {
+    padding: 16px;
+  }
+  
+  .param-content {
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .icon-container {
+    width: 80px !important;
+    height: 80px !important;
+    font-size: 32px !important;
+  }
+  
+  .operation-title {
+    font-size: 20px;
+  }
+  
+  .details-grid {
+    padding: 12px;
   }
 }
 </style>

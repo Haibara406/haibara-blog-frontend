@@ -2015,30 +2015,44 @@ onMounted(() => {
   font-weight: bold;
   color: white;
   font-size: 11px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.tech-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .tech-icon.vue {
-  background: #4fc08d;
+  background: linear-gradient(135deg, #4fc08d 0%, #42a76b 100%);
+  border: 1px solid rgba(79, 192, 141, 0.3);
 }
 
 .tech-icon.spring {
-  background: #6db33f;
+  background: linear-gradient(135deg, #6db33f 0%, #5ea33a 100%);
+  border: 1px solid rgba(109, 179, 63, 0.3);
 }
 
 .tech-icon.antd {
-  background: #1890ff;
+  background: linear-gradient(135deg, #1890ff 0%, #1573d4 100%);
+  border: 1px solid rgba(24, 144, 255, 0.3);
 }
 
 .tech-icon.mysql {
-  background: #4479a1;
+  background: linear-gradient(135deg, #4479a1 0%, #3a6887 100%);
+  border: 1px solid rgba(68, 121, 161, 0.3);
 }
 
 .tech-icon.redis {
-  background: #dc382d;
+  background: linear-gradient(135deg, #dc382d 0%, #c23225 100%);
+  border: 1px solid rgba(220, 56, 45, 0.3);
 }
 
 .tech-icon.docker {
-  background: #2496ed;
+  background: linear-gradient(135deg, #2496ed 0%, #1f7fcb 100%);
+  border: 1px solid rgba(36, 150, 237, 0.3);
 }
 
 .tech-item span {
