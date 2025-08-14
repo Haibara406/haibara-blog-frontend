@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, computed} from 'vue'
 import {MdPreview, MdCatalog} from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import {
@@ -346,6 +346,14 @@ function ReadingModeFunc() {
   toggleReadingMode()
 }
 
+// 判断是否为技术类文章
+const isTechArticle = computed(() => {
+  const techCategories = ['技术', '技术分享', '编程', '开发', '前端', '后端', '算法', 'Tech', 'Technology', 'Programming', 'Development']
+  return techCategories.some(category => 
+    articleDetail.value.categoryName.toLowerCase().includes(category.toLowerCase())
+  )
+})
+
 // 切换指针排斥特效（保留函数但不再使用）
 function togglePointerRepel() {
   isPointerRepelEnabled.value = !isPointerRepelEnabled.value;
@@ -436,9 +444,27 @@ function togglePointerRepel() {
               </div>
             </div>
 
-            <!-- 指针排斥特效文本（默认开启） -->
+            <!-- 技术类文章提示或指针排斥特效文本 -->
             <div class="pointer-repel-wrapper">
+              <!-- 技术类文章提示 -->
+              <div v-if="isTechArticle" class="tech-article-notice">
+                <div class="notice-content">
+                  <div class="notice-icon">💻</div>
+                  <div class="notice-text">
+                    <h4>技术类文章提示</h4>
+                    <p>技术类文章暂不支持在特效文本框中展示，请点击右侧阅读模式按钮进入阅读模式以获得更好的阅读体验。</p>
+                  </div>
+                  <div class="notice-action">
+                    <button @click="ReadingModeFunc" class="reading-mode-btn">
+                      📖 进入阅读模式
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 非技术类文章显示指针排斥特效 -->
               <PointerRepelText
+                v-else
                 :content="plainTextContent"
                 :html-content="htmlContent"
                 :preserve-structure="true"
@@ -1791,6 +1817,116 @@ function togglePointerRepel() {
       padding: 15px;
     }
   }
+  
+  // 技术类文章提示样式
+  .tech-article-notice {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 1rem;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      animation: shimmer 3s infinite;
+    }
+    
+    .notice-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 600px;
+      position: relative;
+      z-index: 1;
+      
+      .notice-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: float 3s ease-in-out infinite;
+      }
+      
+      .notice-text {
+        margin-bottom: 1.5rem;
+        
+        h4 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--el-text-color-primary);
+          margin-bottom: 0.75rem;
+        }
+        
+        p {
+          font-size: 1rem;
+          line-height: 1.6;
+          color: var(--el-text-color-regular);
+          margin: 0;
+        }
+      }
+      
+      .notice-action {
+        .reading-mode-btn {
+          padding: 0.75rem 2rem;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          border: none;
+          border-radius: 2rem;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          
+          &:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+          }
+          
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+    }
+    
+    @media screen and (max-width: 768px) {
+      padding: 1.5rem 1rem;
+      min-height: 150px;
+      
+      .notice-content {
+        .notice-icon {
+          font-size: 2.5rem;
+        }
+        
+        .notice-text {
+          h4 {
+            font-size: 1.1rem;
+          }
+          
+          p {
+            font-size: 0.9rem;
+          }
+        }
+        
+        .notice-action .reading-mode-btn {
+          padding: 0.6rem 1.5rem;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
 }
 
 // 闪烁动画
@@ -1802,6 +1938,26 @@ function togglePointerRepel() {
   50% {
     opacity: 0.7;
     transform: scale(1.1);
+  }
+}
+
+// 浮动动画
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+// 闪光动画
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
   }
 }
 
