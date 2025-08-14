@@ -17,6 +17,20 @@ const route = useRoute()
 // 日夜切换
 const mode = useColorMode()
 const dialogVisible = ref(false)
+const dialogRef = ref()
+
+// 关闭动画状态
+const isClosing = ref(false)
+
+// 处理对话框关闭
+const handleDialogClose = () => {
+  isClosing.value = true
+  // 等待动画完成后关闭
+  setTimeout(() => {
+    dialogVisible.value = false
+    isClosing.value = false
+  }, 300)
+}
 
 onMounted(async () => {
   try {
@@ -102,23 +116,34 @@ const handleLoginClick = () => {
 
 </script>
 <template>
-  <div class="search_dialog_container">
+  <div class="search_dialog_container" v-if="dialogVisible">
     <!-- 搜索内容 -->
-    <el-dialog
-        v-model="dialogVisible"
-        :show-close="false"
-        :close-on-click-modal="false"
-        :lock-scroll="true"
-    >
-      <template #header>
-        <div style="display: flex;justify-content: space-between;align-items: center">
-          <span style="font-size: 1.2rem">搜索</span>
-          <el-button :icon="Close" style="background: none;font-size: 1.5rem;width: 30px;border: none"
-                     @click="dialogVisible = false"/>
+    <div class="search-panel" :class="{ closing: isClosing }" @click.self="handleDialogClose">
+      <!-- 搜索弹窗容器 -->
+      <div class="search-container">
+        <!-- 标题区域 -->
+        <div class="header-section">
+          <div class="header-content">
+            <h2 class="main-title">
+              <SvgIcon name="search" width="24" height="24" color="white" class="title-icon" />
+              智能搜索
+            </h2>
+            <p class="subtitle">快速查找您需要的内容</p>
+            <el-button 
+              type="text" 
+              :icon="Close" 
+              @click="handleDialogClose"
+              class="close-btn"
+            />
+          </div>
         </div>
-      </template>
-      <Search @isShowSearch="dialogVisible = false"/>
-    </el-dialog>
+        
+        <!-- 搜索内容区域 -->
+        <div class="content-section">
+          <Search @isShowSearch="handleDialogClose"/>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="menu">
     <Menu/>
@@ -309,40 +334,201 @@ const handleLoginClick = () => {
   }
 }
 
+// 搜索面板样式
 .search_dialog_container {
-  :deep(.el-dialog) {
-    overflow: auto;
-    border-radius: 10px;
-    height: 70%;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
 
-  @media screen and (max-width: 650px) {
-    :deep(.el-dialog) {
-      border-radius: 0;
-      margin-top: 0;
-      margin-bottom: 0;
-      width: 100vw;
-      height: 100%;
+.search-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+  
+  &.closing {
+    animation: fadeOut 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+}
+
+.search-container {
+  width: 600px;
+  max-width: 95vw;
+  max-height: 90vh;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 255, 255, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  
+  .closing & {
+    animation: slideOut 0.3s cubic-bezier(0.4, 0, 1, 1);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateY(-30px);
+  }
+}
+
+// 标题区域
+.header-section {
+  position: relative;
+  padding: 30px 30px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  overflow: hidden;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.main-title {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  .title-icon {
+    font-size: 28px;
+  }
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: white !important;
+  font-size: 20px;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+}
+
+// 内容区域
+.content-section {
+  padding: 30px;
+  background: white;
+  border-radius: 0 0 20px 20px;
+}
+
+// 移动端适配
+@media screen and (max-width: 768px) {
+  .search-container {
+    width: 95vw;
+    max-width: none;
+    margin: 16px;
+  }
+  
+  .header-section {
+    padding: 24px 20px 16px;
+  }
+  
+  .main-title {
+    font-size: 20px;
+    
+    .title-icon {
+      font-size: 24px;
     }
   }
+  
+  .content-section {
+    padding: 20px;
+  }
 }
 
-:deep(.el-dialog) {
-  // 过渡效果
-  transition: all .3s;
-  @media (max-width: 1400px) {
-    width: 45%;
+@media screen and (max-width: 480px) {
+  .search-container {
+    width: 100vw;
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+    margin: 0;
   }
-  @media (max-width: 1000px) {
-    width: 60%;
+  
+  .header-section {
+    border-radius: 0;
   }
-  @media (max-width: 760px) {
-    width: 70%;
-  }
-  @media (max-width: 600px) {
-    width: 90%;
+  
+  .content-section {
+    border-radius: 0;
+    height: calc(100vh - 100px);
+    overflow-y: auto;
   }
 }
+
+
 
 // 登录按钮样式
 .login-btn {
