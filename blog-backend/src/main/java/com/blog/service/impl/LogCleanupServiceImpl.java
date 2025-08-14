@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.blog.constants.ErrorConst;
 import com.blog.constants.LogConst;
 import com.blog.domain.entity.Log;
+import com.blog.domain.vo.LogStatisticsVO;
 import com.blog.mapper.LogMapper;
 import com.blog.mapper.LoginLogMapper;
 import com.blog.service.LogCleanupService;
@@ -17,10 +18,7 @@ import jakarta.annotation.PostConstruct;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 日志清理服务实现
@@ -38,6 +36,11 @@ public class LogCleanupServiceImpl implements LogCleanupService {
     
     @Resource
     private LogMapper logMapper;
+    
+    /**
+     * 最后清理时间 - 内存存储
+     */
+    private volatile LocalDateTime lastCleanupTime = null;
     
     /**
      * 默认保留的登录日志数量
@@ -302,7 +305,9 @@ public class LogCleanupServiceImpl implements LogCleanupService {
             log.info("受保护操作类型: {}", PROTECTED_OPERATIONS);
             log.info("非保护操作类型: {}", NON_PROTECTED_OPERATIONS);
             
-            String startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            // 记录清理开始时间
+            LocalDateTime cleanupStartTime = LocalDateTime.now();
+            String startTimeStr = cleanupStartTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             
             // 记录清理前的统计信息
             String beforeStats = getLogStatistics();
@@ -314,13 +319,16 @@ public class LogCleanupServiceImpl implements LogCleanupService {
             // 清理操作日志
             int deletedOperateLogs = cleanupOperateLogs(defaultOperateLogKeepCount);
             
+            // 清理成功后更新最后清理时间
+            this.lastCleanupTime = cleanupStartTime;
+            
             // 记录清理后的统计信息
             String afterStats = getLogStatistics();
             log.info("清理后统计: {}", afterStats);
             
             String result = String.format(
                 "日志自动清理完成 [%s] - 删除登录日志: %d条, 删除操作日志: %d条 (基于LogConst分类策略)",
-                startTime, deletedLoginLogs, deletedOperateLogs
+                startTimeStr, deletedLoginLogs, deletedOperateLogs
             );
             
             log.info("========== 日志清理任务执行完成 ==========");
@@ -329,6 +337,7 @@ public class LogCleanupServiceImpl implements LogCleanupService {
             return result;
             
         } catch (Exception e) {
+            // 异常情况不更新清理时间
             String errorMsg = String.format(ErrorConst.LOG_CLEANUP_TASK_FAILED + "%s", e.getMessage());
             log.error(errorMsg, e);
             return errorMsg;
@@ -336,10 +345,10 @@ public class LogCleanupServiceImpl implements LogCleanupService {
     }
     
     /**
-     * 获取日志统计信息
+     * 获取简单日志统计信息 - 内部使用
+     * 用于清理前后的日志记录
      */
-    @Override
-    public String getLogStatistics() {
+    private String getLogStatistics() {
         try {
             // 登录日志统计
             Long loginLogCount = loginLogMapper.selectCount(null);
@@ -361,5 +370,90 @@ public class LogCleanupServiceImpl implements LogCleanupService {
             log.error(ErrorConst.GET_LOG_STATISTICS_FAILED, e);
             return ErrorConst.LOG_STATISTICS_GET_FAILED + e.getMessage();
         }
+    }
+    
+    /**
+     * 获取详细日志统计信息
+     */
+    @Override
+    public LogStatisticsVO getDetailedLogStatistics() {
+        try {
+            LogStatisticsVO vo = new LogStatisticsVO();
+            
+            // 基础统计 - 只需要3次查询
+            Long loginLogCount = loginLogMapper.selectCount(null);
+            Long operateLogCount = logMapper.selectCount(null);
+            
+            LambdaQueryWrapper<Log> protectedWrapper = new LambdaQueryWrapper<>();
+            protectedWrapper.in(Log::getOperation, PROTECTED_OPERATIONS);
+            Long protectedLogCount = logMapper.selectCount(protectedWrapper);
+            
+            Long unprotectedLogCount = operateLogCount - protectedLogCount;
+            
+            vo.setLoginLogCount(loginLogCount);
+            vo.setOperateLogCount(operateLogCount);
+            vo.setTotalLogCount(loginLogCount + operateLogCount);
+            vo.setProtectedLogCount(protectedLogCount);
+            vo.setUnprotectedLogCount(unprotectedLogCount);
+            
+            // 时间信息 - 只记录最后清理时间
+            vo.setLastCleanupTime(this.lastCleanupTime);
+            
+            // 存储大小估算
+            vo.setEstimatedSize(estimateStorageSize(loginLogCount, operateLogCount));
+            
+            // 详细操作统计
+            vo.setProtectedOperationStats(getOperationStats(PROTECTED_OPERATIONS));
+            vo.setUnprotectedOperationStats(getOperationStats(NON_PROTECTED_OPERATIONS));
+            
+            // 操作类型说明
+            vo.setProtectedOperations(new ArrayList<>(PROTECTED_OPERATIONS));
+            vo.setUnprotectedOperations(new ArrayList<>(NON_PROTECTED_OPERATIONS));
+            
+            return vo;
+            
+        } catch (Exception e) {
+            log.error("获取详细日志统计失败", e);
+            throw new RuntimeException("获取详细统计信息失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取指定操作类型的统计信息
+     */
+    private Map<String, Long> getOperationStats(List<String> operations) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (String operation : operations) {
+            Long count = logMapper.countByOperation(operation);
+            stats.put(operation, count != null ? count : 0L);
+        }
+        return stats;
+    }
+    
+    /**
+     * 估算日志存储大小
+     */
+    private String estimateStorageSize(Long loginLogCount, Long operateLogCount) {
+        if (loginLogCount == null) loginLogCount = 0L;
+        if (operateLogCount == null) operateLogCount = 0L;
+        
+        // 基于经验值估算
+        // 登录日志平均 ~200字节/条
+        // 操作日志平均 ~800字节/条
+        long loginLogSize = loginLogCount * 200;
+        long operateLogSize = operateLogCount * 800;
+        long totalSize = loginLogSize + operateLogSize;
+        
+        return formatFileSize(totalSize);
+    }
+    
+    /**
+     * 格式化文件大小
+     */
+    private String formatFileSize(long size) {
+        if (size < 1024) return size + " B";
+        if (size < 1024 * 1024) return String.format("%.1f KB", size / 1024.0);
+        if (size < 1024 * 1024 * 1024) return String.format("%.1f MB", size / (1024.0 * 1024));
+        return String.format("%.1f GB", size / (1024.0 * 1024 * 1024));
     }
 }

@@ -1,5 +1,7 @@
 package com.blog.service;
 
+import com.blog.domain.vo.LogStatisticsVO;
+
 /**
  * 日志清理服务接口
  * 
@@ -37,9 +39,9 @@ public interface LogCleanupService {
     String performFullCleanup();
     
     /**
-     * 获取日志统计信息
+     * 获取详细日志统计信息
      * 
-     * @return 当前各类日志的数量统计
+     * @return 详细的日志统计信息，包含分类统计、时间信息等
      */
-    String getLogStatistics();
+    LogStatisticsVO getDetailedLogStatistics();
 }

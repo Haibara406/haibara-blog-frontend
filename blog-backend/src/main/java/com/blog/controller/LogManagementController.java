@@ -6,6 +6,7 @@ import com.blog.constants.AccessLimitConst;
 
 import com.blog.constants.ErrorConst;
 import com.blog.domain.response.ResponseResult;
+import com.blog.domain.vo.LogStatisticsVO;
 import com.blog.service.LogCleanupService;
 import com.blog.utils.ControllerUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,24 +35,27 @@ public class LogManagementController {
     @Resource
     private LogCleanupService logCleanupService;
 
+
+
     /**
      * 获取日志统计信息
      * <p>
-     * 查询当前系统中各类日志的数量统计信息，包括：
-     * - 登录日志总数
-     * - 操作日志总数
-     * - 受保护的操作日志数量
-     * 该接口用于系统监控和容量规划。
+     * 获取系统中各类日志的详细统计信息，包括：
+     * - 基础统计：登录日志、操作日志、受保护日志、非保护日志数量
+     * - 时间信息：最后清理时间
+     * - 存储信息：预估存储大小
+     * - 详细分类：受保护和非保护操作的具体统计
+     * 该接口用于前端展示丰富的统计信息和清理策略说明。
      *
-     * @return 响应结果，包含日志统计信息
+     * @return 响应结果，包含详细的日志统计信息
      */
     @PreAuthorize("hasAnyAuthority('system:log:statistics')")
     @Operation(summary = "获取日志统计信息")
-    @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS, 
+    @AccessLimit(seconds = AccessLimitConst.DEFAULT_SECONDS,
                 maxCount = AccessLimitConst.DEFAULT_MAX_COUNT)
     @GetMapping("/statistics")
-    public ResponseResult<String> getLogStatistics() {
-        return ControllerUtils.messageHandler(() -> logCleanupService.getLogStatistics());
+    public ResponseResult<LogStatisticsVO> getLogStatistics() {
+        return ControllerUtils.messageHandler(() -> logCleanupService.getDetailedLogStatistics());
     }
 
     /**

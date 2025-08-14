@@ -51,4 +51,13 @@ public interface LogMapper extends BaseMapper<Log> {
             "</script>")
     List<Long> selectOldestProtectedIds(@Param("protectedOperations") List<String> protectedOperations,
                                       @Param("limit") long limit);
+    
+    /**
+     * 根据操作类型统计数量
+     * 
+     * @param operation 操作类型
+     * @return 记录数量
+     */
+    @Select("SELECT COUNT(*) FROM sys_log WHERE operation = #{operation} AND is_deleted = 0")
+    Long countByOperation(@Param("operation") String operation);
 }
