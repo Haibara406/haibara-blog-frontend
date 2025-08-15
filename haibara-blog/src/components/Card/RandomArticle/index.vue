@@ -82,11 +82,11 @@ function loadContent(){
   <Card :title="title" :prefix-icon="prefixIcon" :suffix-icon="title === '相关推荐' ? '' : 'rotate'" @isRotate="true"
         :isScale="true" @invoke="randomArticleBtn" v-view-request="{ callback: loadContent }">
     <div class="random_container" v-for="randomArticle in randomArticles">
-      <div class="random_image" @click="$router.push('/article/'+randomArticle.id)">
+      <div class="random_image" @click="$router.push('/article/'+randomArticle.id)" style="cursor: pointer;">
         <img v-if="randomArticle.articleCover" :src="imgRefresh ? randomArticle.articleCover: ''" :data-src="randomArticle.articleCover" v-lazy="true"  alt="文章封面"/>
       </div>
       <div class="random_text" :key="randomArticle.id">
-        <div @click="$router.push('/article/'+randomArticle.id)" class="cursor-pointer hover:text-[#409EFF] transition-colors">{{ randomArticle.articleTitle }}</div>
+        <div @click="$router.push('/article/'+randomArticle.id)" class="cursor-pointer hover:text-[#409EFF] transition-colors" style="cursor: pointer;">{{ randomArticle.articleTitle }}</div>
         <div>{{ randomArticle.createTime }}</div>
       </div>
     </div>

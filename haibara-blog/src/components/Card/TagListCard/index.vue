@@ -74,8 +74,9 @@ onMounted(() => {
         <div class="decoration-dot dot3"></div>
         <div class="decoration-dot dot4"></div>
         
-        <div v-for="tag in tags" :key="tag.id" 
-             class="tag-item cursor-pointer" 
+        <div v-for="tag in tags" :key="tag.id"
+             class="tag-item cursor-pointer"
+             style="cursor: pointer;"
              @click="goToTag(tag.id)">
           <div class="tag-content">
             <span class="tag-symbol">#</span>

@@ -1,7 +1,16 @@
-:deep(.card .character .title[data-v-931120c3]){
-  cursor: url(https://image.kuailemao.xyz/blog/cursor/带土+.cur), auto;
+// 为可点击元素设置手型光标
+.cursor-pointer,
+button,
+a,
+[role="button"],
+.card,
+.tag-item,
+.random_image,
+.swiper-slide.cursor-pointer {
+  cursor: pointer !important;
 }
 
-*{
-  cursor: url(https://image.kuailemao.xyz/blog/cursor/琳+.cur), default;
+// 为带有悬浮效果的文章标题设置手型光标
+.hover\:text-\[\#409EFF\] {
+  cursor: pointer !important;
 }

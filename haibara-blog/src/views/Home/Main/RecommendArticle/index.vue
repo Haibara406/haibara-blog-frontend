@@ -46,7 +46,7 @@ function loadContent(){
     >
       <swiper-slide v-for="recommendArticle in recommendArticles" :key="recommendArticle.id"
                     @click="$router.push(`/article/${recommendArticle.id}`)"
-                    class="cursor-pointer">
+                    class="cursor-pointer" style="cursor: pointer;">
         <div class="item_text">
           <div style="font-size: 30px">
             {{ recommendArticle.articleTitle }}
