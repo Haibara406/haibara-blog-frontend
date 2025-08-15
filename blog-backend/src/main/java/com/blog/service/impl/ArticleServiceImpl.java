@@ -417,6 +417,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                             .build())
                     .toList();
             articleTagService.saveBatch(articleTags);
+
+            // 清除分类和标签缓存，因为文章数量发生了变化
+            redisCache.deleteObject(RedisConst.CATEGORY_LIST);
+            redisCache.deleteObject(RedisConst.TAG_LIST);
+            log.debug("文章发布成功，已清除分类和标签缓存");
+
             return ResponseResult.success();
         }
         return ResponseResult.failure();
@@ -595,6 +601,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (this.update(new LambdaUpdateWrapper<Article>()
                 .eq(Article::getId, id)
                 .set(Article::getStatus, status))) {
+            // 文章状态变更可能影响分类和标签的文章数量统计
+            redisCache.deleteObject(RedisConst.CATEGORY_LIST);
+            redisCache.deleteObject(RedisConst.TAG_LIST);
+            log.debug("文章状态更新成功，已清除分类和标签缓存");
             return ResponseResult.success();
         }
         return ResponseResult.failure();
@@ -669,6 +679,20 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             commentMapper.delete(new LambdaQueryWrapper<Comment>()
                     .eq(Comment::getType, CommentEnum.COMMENT_TYPE_ARTICLE.getType())
                     .and(a -> a.in(Comment::getTypeId, ids)));
+
+            // 清除相关缓存
+            ids.forEach(id -> {
+                // 清除文章统计缓存
+                redisCache.deleteCacheMapValue(RedisConst.ARTICLE_LIKE_COUNT, id.toString());
+                redisCache.deleteCacheMapValue(RedisConst.ARTICLE_FAVORITE_COUNT, id.toString());
+                redisCache.deleteCacheMapValue(RedisConst.ARTICLE_COMMENT_COUNT, id.toString());
+                redisCache.deleteObject(RedisConst.ARTICLE_VISIT_COUNT + id);
+            });
+            // 清除分类和标签缓存，因为文章数量发生了变化
+            redisCache.deleteObject(RedisConst.CATEGORY_LIST);
+            redisCache.deleteObject(RedisConst.TAG_LIST);
+            log.debug("文章删除成功，已清除相关缓存");
+
             return ResponseResult.success();
         }
         return ResponseResult.failure();
