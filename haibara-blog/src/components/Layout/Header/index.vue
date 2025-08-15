@@ -156,13 +156,15 @@ const handleLoginClick = () => {
         <SvgIcon name="directory_icon" width="30" height="30" :use-theme-color="true" class="icon" style="pointer-events: none;"/>
       </div>
       <!-- 移动端日夜切换 -->
-      <div style="margin-left: 2rem">
+      <div style="margin-left: 1rem">
         <toggle-button @change="changeToggle" size="1"></toggle-button>
       </div>
 
       <!-- 移动端主题色选择器 -->
-      <div style="margin-left: 1rem; margin-top: 0.3rem">
-        <HeaderThemeColorPicker />
+      <div style="margin-left: 1rem; display: flex; align-items: center; height: 100%;">
+        <div class="mobile-theme-color">
+          <HeaderThemeColorPicker />
+        </div>
       </div>
     </div>
 
@@ -487,6 +489,32 @@ const handleLoginClick = () => {
   padding: 30px;
   background: white;
   border-radius: 0 0 20px 20px;
+}
+
+// 移动端主题色按钮样式
+.mobile-theme-color {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer !important;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: rgba(var(--mao-primary), 0.15);
+    border-color: rgba(var(--mao-primary), 0.3);
+    box-shadow:
+      0 8px 25px rgba(var(--mao-primary), 0.2),
+      0 0 0 1px rgba(var(--mao-primary), 0.1);
+  }
 }
 
 // 移动端适配

@@ -249,8 +249,10 @@ onUnmounted(() => {
       </div>
 
       <!-- 主题色选择器 -->
-      <div style="margin-right: 1rem;margin-top: 0.5rem">
-        <HeaderThemeColorPicker />
+      <div id="theme-color-button" style="margin-right: 1rem;">
+        <div class="theme-color">
+          <HeaderThemeColorPicker />
+        </div>
       </div>
 
       <div id="search-button">
@@ -762,6 +764,31 @@ nav {
 
       .icon {
         transition: all 0.3s ease;
+      }
+    }
+
+    .theme-color {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer !important;
+      flex-shrink: 0;
+      width: 46px;
+      height: 46px;
+
+      &:hover {
+        transform: translateY(-2px) scale(1.05);
+        background: rgba(var(--mao-primary), 0.15);
+        border-color: rgba(var(--mao-primary), 0.3);
+        box-shadow:
+          0 8px 25px rgba(var(--mao-primary), 0.2),
+          0 0 0 1px rgba(var(--mao-primary), 0.1);
       }
     }
 

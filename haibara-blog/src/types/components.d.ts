@@ -94,7 +94,6 @@ declare module 'vue' {
     SvgIcon: typeof import('./../components/SvgIcon/index.vue')['default']
     TagListCard: typeof import('./../components/Card/TagListCard/index.vue')['default']
     TextGlitch: typeof import('./../components/TextGlitch/index.vue')['default']
-    ThemeColorPicker: typeof import('./../components/ThemeColorPicker/index.vue')['default']
     TimeVolume: typeof import('./../components/Music/controls/components/time-volume.vue')['default']
     ToTop: typeof import('./../components/ToTop/index.vue')['default']
     Wave: typeof import('./../components/Wave/index.vue')['default']

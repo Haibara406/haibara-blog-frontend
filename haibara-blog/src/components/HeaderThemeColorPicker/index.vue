@@ -20,30 +20,42 @@
 
     <!-- 主题色面板 -->
     <Transition name="theme-panel">
-      <div v-if="showPanel" class="theme-color-panel" @click.stop>
+      <div v-if="showPanel" class="theme-color-panel" :class="{ disabled: !enabled }" @click.stop>
         <!-- 面板头部 -->
         <div class="panel-header">
           <div class="panel-title">
             <div class="title-icon" :style="{ backgroundColor: currentColor }"></div>
             <span>主题色彩</span>
           </div>
-          <button @click="resetToDefault" class="reset-btn" :disabled="hue === 210" title="重置为默认">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-              <path d="M21 3v5h-5"/>
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-              <path d="M3 21v-5h5"/>
-            </svg>
-          </button>
+          <div class="header-controls">
+            <button @click="toggleThemeColor" class="toggle-btn" :class="{ active: enabled }" :title="enabled ? '禁用主题色' : '启用主题色'">
+              <svg v-if="enabled" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 12l2 2 4-4"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <button @click="resetToDefault" class="reset-btn" :disabled="hue === 210 || !enabled" title="重置为默认">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                <path d="M3 21v-5h5"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- 当前颜色显示 -->
-        <div class="current-color-display">
+        <div class="current-color-display" :class="{ disabled: !enabled }">
           <div class="color-info">
-            <div class="color-name">{{ currentColorName }}</div>
-            <div class="color-value">{{ hue }}°</div>
+            <div class="color-name">{{ enabled ? currentColorName : '主题色已禁用' }}</div>
+            <div class="color-value">{{ enabled ? `${hue.toFixed(1)}°` : '使用原始样式' }}</div>
           </div>
-          <div class="color-swatch" :style="{ backgroundColor: currentColor }"></div>
+          <div class="color-swatch" :style="{ backgroundColor: enabled ? currentColor : '#409EFF' }"></div>
         </div>
 
         <!-- 彩虹滑块 -->
@@ -53,10 +65,24 @@
             type="range"
             min="0"
             max="360"
-            step="5"
+            step="0.1"
             class="color-slider"
           />
           <div class="slider-track"></div>
+        </div>
+
+        <!-- 精确数值输入 -->
+        <div class="precise-input">
+          <label>精确调节:</label>
+          <input
+            v-model.number="hue"
+            type="number"
+            min="0"
+            max="360"
+            step="0.1"
+            class="hue-input"
+          />
+          <span>°</span>
         </div>
 
         <!-- 预设颜色 -->
@@ -64,15 +90,15 @@
           <div class="preset-title">快速选择</div>
           <div class="preset-grid">
             <button
-              v-for="preset in presets.slice(0, 8)"
+              v-for="preset in presets"
               :key="preset.hue"
               @click="setPresetColor(preset.hue)"
               class="preset-color"
-              :class="{ active: hue === preset.hue }"
+              :class="{ active: Math.abs(hue - preset.hue) <= 5 }"
               :style="{ backgroundColor: preset.color }"
               :title="preset.name"
             >
-              <svg v-if="hue === preset.hue" class="check-icon" viewBox="0 0 24 24" fill="currentColor">
+              <svg v-if="Math.abs(hue - preset.hue) <= 5" class="check-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
               </svg>
             </button>
@@ -109,11 +135,13 @@ import { useThemeColor } from '@/composables/useThemeColor';
 // 使用主题色管理
 const {
   hue,
+  enabled,
   currentColor,
   currentColorName,
   presets,
   setPresetColor,
-  resetToDefault
+  resetToDefault,
+  toggleThemeColor
 } = useThemeColor();
 
 // 面板显示状态
@@ -234,6 +262,12 @@ onUnmounted(() => {
     }
   }
 
+  .header-controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  .toggle-btn,
   .reset-btn {
     width: 28px;
     height: 28px;
@@ -274,6 +308,21 @@ onUnmounted(() => {
       }
     }
   }
+
+  .toggle-btn {
+    &.active {
+      background: var(--mao-primary);
+      color: white;
+
+      svg {
+        color: white;
+      }
+
+      &:hover {
+        background: var(--mao-primary-dark);
+      }
+    }
+  }
 }
 
 .current-color-display {
@@ -284,9 +333,19 @@ onUnmounted(() => {
   background: rgba(0, 0, 0, 0.03);
   border-radius: 12px;
   margin-bottom: 16px;
+  transition: all 0.3s ease;
 
   html.dark & {
     background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.02);
+
+    html.dark & {
+      background: rgba(255, 255, 255, 0.03);
+    }
   }
 
   .color-info {
@@ -393,34 +452,39 @@ onUnmounted(() => {
   .preset-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 6px;
+    gap: 4px;
+    max-height: 80px;
+    overflow-y: auto;
   }
 
   .preset-color {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid transparent;
 
     &:hover {
-      transform: scale(1.1);
+      transform: scale(1.15);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
     }
 
     &.active {
-      transform: scale(1.1);
+      transform: scale(1.15);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.8);
     }
 
     .check-icon {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       color: rgba(255, 255, 255, 0.9);
       filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
     }
@@ -461,6 +525,64 @@ onUnmounted(() => {
       border-radius: 50%;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
+  }
+}
+
+.precise-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 12px;
+
+  label {
+    color: #666;
+    font-weight: 500;
+
+    html.dark & {
+      color: #ccc;
+    }
+  }
+
+  .hue-input {
+    width: 60px;
+    padding: 4px 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.8);
+
+    html.dark & {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--mao-primary);
+      box-shadow: 0 0 0 2px rgba(var(--mao-primary), 0.2);
+    }
+  }
+
+  span {
+    color: #666;
+    font-weight: 500;
+
+    html.dark & {
+      color: #ccc;
+    }
+  }
+}
+
+.theme-color-panel.disabled {
+  .color-slider-container,
+  .preset-colors,
+  .preview-section,
+  .precise-input {
+    opacity: 0.4;
+    pointer-events: none;
   }
 }
 
