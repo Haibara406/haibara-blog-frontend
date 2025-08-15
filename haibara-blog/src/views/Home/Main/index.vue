@@ -3,15 +3,15 @@
     <!-- 内容区 -->
     <template #content>
       <div class="announcement">
-        <SvgIcon style="min-width: 30px" name="notice" color="#409EFF"/>
+        <SvgIcon style="min-width: 30px" name="notice" :use-theme-color="true"/>
         <span>{{ useWebsite?.webInfo?.headerNotification }}</span>
       </div>
       <RecommendArticle/>
       <div class="essay_title">
         <el-divider border-style="dashed" content-position="left">
           <div>
-            <SvgIcon name="essay_icon" color="#409EFF" class="icon"/>
-            <span>文章</span>
+            <SvgIcon name="essay_icon" class="icon" :use-theme-color="true"/>
+            <span class="text-primary">文章</span>
           </div>
         </el-divider>
       </div>

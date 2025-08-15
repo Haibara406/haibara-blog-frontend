@@ -1,0 +1,329 @@
+// 主题色应用工具类
+// 这个文件包含了各种主题色相关的工具类和混入
+
+// 主题色文本类
+.text-primary {
+  color: var(--mao-text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--mao-text-secondary) !important;
+}
+
+// 主题色背景类
+.bg-primary {
+  background-color: var(--mao-primary) !important;
+}
+
+.bg-primary-light {
+  background-color: var(--mao-primary-light) !important;
+}
+
+.bg-primary-dark {
+  background-color: var(--mao-primary-dark) !important;
+}
+
+.bg-primary-bg {
+  background-color: var(--mao-primary-bg) !important;
+}
+
+.bg-page {
+  background-color: var(--mao-background-color) !important;
+}
+
+.bg-card {
+  background-color: var(--mao-card-bg) !important;
+}
+
+.bg-container {
+  background-color: var(--mao-container-bg) !important;
+}
+
+// 主题色边框类
+.border-primary {
+  border-color: var(--mao-border-color) !important;
+}
+
+.border-primary-hover:hover {
+  border-color: var(--mao-border-hover) !important;
+}
+
+// 主题色图标类
+.icon-primary {
+  color: var(--mao-icon-color) !important;
+}
+
+.icon-primary:hover {
+  color: var(--mao-icon-hover) !important;
+}
+
+// 主题色链接类
+.link-primary {
+  color: var(--mao-link-color) !important;
+  
+  &:hover {
+    color: var(--mao-link-hover) !important;
+  }
+}
+
+// 主题色按钮类
+.btn-theme-primary {
+  background-color: var(--mao-button-primary) !important;
+  border-color: var(--mao-button-primary) !important;
+  color: white !important;
+  
+  &:hover {
+    background-color: var(--mao-button-primary-hover) !important;
+    border-color: var(--mao-button-primary-hover) !important;
+  }
+}
+
+.btn-theme-secondary {
+  background-color: var(--mao-button-secondary) !important;
+  border-color: var(--mao-button-secondary) !important;
+  color: white !important;
+  
+  &:hover {
+    background-color: var(--mao-button-secondary-hover) !important;
+    border-color: var(--mao-button-secondary-hover) !important;
+  }
+}
+
+.btn-theme-outline {
+  background-color: transparent !important;
+  border-color: var(--mao-border-color) !important;
+  color: var(--mao-text-primary) !important;
+  
+  &:hover {
+    background-color: var(--mao-primary) !important;
+    border-color: var(--mao-primary) !important;
+    color: white !important;
+  }
+}
+
+// 主题色高亮类
+.highlight-primary {
+  background-color: var(--mao-highlight-bg) !important;
+  border: 1px solid var(--mao-highlight-border) !important;
+}
+
+// 主题色渐变类
+.gradient-primary {
+  background: linear-gradient(135deg, var(--mao-primary-light), var(--mao-primary)) !important;
+}
+
+.gradient-primary-vertical {
+  background: linear-gradient(to bottom, var(--mao-primary-light), var(--mao-primary)) !important;
+}
+
+// 主题色阴影类
+.shadow-primary {
+  box-shadow: 0 4px 12px rgba(var(--mao-primary), 0.3) !important;
+}
+
+// 主题色过渡类
+.transition-theme {
+  transition: all 0.3s ease !important;
+}
+
+// Sass 混入 (Mixins)
+@mixin theme-button($type: primary) {
+  @if $type == primary {
+    background-color: var(--mao-button-primary);
+    border-color: var(--mao-button-primary);
+    color: white;
+    
+    &:hover {
+      background-color: var(--mao-button-primary-hover);
+      border-color: var(--mao-button-primary-hover);
+    }
+  } @else if $type == secondary {
+    background-color: var(--mao-button-secondary);
+    border-color: var(--mao-button-secondary);
+    color: white;
+    
+    &:hover {
+      background-color: var(--mao-button-secondary-hover);
+      border-color: var(--mao-button-secondary-hover);
+    }
+  } @else if $type == outline {
+    background-color: transparent;
+    border-color: var(--mao-border-color);
+    color: var(--mao-text-primary);
+    
+    &:hover {
+      background-color: var(--mao-primary);
+      border-color: var(--mao-primary);
+      color: white;
+    }
+  }
+}
+
+@mixin theme-card {
+  background-color: var(--el-bg-color);
+  border: 1px solid var(--mao-border-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: var(--mao-border-hover);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+@mixin theme-icon($size: 24px) {
+  width: $size;
+  height: $size;
+  color: var(--mao-icon-color);
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: var(--mao-icon-hover);
+  }
+}
+
+@mixin theme-text($type: primary) {
+  @if $type == primary {
+    color: var(--mao-text-primary);
+  } @else if $type == secondary {
+    color: var(--mao-text-secondary);
+  }
+}
+
+@mixin theme-gradient($direction: 135deg) {
+  background: linear-gradient($direction, var(--mao-primary-light), var(--mao-primary));
+}
+
+@mixin theme-border($width: 1px, $style: solid) {
+  border: $width $style var(--mao-border-color);
+  
+  &:hover {
+    border-color: var(--mao-border-hover);
+  }
+}
+
+// 响应式主题色工具类
+@media (max-width: 768px) {
+  .mobile-text-primary {
+    color: var(--mao-text-primary) !important;
+  }
+  
+  .mobile-bg-primary {
+    background-color: var(--mao-primary) !important;
+  }
+}
+
+// 动画相关的主题色类
+@keyframes theme-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--mao-primary), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--mao-primary), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--mao-primary), 0);
+  }
+}
+
+.pulse-primary {
+  animation: theme-pulse 2s infinite;
+}
+
+// 特殊效果类
+.glow-primary {
+  box-shadow: 0 0 20px rgba(var(--mao-primary), 0.5);
+}
+
+.underline-primary {
+  border-bottom: 2px solid var(--mao-primary);
+}
+
+// 状态类
+.active-primary {
+  background-color: var(--mao-primary) !important;
+  color: white !important;
+}
+
+.disabled-primary {
+  background-color: var(--mao-primary-bg) !important;
+  color: var(--mao-text-secondary) !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+// 覆盖 Element Plus 的一些样式
+.el-button--primary {
+  @include theme-button(primary);
+}
+
+.el-icon {
+  @include theme-icon();
+}
+
+.el-divider__text {
+  color: var(--mao-text-primary) !important;
+}
+
+// SVG 图标主题色应用
+.svg-icon-primary {
+  fill: var(--mao-icon-color);
+  transition: fill 0.3s ease;
+  
+  &:hover {
+    fill: var(--mao-icon-hover);
+  }
+}
+
+// 卡片组件主题色应用
+.theme-card {
+  @include theme-card;
+}
+
+// 输入框主题色应用
+.el-input__inner:focus {
+  border-color: var(--mao-primary) !important;
+}
+
+.el-textarea__inner:focus {
+  border-color: var(--mao-primary) !important;
+}
+
+// 选择器主题色应用
+.el-select .el-input.is-focus .el-input__inner {
+  border-color: var(--mao-primary) !important;
+}
+
+// 分页器主题色应用
+.el-pagination .el-pager li.active {
+  background-color: var(--mao-primary) !important;
+  border-color: var(--mao-primary) !important;
+}
+
+// 标签主题色应用
+.el-tag--primary {
+  background-color: var(--mao-primary-bg) !important;
+  border-color: var(--mao-primary-light) !important;
+  color: var(--mao-primary) !important;
+}
+
+// 进度条主题色应用
+.el-progress-bar__inner {
+  background-color: var(--mao-primary) !important;
+}
+
+// 开关主题色应用
+.el-switch.is-checked .el-switch__core {
+  background-color: var(--mao-primary) !important;
+  border-color: var(--mao-primary) !important;
+}
+
+// 滑块主题色应用
+.el-slider__button {
+  border-color: var(--mao-primary) !important;
+}
+
+.el-slider__bar {
+  background-color: var(--mao-primary) !important;
+}

@@ -1,9 +1,11 @@
 import { ref, computed, watch } from 'vue';
+import { useThemeColor } from './useThemeColor';
 
 // 设置项接口
 interface AppSettings {
   mouseFollowEffectEnabled: boolean; // 鼠标跟随特效
   fullscreenEnabled: boolean;
+  themeColorEnabled: boolean; // 主题色功能开关
   // 可以在这里添加更多设置项
 }
 
@@ -11,6 +13,7 @@ interface AppSettings {
 const defaultSettings: AppSettings = {
   mouseFollowEffectEnabled: false, // 默认关闭鼠标跟随特效
   fullscreenEnabled: false,  // 默认关闭全屏功能
+  themeColorEnabled: true,   // 默认开启主题色功能
 };
 
 // 从localStorage加载设置
@@ -46,6 +49,9 @@ watch(settings, (newSettings) => {
 
 // 设置管理 composable
 export const useSettings = () => {
+  // 获取主题色管理
+  const themeColor = useThemeColor();
+
   // 鼠标跟随特效开关
   const mouseFollowEffectEnabled = computed({
     get: () => settings.value.mouseFollowEffectEnabled,
@@ -62,9 +68,19 @@ export const useSettings = () => {
     }
   });
 
+  // 主题色功能开关
+  const themeColorEnabled = computed({
+    get: () => settings.value.themeColorEnabled,
+    set: (value: boolean) => {
+      settings.value.themeColorEnabled = value;
+    }
+  });
+
   // 重置所有设置
   const resetSettings = () => {
     settings.value = { ...defaultSettings };
+    // 同时重置主题色
+    themeColor.resetToDefault();
   };
 
   // 获取所有设置
@@ -73,8 +89,11 @@ export const useSettings = () => {
   return {
     mouseFollowEffectEnabled,
     fullscreenEnabled,
+    themeColorEnabled,
     resetSettings,
     getAllSettings,
-    settings: readonly(settings)
+    settings: readonly(settings),
+    // 暴露主题色相关功能
+    themeColor
   };
 };

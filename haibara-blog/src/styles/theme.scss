@@ -1,89 +1,219 @@
+// 默认色调值（天空蓝）
+:root {
+  --hue: 210;
+}
+
+// 彩虹色条（用于主题色选择器）
+:root {
+  --rainbow-light: linear-gradient(to right,
+    oklch(0.80 0.10 0), oklch(0.80 0.10 30), oklch(0.80 0.10 60), oklch(0.80 0.10 90),
+    oklch(0.80 0.10 120), oklch(0.80 0.10 150), oklch(0.80 0.10 180), oklch(0.80 0.10 210),
+    oklch(0.80 0.10 240), oklch(0.80 0.10 270), oklch(0.80 0.10 300), oklch(0.80 0.10 330),
+    oklch(0.80 0.10 360));
+  --rainbow-dark: linear-gradient(to right,
+    oklch(0.70 0.10 0), oklch(0.70 0.10 30), oklch(0.70 0.10 60), oklch(0.70 0.10 90),
+    oklch(0.70 0.10 120), oklch(0.70 0.10 150), oklch(0.70 0.10 180), oklch(0.70 0.10 210),
+    oklch(0.70 0.10 240), oklch(0.70 0.10 270), oklch(0.70 0.10 300), oklch(0.70 0.10 330),
+    oklch(0.70 0.10 360));
+}
+
 // 亮色模式下的主题色
 :root {
-  --mao-background-color: aliceblue;
+  // 动态页面背景色（基于--hue）
+  --mao-background-color: oklch(0.98 0.005 var(--hue));
+
+  // 动态主题色变量（基于--hue）
+  --mao-primary: oklch(0.70 0.14 var(--hue));
+  --mao-primary-light: oklch(0.80 0.12 var(--hue));
+  --mao-primary-dark: oklch(0.60 0.16 var(--hue));
+  --mao-primary-bg: oklch(0.95 0.03 var(--hue));
+  --mao-primary-hover: oklch(0.90 0.06 var(--hue));
+
+  // 动态卡片和容器背景色
+  --mao-card-bg: oklch(0.99 0.002 var(--hue));
+  --mao-container-bg: oklch(0.97 0.008 var(--hue));
+
   // 留言板说明背景
   --mao-bg-message: #f5f5f5;
-  // 分类列表背景
-  --mao-bg-category: linear-gradient(135deg, #f54ea2, #ff7676);
-  // 首页波浪
-  --mao-bg-wave01: rgba(240, 248, 255,0.7);
-  --mao-bg-wave02: rgba(240, 248, 255,0.5);
-  --mao-bg-wave03: rgba(240, 248, 255,0.3);
-  --mao-bg-wave04: rgba(240, 248, 255,1);
-  // footer
-  --mao-bg-footer: linear-gradient(135deg,#f6ceec,#d939cd);
+  // 分类列表背景（使用动态主题色）
+  --mao-bg-category: linear-gradient(135deg, var(--mao-primary-light), var(--mao-primary));
+  // 首页波浪（基于主题色）
+  --mao-bg-wave01: oklch(0.96 0.02 var(--hue) / 0.7);
+  --mao-bg-wave02: oklch(0.96 0.02 var(--hue) / 0.5);
+  --mao-bg-wave03: oklch(0.96 0.02 var(--hue) / 0.3);
+  --mao-bg-wave04: oklch(0.96 0.02 var(--hue));
+  // footer（使用动态主题色）
+  --mao-bg-footer: linear-gradient(135deg, var(--mao-primary-light), var(--mao-primary-dark));
   // 评论框背景
   --mao-bg-comment: #F2F2F3;
   // 回复用户名
   --mao-bg-reply: rgba(245, 108, 108, 0.7);
   // 文章页面右下角滚动进度背景色
   --mao-scroll-percentage-bg: #ffffff;
-  // 文章页面底部滚动进度条背景色
-  --mao-scroll-percentage-bar: linear-gradient(135deg,#17ead9,#6078ea);
+  // 文章页面底部滚动进度条背景色（使用动态主题色）
+  --mao-scroll-percentage-bar: linear-gradient(135deg, var(--mao-primary-light), var(--mao-primary));
   // 设置模块背景阴影
   --mao-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
-  // 音乐播放器变量
-  --primary: #5cbfef;
+  // 音乐播放器变量（使用动态主题色）
+  --primary: var(--mao-primary);
   --router-color: #dddddd;
   --font-color: #676767;
   --dark-font-color: #a7a7a7;
-  --second-font-color: #b3b7ff;
+  --second-font-color: var(--mao-primary-light);
   --hot-color: #f00;
-  --md-active: #409eff;
+  --md-active: var(--mao-primary);
   --global-white: #fff;
   --global-black: #000;
   --global-shadow-white: #fafafa;
   --header-bg-color: #8a7e90;
   --meta-color: #858585;
   --comment-grey: #a4a4a4;
-  --border-color: #7ec4f2;
-  --hr-border: #a9d5f4;
+  --border-color: var(--mao-primary-light);
+  --hr-border: var(--mao-primary-bg);
   --top: #f26c60;
   --error: #f56c6c;
-  --music-main-active: #62c28a;
+  --music-main-active: var(--mao-primary);
   --music-main-bg: #101827;
   --shadow-mask-bg: rgba(0, 0, 0, 0.5);
   --shadow-button-bg: rgba(255, 255, 255, 0.5);
   --global-font-size: 14px;
   --card-box-shadow: 0 3px 6px 3px rgba(7, 17, 27, 0.06);
   --card-hover-box-shadow: 0 3px 6px 3px rgba(7, 17, 27, 0.15);
-  // 亮色滚动条
-  --scroll-bar-color: linear-gradient(135deg,#17ead9,#6078ea);
+  // 亮色滚动条（使用动态主题色）
+  --scroll-bar-color: linear-gradient(135deg, var(--mao-primary-light), var(--mao-primary));
   // 充电榜列表亮色背景
   --mao-charging-bg-color: #f5f5f5;
   // Header-Menu阴影
   --shadow-color: rgba(0, 0, 0, 0.1);
+
+  // 主题色选择器相关变量
+  --theme-color-slider-bg: var(--rainbow-light);
+  --theme-color-thumb: rgba(255, 255, 255, 0.9);
+  --theme-color-thumb-hover: rgba(255, 255, 255, 1);
+  --theme-color-thumb-active: rgba(255, 255, 255, 0.8);
+
+  // 扩展的主题色应用变量
+  --mao-icon-color: var(--mao-primary);
+  --mao-icon-hover: var(--mao-primary-dark);
+  --mao-text-primary: var(--mao-primary);
+  --mao-text-secondary: var(--mao-primary-light);
+  --mao-border-color: var(--mao-primary-light);
+  --mao-border-hover: var(--mao-primary);
+  --mao-link-color: var(--mao-primary);
+  --mao-link-hover: var(--mao-primary-dark);
+  --mao-button-primary: var(--mao-primary);
+  --mao-button-primary-hover: var(--mao-primary-dark);
+  --mao-button-secondary: var(--mao-primary-light);
+  --mao-button-secondary-hover: var(--mao-primary);
+  --mao-accent-color: var(--mao-primary);
+  --mao-highlight-bg: var(--mao-primary-bg);
+  --mao-highlight-border: var(--mao-primary-light);
+
+  // Element Plus 主题色覆盖
+  --el-color-primary: var(--mao-primary);
+  --el-color-primary-light-3: var(--mao-primary-light);
+  --el-color-primary-light-5: var(--mao-primary-bg);
+  --el-color-primary-light-7: var(--mao-primary-bg);
+  --el-color-primary-light-8: var(--mao-primary-bg);
+  --el-color-primary-light-9: var(--mao-primary-bg);
+  --el-color-primary-dark-2: var(--mao-primary-dark);
+
+  // Element Plus 背景色覆盖
+  --el-bg-color: var(--mao-card-bg);
+  --el-bg-color-page: var(--mao-background-color);
+  --el-bg-color-overlay: var(--mao-container-bg);
 }
 
 // 暗色模式下的主题色
 html.dark {
-  --mao-background-color: #424242;
+  // 暗色模式下的动态页面背景色（基于--hue）
+  --mao-background-color: oklch(0.15 0.01 var(--hue));
+
+  // 暗色模式下的动态主题色变量（基于--hue）
+  --mao-primary: oklch(0.75 0.14 var(--hue));
+  --mao-primary-light: oklch(0.85 0.12 var(--hue));
+  --mao-primary-dark: oklch(0.65 0.16 var(--hue));
+  --mao-primary-bg: oklch(0.25 0.03 var(--hue));
+  --mao-primary-hover: oklch(0.35 0.06 var(--hue));
+
+  // 暗色模式下的动态卡片和容器背景色
+  --mao-card-bg: oklch(0.20 0.015 var(--hue));
+  --mao-container-bg: oklch(0.18 0.02 var(--hue));
+
   --mao-bg-message: #212121;
-  --mao-bg-category: linear-gradient(135deg,#000c40,#607d8b);
-  --mao-bg-wave01: rgba(70, 70, 70, 0.7);
-  --mao-bg-wave02: rgba(70, 70, 70, 0.5);
-  --mao-bg-wave03: rgba(70, 70, 70, 0.3);
-  --mao-bg-wave04: rgba(70, 70, 70, 1);
-  --mao-bg-footer: linear-gradient(135deg,#000c40,#607d8b);
+  // 分类列表背景（暗色模式使用动态主题色）
+  --mao-bg-category: linear-gradient(135deg, var(--mao-primary-dark), var(--mao-primary));
+  // 暗色模式下的首页波浪（基于主题色）
+  --mao-bg-wave01: oklch(0.25 0.02 var(--hue) / 0.7);
+  --mao-bg-wave02: oklch(0.25 0.02 var(--hue) / 0.5);
+  --mao-bg-wave03: oklch(0.25 0.02 var(--hue) / 0.3);
+  --mao-bg-wave04: oklch(0.25 0.02 var(--hue));
+  // footer（暗色模式使用动态主题色）
+  --mao-bg-footer: linear-gradient(135deg, var(--mao-primary-dark), var(--mao-primary));
   --mao-bg-right: #292D3DFF;
   --mao-bg-left: #52305e;
   --mao-bg-left-card: #714e79;
   --mao-bg-comment: #a8a8b7;
   --mao-bg-reply: rgba(0, 0, 0, 0.7);
   --mao-scroll-percentage-bg: #18222c;
-  --mao-scroll-percentage-bar: linear-gradient(135deg,#5b247a,#1bcedf);
+  // 滚动进度条（暗色模式使用动态主题色）
+  --mao-scroll-percentage-bar: linear-gradient(135deg, var(--mao-primary-dark), var(--mao-primary-light));
 
-  // 音乐播放器变量
+  // 音乐播放器变量（暗色模式使用动态主题色）
+  --primary: var(--mao-primary);
+  --second-font-color: var(--mao-primary-light);
+  --md-active: var(--mao-primary);
+  --border-color: var(--mao-primary-light);
+  --hr-border: var(--mao-primary-bg);
+  --music-main-active: var(--mao-primary);
+
   --global-white: #424242;
   --global-shadow-white: #1D1D1D;
   --mao-shadow: 0 2px 12px 0 rgba(255, 255, 255, 0.1);
-  // 暗色滚动条
-  --scroll-bar-color: linear-gradient(135deg,#43cbff,#9708cc);
+  // 暗色滚动条（使用动态主题色）
+  --scroll-bar-color: linear-gradient(135deg, var(--mao-primary-light), var(--mao-primary-dark));
   // 充电榜列表暗色背景
   --mao-charging-bg-color: #212121;
   // Header-Menu阴影
   --shadow-color: rgba(255, 255, 255, 0.1);
+
+  // 暗色模式下的主题色选择器变量
+  --theme-color-slider-bg: var(--rainbow-dark);
+  --theme-color-thumb: rgba(255, 255, 255, 0.7);
+  --theme-color-thumb-hover: rgba(255, 255, 255, 0.9);
+  --theme-color-thumb-active: rgba(255, 255, 255, 0.6);
+
+  // 暗色模式下的扩展主题色变量
+  --mao-icon-color: var(--mao-primary);
+  --mao-icon-hover: var(--mao-primary-light);
+  --mao-text-primary: var(--mao-primary);
+  --mao-text-secondary: var(--mao-primary-light);
+  --mao-border-color: var(--mao-primary-dark);
+  --mao-border-hover: var(--mao-primary);
+  --mao-link-color: var(--mao-primary);
+  --mao-link-hover: var(--mao-primary-light);
+  --mao-button-primary: var(--mao-primary);
+  --mao-button-primary-hover: var(--mao-primary-light);
+  --mao-button-secondary: var(--mao-primary-dark);
+  --mao-button-secondary-hover: var(--mao-primary);
+  --mao-accent-color: var(--mao-primary);
+  --mao-highlight-bg: var(--mao-primary-bg);
+  --mao-highlight-border: var(--mao-primary-dark);
+
+  // 暗色模式下的 Element Plus 主题色覆盖
+  --el-color-primary: var(--mao-primary);
+  --el-color-primary-light-3: var(--mao-primary-light);
+  --el-color-primary-light-5: var(--mao-primary-bg);
+  --el-color-primary-light-7: var(--mao-primary-bg);
+  --el-color-primary-light-8: var(--mao-primary-bg);
+  --el-color-primary-light-9: var(--mao-primary-bg);
+  --el-color-primary-dark-2: var(--mao-primary-dark);
+
+  // 暗色模式下的 Element Plus 背景色覆盖
+  --el-bg-color: var(--mao-card-bg);
+  --el-bg-color-page: var(--mao-background-color);
+  --el-bg-color-overlay: var(--mao-container-bg);
 }
 
 // 全局字体

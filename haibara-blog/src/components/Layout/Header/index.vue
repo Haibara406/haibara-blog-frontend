@@ -4,6 +4,7 @@ import {
   Setting, Promotion, Close
 } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon/index.vue'
+import HeaderThemeColorPicker from '@/components/HeaderThemeColorPicker/index.vue'
 import {useColorMode} from '@vueuse/core'
 import DayNightToggleButton from "@/components/DayNightToggle"
 import useUserStore from "@/store/modules/user.ts"
@@ -152,18 +153,23 @@ const handleLoginClick = () => {
   <div class="move_nav" style="margin-left: 1.5rem">
     <div>
       <div @click="drawer = true" style="cursor: pointer;">
-        <SvgIcon name="directory_icon" width="30" height="30" color="#409EFF" class="icon" style="pointer-events: none;"/>
+        <SvgIcon name="directory_icon" width="30" height="30" :use-theme-color="true" class="icon" style="pointer-events: none;"/>
       </div>
       <!-- 移动端日夜切换 -->
-      <div style="margin-left: 5rem">
+      <div style="margin-left: 2rem">
         <toggle-button @change="changeToggle" size="1"></toggle-button>
+      </div>
+
+      <!-- 移动端主题色选择器 -->
+      <div style="margin-left: 1rem; margin-top: 0.3rem">
+        <HeaderThemeColorPicker />
       </div>
     </div>
 
     <!-- 搜索按钮 -->
     <div class="right_nav">
-      <div class="search" @click="dialogVisible = true" style="margin-right: 2rem">
-        <SvgIcon name="search" width="30" height="30" color="#409EFF" class="icon" style="pointer-events: none;"/>
+      <div class="search" @click="dialogVisible = true" style="margin-right: 1rem">
+        <SvgIcon name="search" width="30" height="30" :use-theme-color="true" class="icon" style="pointer-events: none;"/>
       </div>
       <div class="user-info">
         <div v-if="userStore.userInfo == undefined">

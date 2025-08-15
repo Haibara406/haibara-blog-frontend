@@ -15,7 +15,7 @@
     <Wave></Wave>
     <!-- 向下按钮 -->
     <div class="button-container" @click="scrollDown">
-      <SvgIcon class="arrow-down" name="jt_x" width="50px" height="50px" />
+      <SvgIcon class="arrow-down" name="jt_x" width="50px" height="50px" :use-theme-color="true" />
       <div class="button-ripple"></div>
     </div>
   </div>

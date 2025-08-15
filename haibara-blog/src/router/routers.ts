@@ -163,6 +163,15 @@ export const constantRouter = [
             title: '用户设置',
         }
     },
+    // 主题色测试页面
+    {
+        path: '/theme-color-test',
+        component: () => import('@/views/ThemeColorTest.vue'),
+        name: 'themeColorTest',
+        meta: {
+            title: '主题色测试',
+        }
+    },
     // 访问其他任何不存在的路由，重定向到首页
     {
         path: '/:pathMatch(.*)*',

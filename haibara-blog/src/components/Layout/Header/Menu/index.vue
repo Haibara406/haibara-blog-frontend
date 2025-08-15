@@ -18,6 +18,7 @@ import useUserStore from "@/store/modules/user.ts"
 import router from "@/router";
 import useWebsiteStore from "@/store/modules/website.ts";
 import SvgIcon from "@/components/SvgIcon/index.vue";
+import HeaderThemeColorPicker from "@/components/HeaderThemeColorPicker/index.vue";
 import {ref} from "vue";
 import {ElMessage} from "element-plus";
 
@@ -243,13 +244,19 @@ onUnmounted(() => {
     </div>
     <div id="menu-right">
       <!-- 日夜切换 -->
-      <div style="margin-right: 4.5rem;margin-top: -0.2rem">
+      <div style="margin-right: 1rem;margin-top: -0.2rem">
         <toggle-button @change="changeToggle" size="1"></toggle-button>
       </div>
+
+      <!-- 主题色选择器 -->
+      <div style="margin-right: 1rem;margin-top: 0.5rem">
+        <HeaderThemeColorPicker />
+      </div>
+
       <div id="search-button">
         <!-- 搜索按钮 -->
         <div class="search" @click="dialogVisible = true">
-          <SvgIcon name="search" width="30" height="30" color="#409EFF" class="icon" style="pointer-events: none;"/>
+          <SvgIcon name="search" width="30" height="30" :use-theme-color="true" class="icon" style="pointer-events: none;"/>
         </div>
       </div>
       <div class="user-info">

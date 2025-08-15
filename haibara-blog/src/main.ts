@@ -22,9 +22,15 @@ import pinia from '@/store'
 import vSlideIn from '@/directives/vSlideIn.ts'
 import vLazy from '@/directives/vLazy.ts'
 import vViewRequest from '@/directives/vViewRequest.ts'
+// 主题色功能
+import { useThemeColor } from '@/composables/useThemeColor'
 
 // 获取应用实例对象
 const app = createApp(App)
+
+// 初始化主题色
+const themeColor = useThemeColor()
+themeColor.applyThemeColor()
 app.directive('slide-in',vSlideIn)
 app.directive('lazy',vLazy)
 app.directive('view-request',vViewRequest)

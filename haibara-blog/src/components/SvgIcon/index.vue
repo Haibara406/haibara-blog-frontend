@@ -1,15 +1,17 @@
 <template>
   <!-- svg：图标外层容器节点，内部需要与 use 标签结合使用 -->
-  <svg :style="{ width, height }">
+  <svg :style="{ width, height }" :class="{ 'svg-icon-primary': useThemeColor && !color }">
     <!-- xlink:href执行用哪一个图标，属性值务必#icon-图标名字 -->
     <!-- use 标签 fill 属性可以设置图标的颜色 -->
-    <use :xlink:href="prefix + name" :fill="color"></use>
+    <use :xlink:href="prefix + name" :fill="finalColor"></use>
   </svg>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 // 接收父组件传递过来的参数
-defineProps({
+const props = defineProps({
   // xlink:href 属性值的前缀
   prefix: {
     type: String,
@@ -32,7 +34,23 @@ defineProps({
     type: String,
     default: '16px',
   },
-})
+  // 是否使用主题色
+  useThemeColor: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+// 计算最终颜色
+const finalColor = computed(() => {
+  if (props.color) {
+    return props.color;
+  }
+  if (props.useThemeColor) {
+    return 'var(--mao-icon-color)';
+  }
+  return '';
+});
 </script>
 
 <style scoped lang="scss">
@@ -40,10 +58,22 @@ svg {
   display: block;
   pointer-events: inherit;
   cursor: inherit;
+  transition: all 0.3s ease;
+
+  &.svg-icon-primary {
+    use {
+      fill: var(--mao-icon-color);
+    }
+
+    &:hover use {
+      fill: var(--mao-icon-hover);
+    }
+  }
 }
 
 use {
   pointer-events: none;
   cursor: inherit;
+  transition: fill 0.3s ease;
 }
 </style>
