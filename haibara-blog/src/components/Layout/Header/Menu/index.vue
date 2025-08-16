@@ -67,8 +67,12 @@ const handleLoginClick = () => {
 }
 
 // 跳转到站长主页
-const goToHomepage = () => {
+const goToHomepage = (event?: Event) => {
   console.log('🏠 跳转到站长主页 (桌面端)')
+  if (event) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
   try {
     router.push('/homepage')
   } catch (error) {
@@ -140,8 +144,8 @@ onUnmounted(() => {
   <nav :class="{ 'hidden': !isMenuVisible, 'transparent': isTransparent }">
     <div id="menu-left">
       <div id="menus">
-        <span id="blog-info">
-          <a @click="goToHomepage" style="cursor: pointer;">{{ useWebsite.webInfo?.websiteName }}</a>
+        <span id="blog-info" @click="goToHomepage" style="cursor: pointer;">
+          <a @click.prevent="goToHomepage($event)" style="cursor: pointer;">{{ useWebsite.webInfo?.websiteName }}</a>
         </span>
         <div class="menus_items">
           <div class="menus_item" @click="router.push('/')">
@@ -428,6 +432,8 @@ nav {
         width: 120px;
         margin: 0 10px;
         cursor: pointer;
+        position: relative;
+        z-index: 10;
 
         a {
           color: white;
@@ -440,12 +446,22 @@ nav {
           display: block;
           width: 100%;
           height: 100%;
-          padding: 10px 0;
+          padding: 15px 5px;
+          position: relative;
+          z-index: 11;
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
 
           &:hover {
             color: #409EFF;
             text-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
             transform: scale(1.02);
+          }
+
+          &:active {
+            transform: scale(0.98);
           }
         }
       }

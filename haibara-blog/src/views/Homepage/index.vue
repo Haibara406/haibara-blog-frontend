@@ -244,7 +244,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useColorMode } from '@vueuse/core'
 
 const loading = ref(true)
@@ -257,10 +257,31 @@ const snakeImage = computed(() => {
 
 const showPopup = (imageSrc: string) => {
   popupImage.value = imageSrc
+  // 添加动画效果
+  nextTick(() => {
+    const tcElement = document.querySelector('.tc')
+    const tcMainElement = document.querySelector('.tc-main')
+    if (tcElement && tcMainElement) {
+      tcElement.classList.add('active')
+      setTimeout(() => {
+        tcMainElement.classList.add('active')
+      }, 50)
+    }
+  })
 }
 
 const closePopup = () => {
-  popupImage.value = ''
+  const tcElement = document.querySelector('.tc')
+  const tcMainElement = document.querySelector('.tc-main')
+  if (tcElement && tcMainElement) {
+    tcMainElement.classList.remove('active')
+    setTimeout(() => {
+      tcElement.classList.remove('active')
+      popupImage.value = ''
+    }, 200)
+  } else {
+    popupImage.value = ''
+  }
 }
 
 // 添加按下效果
@@ -383,7 +404,7 @@ a:focus {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--main_bg_color, linear-gradient(50deg, #a2d0ff, #ffffff));
+  background: var(--main_bg_color, linear-gradient(50deg, #a2d0ff, #ffffff));
 }
 
 // 全局样式
@@ -916,31 +937,47 @@ footer {
 
 .tc {
   position: fixed;
-  top: 0;
-  left: 0;
+  display: flex;
+  visibility: hidden;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(20, 20, 20, 0.5);
+  z-index: 99999;
+  left: 0;
+  top: 0;
   justify-content: center;
   align-items: center;
-  z-index: 10000;
   cursor: pointer;
+
+  &.active {
+    visibility: visible;
+  }
 }
 
 .tc-main {
-  max-width: 90%;
-  max-height: 90%;
+  z-index: 100000;
+  width: 80%;
+  max-width: 300px;
+  min-height: 200px;
+  background-color: #ffffff;
+  border-radius: 15px;
   display: flex;
+  transition: transform 0.2s linear;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
+  transform: translateY(30%) scale(0.5);
+
+  &.active {
+    transform: translateY(0) scale(1);
+  }
 }
 
 .tc-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
+  width: 100%;
+  height: 100%;
 }
 
 // 响应式设计

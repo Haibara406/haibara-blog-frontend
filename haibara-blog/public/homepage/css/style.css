@@ -1,7 +1,7 @@
 @font-face {
     font-family: "a";
     /*中文字体*/
-    src: url();
+    src: url(../fonts/Ubuntu-Regular.ttf);
     font-display: swap;
 }
 
@@ -53,7 +53,7 @@ a:focus {
 }
 
 ::-webkit-scrollbar-track {
-    background-color: var(--main_bg_color, linear-gradient(50deg, #a2d0ff, #ffffff));
+    background: var(--main_bg_color, linear-gradient(50deg, #a2d0ff, #ffffff));
 }
 
 
