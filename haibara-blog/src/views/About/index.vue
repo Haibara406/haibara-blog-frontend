@@ -418,6 +418,8 @@ onUnmounted(() => {
     clearTimeout(clickTimer)
   }
 
+
+
   // 清理emoji元素
   const emojiContainer = document.querySelector('.emoji-rain-container')
   if (emojiContainer) {

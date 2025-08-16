@@ -40,33 +40,33 @@
           <ul id="line">
             <li>
               <div class="focus"></div>
-              <div>敬请期待</div>
-              <div>2024.1</div>
+              <div>博客系统优化升级</div>
+              <div>2025.1</div>
             </li>
             <li>
               <div class="focus"></div>
-              <div>ICP备案成功</div>
-              <div>2023.8</div>
+              <div>Haibara-Blog正式上线</div>
+              <div>2024.12</div>
             </li>
             <li>
               <div class="focus"></div>
-              <div>注册域名zyyo.net</div>
-              <div>2023.3</div>
+              <div>开始Vue3+TypeScript重构</div>
+              <div>2024.8</div>
             </li>
             <li>
               <div class="focus"></div>
-              <div>出来后洗心革面</div>
-              <div>2021.2</div>
+              <div>学习前端框架技术栈</div>
+              <div>2024.3</div>
             </li>
             <li>
               <div class="focus"></div>
-              <div>...</div>
-              <div>...</div>
+              <div>开始专注全栈开发</div>
+              <div>2023.6</div>
             </li>
             <li>
               <div class="focus"></div>
-              <div>搭建第一个网站</div>
-              <div>2018.1</div>
+              <div>踏上编程学习之路</div>
+              <div>2022.1</div>
             </li>
           </ul>
         </div>
@@ -107,13 +107,14 @@
               </svg>
               <div class="iconTip">Mail</div>
             </a>
-            <a class="iconItem" @click="showPopup('/homepage/img/wxzsm.jpg')" href="javascript:void(0)">
-              <svg t="1705247464964" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4987">
-                <path d="M995.575172 725.451034c-12.358621-26.835862-38.488276-64.794483-92.689655-94.27862-62.146207-33.721379-136.297931-40.96-208.860689-20.303448l-99.928276 28.424827-279.304828-126.057931H22.775172v489.401379h509.704828l432.375172-195.266207c15.006897-6.708966 26.835862-19.42069 32.662069-34.957241 5.649655-15.36 4.943448-31.955862-1.942069-46.962759z m-482.162758 188.910345H111.051034V601.688276h184.673104l166.664828 75.387586-3.354483 0.882759h-170.372414v88.275862H471.393103l246.819311-70.267586c49.434483-14.124138 101.517241-9.357241 142.653793 12.888275 18.184828 9.886897 30.72 20.833103 39.371034 30.896552l-386.824827 174.609655z" p-id="4988"></path>
-                <path d="M695.437241 163.486897l58.615173-142.30069h-397.24138l66.736552 143.36c-121.82069 53.142069-207.095172 174.433103-207.095172 315.674483 0 28.601379 3.531034 57.202759 10.593103 84.744827l85.627586-21.715862c-5.12-20.48-7.768276-41.666207-7.768275-63.028965 0-141.241379 114.758621-256 256-256s256 114.758621 256 256c0 51.023448-14.830345 100.104828-43.078621 142.300689l73.268965 49.08138c37.958621-56.673103 58.085517-122.88 58.085518-191.382069-0.176552-141.947586-86.686897-264.121379-209.743449-316.733793zM467.508966 91.983448h180.965517l-21.009655 50.846897a348.16 348.16 0 0 0-66.913104-6.708966c-23.834483 0-46.962759 2.471724-69.384827 7.062069l-23.657931-51.2z" p-id="4989"></path>
-                <path d="M683.431724 427.431724v-70.62069h-38.311724l30.190345-30.190344-49.964138-49.964138-62.49931 62.49931h-6.002759L494.344828 276.656552l-49.787587 49.964138 30.013793 30.190344h-38.311724v70.62069h88.275862v35.310345h-88.275862v70.62069h88.275862v52.965517h70.62069v-52.965517h88.275862v-70.62069h-88.275862v-35.310345z" p-id="4990"></path>
+            <a class="iconItem" @click="showPopup('/homepage/img/wx.jpg')" href="javascript:void(0)">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M692.3 412c-23.8 0-47.6 15.9-47.6 39.7 0 23.8 23.8 39.7 47.6 39.7 31.7 0 47.6-15.9 47.6-39.7 0-23.8-15.9-39.7-47.6-39.7z m-158.7 0c-23.8 0-47.6 15.9-47.6 39.7 0 23.8 23.8 39.7 47.6 39.7 31.7 0 47.6-15.9 47.6-39.7 0-23.8-15.9-39.7-47.6-39.7z"></path>
+                <path d="M1024 561.9c0-158.7-158.7-285.7-349.2-285.7-198.4 0-349.2 127-349.2 285.7 0 158.7 150.8 285.7 349.2 285.7 39.7 0 79.4-7.9 119.1-15.9l111.1 55.6c7.9 7.9 23.8 7.9 31.7 0 7.9-7.9 7.9-15.9 7.9-23.8l-15.9-95.2C944.6 730.2 1024 650.8 1024 561.9z m-507.9-31.7c-15.9 0-31.7-15.9-31.7-31.7s15.9-31.7 31.7-31.7 31.7 15.9 31.7 31.7-15.9 31.7-31.7 31.7z m158.7 0c-15.9 0-31.7-15.9-31.7-31.7s15.9-31.7 31.7-31.7 31.7 15.9 31.7 31.7-15.9 31.7-31.7 31.7z m158.7 0c-15.9 0-31.7-15.9-31.7-31.7s15.9-31.7 31.7-31.7 31.7 15.9 31.7 31.7-15.9 31.7-31.7 31.7z"></path>
+                <path d="M365.1 253.9c-23.8 0-47.6 15.9-47.6 39.7 0 23.8 23.8 39.7 47.6 39.7 31.7 0 47.6-15.9 47.6-39.7 0-23.8-15.9-39.7-47.6-39.7z m-158.7 0c-23.8 0-47.6 15.9-47.6 39.7 0 23.8 23.8 39.7 47.6 39.7 31.7 0 47.6-15.9 47.6-39.7 0-23.8-15.9-39.7-47.6-39.7z"></path>
+                <path d="M206.4 412c-7.9 0-15.9 7.9-15.9 15.9l-23.8 87.3c0 7.9 0 15.9 7.9 23.8 7.9 7.9 23.8 7.9 31.7 0l87.3-47.6c31.7 7.9 63.5 15.9 95.2 15.9 7.9 0 23.8 0 31.7-7.9-7.9-23.8-15.9-47.6-15.9-71.4 0-142.9 119.1-253.9 269.8-253.9 7.9 0 15.9 0 23.8 0C674.6 95.2 555.5 15.9 420.7 15.9 230.2 15.9 79.4 142.9 79.4 301.6c0 87.3 71.4 166.7 127 206.4z"></path>
               </svg>
-              <div class="iconTip">赞助</div>
+              <div class="iconTip">微信</div>
             </a>
             <a class="iconItem" @click="showPopup('/homepage/img/qq.jpg')" href="javascript:void(0)">
               <svg t="1712319361023" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1861">
@@ -145,11 +146,11 @@
             site
           </div>
           <div class="projectList">
-            <a class="projectItem a" target="_blank" href="https://blog.zyyo.net"
+            <a class="projectItem a" href="/about"
                @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
               <div class="projectItemLeft">
-                <h1>博客</h1>
-                <p>记录摆烂日常</p>
+                <h1>关于</h1>
+                <p>了解更多信息</p>
               </div>
               <div class="projectItemRight">
                 <img src="/homepage/img/i1.png" alt="">
@@ -165,21 +166,11 @@
                 <img src="/homepage/img/i2.png" alt="">
               </div>
             </a>
-            <a class="projectItem a" target="_blank" href="https://zyyo.cc"
+            <a class="projectItem a" target="_blank" href="https://github.com/Haibara406"
                @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
               <div class="projectItemLeft">
-                <h1>实验室</h1>
-                <p>收集有趣html作品</p>
-              </div>
-              <div class="projectItemRight">
-                <img src="/homepage/img/i4.png" alt="">
-              </div>
-            </a>
-            <a class="projectItem a" target="_blank" href="https://zyyo.cc"
-               @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
-              <div class="projectItemLeft">
-                <h1>实验室</h1>
-                <p>收集有趣html作品</p>
+                <h1>GitHub</h1>
+                <p>开源项目代码</p>
               </div>
               <div class="projectItemRight">
                 <img src="/homepage/img/i4.png" alt="">
@@ -194,11 +185,11 @@
             project
           </div>
           <div class="projectList">
-            <a class="projectItem b" target="_blank" href="https://blog.zyyo.net"
+            <a class="projectItem b" href="/about"
                @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
               <div class="projectItemLeft">
-                <h1>博客</h1>
-                <p>记录摆烂日常</p>
+                <h1>关于</h1>
+                <p>了解更多信息</p>
               </div>
               <div class="projectItemRight">
                 <img src="/homepage/img/i1.png" alt="">
@@ -214,21 +205,11 @@
                 <img src="/homepage/img/i2.png" alt="">
               </div>
             </a>
-            <a class="projectItem b" target="_blank" href="https://zyyo.cc"
+            <a class="projectItem b" target="_blank" href="https://github.com/Haibara406"
                @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
               <div class="projectItemLeft">
-                <h1>实验室</h1>
-                <p>收集有趣html作品</p>
-              </div>
-              <div class="projectItemRight">
-                <img src="/homepage/img/i4.png" alt="">
-              </div>
-            </a>
-            <a class="projectItem b" target="_blank" href="https://zyyo.cc"
-               @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
-              <div class="projectItemLeft">
-                <h1>实验室</h1>
-                <p>收集有趣html作品</p>
+                <h1>GitHub</h1>
+                <p>开源项目代码</p>
               </div>
               <div class="projectItemRight">
                 <img src="/homepage/img/i4.png" alt="">
@@ -317,41 +298,8 @@ onMounted(() => {
 .homepage-container {
   // 添加顶部间距，避免被header遮挡
   padding-top: 80px;
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    user-select: none;
-    transition: background-color 0.2s ease;
-  }
-
-  a:hover,
-  a:link,
-  a:visited,
-  a:active,
-  a:focus {
-    text-decoration: none;
-    outline: none;
-    border: none;
-    color: inherit;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  }
-
-  /* 设置滚动条样式 */
-  ::-webkit-scrollbar {
-    width: 0px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-color: var(--main_text_color, #000000);
-    border-radius: 8px;
-    height: 20%;
-  }
-
-  ::-webkit-scrollbar-track {
-    background-color: var(--main_bg_color, linear-gradient(50deg, #a2d0ff, #ffffff));
-  }
+  // 添加整体淡入动画
+  animation: fadeInUp 0.8s ease-out;
 
   // 主题变量 - 适配haibara-blog主题系统
   --main_text_color: var(--mao-text-color, #000);
@@ -389,6 +337,57 @@ onMounted(() => {
     --main_bg_color: var(--mao-background-color, linear-gradient(50deg, #1f2327, #000000));
   }
 
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    transition: background-color 0.2s ease;
+  }
+}
+
+// 页面加载动画
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 链接样式
+a:hover,
+a:link,
+a:visited,
+a:active,
+a:focus {
+  text-decoration: none;
+  outline: none;
+  border: none;
+  color: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* 设置滚动条样式 */
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--main_text_color, #000000);
+  border-radius: 8px;
+  height: 20%;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--main_bg_color, linear-gradient(50deg, #a2d0ff, #ffffff));
+}
+
+// 全局样式
+body {
   height: 100%;
   min-height: 100vh;
   width: 100%;
