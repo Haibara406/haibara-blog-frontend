@@ -109,6 +109,15 @@ export const constantRouter = [
                     title: '相册',
                 }
             },
+            // 站长主页
+            {
+                path: '/homepage',
+                component: () => import('@/views/Homepage/index.vue'),
+                name: 'homepage',
+                meta: {
+                    title: '站长主页',
+                }
+            },
         ]
     },
     // 文章

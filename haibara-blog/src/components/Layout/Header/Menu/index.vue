@@ -66,6 +66,17 @@ const handleLoginClick = () => {
   }
 }
 
+// 跳转到站长主页
+const goToHomepage = () => {
+  console.log('🏠 跳转到站长主页 (桌面端)')
+  try {
+    router.push('/homepage')
+  } catch (error) {
+    console.error('❌ 跳转到站长主页失败:', error)
+    ElMessage.error('跳转失败，请刷新页面重试')
+  }
+}
+
 // 是否显示音乐模块
 const env = import.meta.env
 
@@ -130,7 +141,7 @@ onUnmounted(() => {
     <div id="menu-left">
       <div id="menus">
         <span id="blog-info">
-          <a href="/" style="cursor: pointer;">{{ useWebsite.webInfo?.websiteName }}</a>
+          <a @click="goToHomepage" style="cursor: pointer;">{{ useWebsite.webInfo?.websiteName }}</a>
         </span>
         <div class="menus_items">
           <div class="menus_item" @click="router.push('/')">
