@@ -156,11 +156,11 @@
                 <img src="/homepage/img/i1.png" alt="">
               </div>
             </a>
-            <a class="projectItem a" target="_blank" href="https://i.zyyo.cc"
+            <a class="projectItem a" target="_blank" href="https://s.apifox.cn/e8f1c057-b9c6-4270-8aa9-0d54c213bdc8"
                @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
               <div class="projectItemLeft">
-                <h1>云盘</h1>
-                <p>存储收集文件</p>
+                <h1>接口文档</h1>
+                <p>API接口说明文档</p>
               </div>
               <div class="projectItemRight">
                 <img src="/homepage/img/i2.png" alt="">
@@ -195,11 +195,11 @@
                 <img src="/homepage/img/i1.png" alt="">
               </div>
             </a>
-            <a class="projectItem b" target="_blank" href="https://i.zyyo.cc"
+            <a class="projectItem b" target="_blank" href="https://s.apifox.cn/e8f1c057-b9c6-4270-8aa9-0d54c213bdc8"
                @mousedown="addPressedClass" @mouseup="removePressedClass" @mouseleave="removePressedClass">
               <div class="projectItemLeft">
-                <h1>云盘</h1>
-                <p>存储收集文件</p>
+                <h1>接口文档</h1>
+                <p>API接口说明文档</p>
               </div>
               <div class="projectItemRight">
                 <img src="/homepage/img/i2.png" alt="">
@@ -235,9 +235,16 @@
       Haibara-Blog © 2025
     </footer>
 
-    <div class="tc" v-if="popupImage">
-      <div class="tc-main" @click="closePopup">
-        <img class="tc-img" :src="popupImage" alt="">
+    <!-- 弹窗 -->
+    <div v-if="popupImage" class="tc" :class="{ active: popupImage }" @click="closePopup">
+      <div class="tc-main" :class="{ active: popupImage }" @click.stop>
+        <img :src="popupImage" alt="QR Code" class="tc-img">
+        <!-- 关闭按钮 -->
+        <button class="tc-close" @click="closePopup" title="关闭">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -508,6 +515,69 @@ body {
   margin-top: 50px;
   background-size: cover;
   border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+  // 添加微妙的呼吸动画
+  animation: breathe 4s ease-in-out infinite;
+
+  // 悬停效果
+  &:hover {
+    transform: scale(1.05) rotate(5deg);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.1) saturate(1.2);
+  }
+
+  // 点击效果
+  &:active {
+    transform: scale(0.95) rotate(-2deg);
+    transition: all 0.1s ease;
+  }
+
+  // 添加边框光晕效果
+  &::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-radius: 50%;
+    background: linear-gradient(45deg,
+      rgba(64, 158, 255, 0.3),
+      rgba(255, 107, 129, 0.3),
+      rgba(64, 158, 255, 0.3)
+    );
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
+    animation: rotate 2s linear infinite;
+  }
+}
+
+// 呼吸动画
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+// 旋转动画
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .left-div {
@@ -978,6 +1048,37 @@ footer {
 .tc-img {
   width: 100%;
   height: 100%;
+}
+
+.tc-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 100001;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  svg {
+    pointer-events: none;
+  }
 }
 
 // 响应式设计
