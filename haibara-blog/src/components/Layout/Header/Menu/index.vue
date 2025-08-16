@@ -16,14 +16,12 @@ import {REMOVE_TOKEN} from "@/utils/auth.ts";
 import {useColorMode} from '@vueuse/core'
 import useUserStore from "@/store/modules/user.ts"
 import router from "@/router";
-import useWebsiteStore from "@/store/modules/website.ts";
 import SvgIcon from "@/components/SvgIcon/index.vue";
 import HeaderThemeColorPicker from "@/components/HeaderThemeColorPicker/index.vue";
 import {ref} from "vue";
 import {ElMessage} from "element-plus";
 
 const userStore = useUserStore()
-const useWebsite = useWebsiteStore()
 // 日夜切换
 const mode = useColorMode()
 const dialogVisible = ref(false)
@@ -39,7 +37,7 @@ const logoutSub = () => {
   })
 }
 
-function changeToggle({detail}) {
+function changeToggle({detail}: {detail: "light" | "dark" | "auto"}) {
   mode.value = detail
 }
 
@@ -145,7 +143,7 @@ onUnmounted(() => {
     <div id="menu-left">
       <div id="menus">
         <span id="blog-info" @click="goToHomepage" style="cursor: pointer;">
-          <a @click.prevent="goToHomepage($event)" style="cursor: pointer;">{{ useWebsite.webInfo?.websiteName }}</a>
+          <a @click.prevent="goToHomepage($event)" style="cursor: pointer;">Haibara</a>
         </span>
         <div class="menus_items">
           <div class="menus_item" @click="router.push('/')">

@@ -14,22 +14,14 @@ import autoprefixer from 'autoprefixer'
 export default defineConfig(({ mode }: ConfigEnv) => {
     return {
         plugins: [
-            // Gzip 压缩
             viteCompression({
-                verbose: true,
+                verbose: true, // 是否在控制台中输出压缩结果
                 disable: false,
-                threshold: 1024,
-                algorithm: 'gzip',
+                threshold: 1024, // 如果体积大于阈值，将被压缩，单位为b，体积过小时请不要压缩，以免适得其反
+                algorithm: 'gzip', // 压缩算法，可选['gzip'，' brotliccompress '，'deflate '，'deflateRaw']
                 ext: '.gz',
-                deleteOriginFile: false
-            }),
-            // Brotli 压缩（更好的压缩率）
-            viteCompression({
-                verbose: true,
-                disable: false,
-                threshold: 1024,
-                algorithm: 'brotliCompress',
-                ext: '.br',
+                // 源文件压缩后是否删除(亲测配置为true后浏览器会出现错误，除非nginx配置index  index.html index.htm;)
+                // 具体出现问题参考：https://blog.csdn.net/zzk_01/article/details/125857217
                 deleteOriginFile: false
             }),
             vue(),
@@ -71,19 +63,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
             }
         },
         build: {
-            // 启用 CSS 代码分割
-            cssCodeSplit: true,
-            // 设置 chunk 大小警告限制
-            chunkSizeWarningLimit: 1000,
-            // 启用压缩
-            minify: 'terser',
-            terserOptions: {
-                compress: {
-                    // 生产环境移除 console
-                    drop_console: true,
-                    drop_debugger: true,
-                },
-            },
             rollupOptions: {
                 // 配置打包文件分类输出
                 output: {
@@ -91,20 +70,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
                     entryFileNames: 'js/[name]-[hash].js', // 包的入口文件名称
                     assetFileNames: '[ext]/[name]-[hash].[ext]', // 资源文件像 字体，图片等
                 },
-                // 更精细的代码分割策略
-                manualChunks: {
-                    // Vue 核心库
-                    'vue-vendor': ['vue', 'vue-router', 'pinia'],
-                    // Element Plus 相关
-                    'element-vendor': ['element-plus', '@element-plus/icons-vue'],
-                    // 编辑器相关（异步加载）
-                    'editor-vendor': ['md-editor-v3'],
-                    // 动画和特效库
-                    'animation-vendor': ['gsap', 'swiper'],
-                    // 工具库
-                    'utils-vendor': ['axios', '@vueuse/core', 'nprogress'],
-                    // 其他第三方库
-                    'other-vendor': ['screenfull', 'js-confetti', 'vue3-danmaku', 'easy-typer-js', '@microsoft/fetch-event-source']
+                // 最小化拆分包， 将需要分离的包单独的打包出来
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        return id.toString().split('node_modules/')[1].split('/')[0].toString();
+                    }
                 }
             }
         },

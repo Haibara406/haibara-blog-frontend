@@ -1,13 +1,7 @@
 <script setup lang="ts">
+import {MdPreview} from 'md-editor-v3';
+import 'md-editor-v3/lib/preview.css';
 import EmojiPicker from './EmojiPicker.vue';
-// 异步加载 md-editor-v3 以减少初始包体积
-const MdPreview = defineAsyncComponent(() =>
-  import('md-editor-v3').then(module => {
-    // 动态导入CSS
-    import('md-editor-v3/lib/preview.css');
-    return module.MdPreview;
-  })
-);
 
 
 import {

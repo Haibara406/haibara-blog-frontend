@@ -4,7 +4,6 @@
   </div>
   <!-- 全局loading -->
   <loading></loading>
-  <Music />
   <DevToolsBlocker :enableDevToolsBlocker="true" />
   <ContextMenu />
   <!-- 鼠标跟随特效 -->
