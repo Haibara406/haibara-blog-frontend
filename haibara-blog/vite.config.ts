@@ -3,7 +3,6 @@ import AutoImport from 'unplugin-auto-import/vite'
 import viteCompression from 'vite-plugin-compression';
 import Components from 'unplugin-vue-components/vite'
 import {ElementPlusResolver} from 'unplugin-vue-components/resolvers'
-import { visualizer } from 'rollup-plugin-visualizer'
 import vue from '@vitejs/plugin-vue'
 // 引入svg需要用到插件
 import {createSvgIconsPlugin} from 'vite-plugin-svg-icons'
@@ -40,11 +39,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
             Components({
                 resolvers: [ElementPlusResolver()],
                 dts: "src/types/components.d.ts",
-            }),
-            // 打包体积分析
-            visualizer({
-                open: true,
-                filename: 'visualizer.html' //分析图生成的文件名
             })
         ],
         resolve: {
