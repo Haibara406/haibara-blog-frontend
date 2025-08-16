@@ -53,56 +53,22 @@
         <div class="current-color-display" :class="{ disabled: !enabled }">
           <div class="color-info">
             <div class="color-name">{{ enabled ? currentColorName : '主题色已禁用' }}</div>
-            <div class="color-value">{{ enabled ? `${hue.toFixed(1)}°` : '使用原始样式' }}</div>
+            <div class="color-value">{{ enabled ? `${hue.toFixed(2)}°` : '使用原始样式' }}</div>
           </div>
           <div class="color-swatch" :style="{ backgroundColor: enabled ? currentColor : '#409EFF' }"></div>
         </div>
 
-        <!-- 彩虹滑块 -->
+        <!-- 色彩滑块 -->
         <div class="color-slider-container">
           <input
             v-model.number="hue"
             type="range"
             min="0"
             max="360"
-            step="0.1"
+            step="0.01"
             class="color-slider"
           />
           <div class="slider-track"></div>
-        </div>
-
-        <!-- 精确数值输入 -->
-        <div class="precise-input">
-          <label>精确调节:</label>
-          <input
-            v-model.number="hue"
-            type="number"
-            min="0"
-            max="360"
-            step="0.1"
-            class="hue-input"
-          />
-          <span>°</span>
-        </div>
-
-        <!-- 预设颜色 -->
-        <div class="preset-colors">
-          <div class="preset-title">快速选择</div>
-          <div class="preset-grid">
-            <button
-              v-for="preset in presets"
-              :key="preset.hue"
-              @click="setPresetColor(preset.hue)"
-              class="preset-color"
-              :class="{ active: Math.abs(hue - preset.hue) <= 5 }"
-              :style="{ backgroundColor: preset.color }"
-              :title="preset.name"
-            >
-              <svg v-if="Math.abs(hue - preset.hue) <= 5" class="check-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-              </svg>
-            </button>
-          </div>
         </div>
 
         <!-- 实时预览 -->
@@ -112,14 +78,38 @@
             <div class="preview-item">
               <div class="preview-dot" :style="{ backgroundColor: 'var(--mao-primary)' }"></div>
               <span>主色调</span>
+              <code>{{ `oklch(0.70 0.14 ${hue.toFixed(2)})` }}</code>
             </div>
             <div class="preview-item">
               <div class="preview-dot" :style="{ backgroundColor: 'var(--mao-primary-light)' }"></div>
               <span>浅色调</span>
+              <code>{{ `oklch(0.80 0.12 ${hue.toFixed(2)})` }}</code>
             </div>
             <div class="preview-item">
               <div class="preview-dot" :style="{ backgroundColor: 'var(--mao-primary-dark)' }"></div>
               <span>深色调</span>
+              <code>{{ `oklch(0.60 0.16 ${hue.toFixed(2)})` }}</code>
+            </div>
+          </div>
+
+          <!-- 色彩对比预览 -->
+          <div class="color-contrast-preview">
+            <div class="contrast-title">色彩对比</div>
+            <div class="contrast-samples">
+              <div class="contrast-sample light-bg">
+                <div class="sample-bg" :style="{ backgroundColor: 'var(--mao-card-bg)' }">
+                  <div class="sample-text" :style="{ color: 'var(--mao-primary)' }">主题色文字</div>
+                  <button class="sample-button" :style="{ backgroundColor: 'var(--mao-primary)', color: 'white' }">按钮</button>
+                </div>
+                <span>浅色背景</span>
+              </div>
+              <div class="contrast-sample dark-bg">
+                <div class="sample-bg dark" :style="{ backgroundColor: 'oklch(0.16 0.04 var(--hue))' }">
+                  <div class="sample-text" :style="{ color: 'var(--mao-primary)' }">主题色文字</div>
+                  <button class="sample-button" :style="{ backgroundColor: 'var(--mao-primary)', color: 'white' }">按钮</button>
+                </div>
+                <span>深色背景</span>
+              </div>
             </div>
           </div>
         </div>
@@ -138,8 +128,6 @@ const {
   enabled,
   currentColor,
   currentColorName,
-  presets,
-  setPresetColor,
   resetToDefault,
   toggleThemeColor
 } = useThemeColor();
@@ -383,13 +371,15 @@ onUnmounted(() => {
   margin-bottom: 20px;
 
   .slider-track {
-    height: 24px;
-    border-radius: 12px;
+    height: 28px;
+    border-radius: 14px;
     background: var(--rainbow-light);
     pointer-events: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 
     html.dark & {
       background: var(--rainbow-dark);
+      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1);
     }
   }
 
@@ -398,12 +388,12 @@ onUnmounted(() => {
     top: 0;
     left: 0;
     width: 100%;
-    height: 24px;
+    height: 28px;
     -webkit-appearance: none;
     appearance: none;
     background: transparent;
     cursor: pointer;
-    border-radius: 12px;
+    border-radius: 14px;
 
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -435,68 +425,14 @@ onUnmounted(() => {
   }
 }
 
-.preset-colors {
-  margin-bottom: 16px;
 
-  .preset-title {
-    font-size: 12px;
-    font-weight: 500;
-    color: #666;
-    margin-bottom: 8px;
-
-    html.dark & {
-      color: #ccc;
-    }
-  }
-
-  .preset-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 4px;
-    max-height: 80px;
-    overflow-y: auto;
-  }
-
-  .preset-color {
-    width: 24px;
-    height: 24px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 2px solid transparent;
-
-    &:hover {
-      transform: scale(1.15);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      border-color: rgba(255, 255, 255, 0.5);
-    }
-
-    &.active {
-      transform: scale(1.15);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      border-color: rgba(255, 255, 255, 0.8);
-    }
-
-    .check-icon {
-      width: 12px;
-      height: 12px;
-      color: rgba(255, 255, 255, 0.9);
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-    }
-  }
-}
 
 .preview-section {
   .preview-title {
     font-size: 12px;
     font-weight: 500;
     color: #666;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 
     html.dark & {
       color: #ccc;
@@ -505,82 +441,118 @@ onUnmounted(() => {
 
   .preview-items {
     display: flex;
-    gap: 12px;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
   }
 
   .preview-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
+    gap: 8px;
+    font-size: 10px;
     color: #666;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 6px;
 
     html.dark & {
       color: #ccc;
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .preview-dot {
-      width: 12px;
-      height: 12px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+    }
+
+    span {
+      font-weight: 500;
+      min-width: 40px;
+    }
+
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      color: #999;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 2px 4px;
+      border-radius: 3px;
+      margin-left: auto;
+
+      html.dark & {
+        color: #666;
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  .color-contrast-preview {
+    .contrast-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: #666;
+      margin-bottom: 8px;
+
+      html.dark & {
+        color: #ccc;
+      }
+    }
+
+    .contrast-samples {
+      display: flex;
+      gap: 8px;
+    }
+
+    .contrast-sample {
+      flex: 1;
+      text-align: center;
+
+      .sample-bg {
+        padding: 8px;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+
+        &.dark {
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sample-text {
+          font-size: 10px;
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+
+        .sample-button {
+          font-size: 9px;
+          padding: 2px 6px;
+          border: none;
+          border-radius: 3px;
+          cursor: pointer;
+        }
+      }
+
+      span {
+        font-size: 9px;
+        color: #999;
+
+        html.dark & {
+          color: #666;
+        }
+      }
     }
   }
 }
 
-.precise-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  font-size: 12px;
 
-  label {
-    color: #666;
-    font-weight: 500;
-
-    html.dark & {
-      color: #ccc;
-    }
-  }
-
-  .hue-input {
-    width: 60px;
-    padding: 4px 6px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    font-size: 12px;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.8);
-
-    html.dark & {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
-      color: #fff;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--mao-primary);
-      box-shadow: 0 0 0 2px rgba(var(--mao-primary), 0.2);
-    }
-  }
-
-  span {
-    color: #666;
-    font-weight: 500;
-
-    html.dark & {
-      color: #ccc;
-    }
-  }
-}
 
 .theme-color-panel.disabled {
   .color-slider-container,
-  .preset-colors,
-  .preview-section,
-  .precise-input {
+  .preview-section {
     opacity: 0.4;
     pointer-events: none;
   }

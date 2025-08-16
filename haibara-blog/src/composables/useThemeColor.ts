@@ -7,24 +7,95 @@ interface ThemeColorSettings {
   enabled: boolean; // 是否启用主题色功能
 }
 
-// 预设主题色 - 增加更多选择，优化颜色强度
+// 预设主题色 - 大幅扩展颜色选择，提供专业级色谱体验
 export const THEME_COLOR_PRESETS = [
-  { name: '天空蓝', hue: 210, color: 'oklch(0.65 0.18 210)' },
-  { name: '薄荷绿', hue: 150, color: 'oklch(0.65 0.18 150)' },
-  { name: '樱花粉', hue: 345, color: 'oklch(0.65 0.18 345)' },
-  { name: '夕阳橙', hue: 30, color: 'oklch(0.65 0.18 30)' },
-  { name: '紫罗兰', hue: 270, color: 'oklch(0.65 0.18 270)' },
+  // 红色系 (0-30度)
+  { name: '正红', hue: 0, color: 'oklch(0.65 0.18 0)' },
+  { name: '朱红', hue: 5, color: 'oklch(0.65 0.18 5)' },
+  { name: '胭脂红', hue: 10, color: 'oklch(0.65 0.18 10)' },
+  { name: '玫瑰红', hue: 15, color: 'oklch(0.65 0.18 15)' },
+  { name: '珊瑚红', hue: 20, color: 'oklch(0.65 0.18 20)' },
+  { name: '西瓜红', hue: 25, color: 'oklch(0.65 0.18 25)' },
+  { name: '夕阳红', hue: 30, color: 'oklch(0.65 0.18 30)' },
+
+  // 橙色系 (30-60度)
+  { name: '橘红', hue: 35, color: 'oklch(0.65 0.18 35)' },
+  { name: '橙色', hue: 40, color: 'oklch(0.65 0.18 40)' },
+  { name: '琥珀', hue: 45, color: 'oklch(0.65 0.18 45)' },
+  { name: '蜜橙', hue: 50, color: 'oklch(0.65 0.18 50)' },
+  { name: '金橙', hue: 55, color: 'oklch(0.65 0.18 55)' },
+
+  // 黄色系 (60-90度)
   { name: '柠檬黄', hue: 60, color: 'oklch(0.65 0.18 60)' },
-  { name: '珊瑚红', hue: 0, color: 'oklch(0.65 0.18 0)' },
+  { name: '鹅黄', hue: 65, color: 'oklch(0.65 0.18 65)' },
+  { name: '金黄', hue: 70, color: 'oklch(0.65 0.18 70)' },
+  { name: '向日葵', hue: 75, color: 'oklch(0.65 0.18 75)' },
+  { name: '芥末黄', hue: 80, color: 'oklch(0.65 0.18 80)' },
+  { name: '橄榄黄', hue: 85, color: 'oklch(0.65 0.18 85)' },
+  { name: '黄绿', hue: 90, color: 'oklch(0.65 0.18 90)' },
+
+  // 绿色系 (90-150度)
+  { name: '嫩绿', hue: 95, color: 'oklch(0.65 0.18 95)' },
+  { name: '草绿', hue: 100, color: 'oklch(0.65 0.18 100)' },
+  { name: '苹果绿', hue: 105, color: 'oklch(0.65 0.18 105)' },
+  { name: '翠绿', hue: 110, color: 'oklch(0.65 0.18 110)' },
+  { name: '叶绿', hue: 115, color: 'oklch(0.65 0.18 115)' },
   { name: '青草绿', hue: 120, color: 'oklch(0.65 0.18 120)' },
-  { name: '深海蓝', hue: 240, color: 'oklch(0.65 0.18 240)' },
-  { name: '森林绿', hue: 135, color: 'oklch(0.65 0.18 135)' },
-  { name: '玫瑰红', hue: 330, color: 'oklch(0.65 0.18 330)' },
-  { name: '琥珀黄', hue: 45, color: 'oklch(0.65 0.18 45)' },
-  { name: '薰衣草', hue: 285, color: 'oklch(0.65 0.18 285)' },
+  { name: '森林绿', hue: 125, color: 'oklch(0.65 0.18 125)' },
+  { name: '深绿', hue: 130, color: 'oklch(0.65 0.18 130)' },
+  { name: '墨绿', hue: 135, color: 'oklch(0.65 0.18 135)' },
+  { name: '松绿', hue: 140, color: 'oklch(0.65 0.18 140)' },
+  { name: '竹绿', hue: 145, color: 'oklch(0.65 0.18 145)' },
+  { name: '薄荷绿', hue: 150, color: 'oklch(0.65 0.18 150)' },
+
+  // 青绿色系 (150-180度)
+  { name: '青绿', hue: 155, color: 'oklch(0.65 0.18 155)' },
+  { name: '碧绿', hue: 160, color: 'oklch(0.65 0.18 160)' },
   { name: '翡翠绿', hue: 165, color: 'oklch(0.65 0.18 165)' },
-  { name: '胭脂红', hue: 15, color: 'oklch(0.65 0.18 15)' },
+  { name: '孔雀绿', hue: 170, color: 'oklch(0.65 0.18 170)' },
+  { name: '青色', hue: 175, color: 'oklch(0.65 0.18 175)' },
+  { name: '湖蓝', hue: 180, color: 'oklch(0.65 0.18 180)' },
+
+  // 蓝色系 (180-240度)
+  { name: '浅蓝', hue: 185, color: 'oklch(0.65 0.18 185)' },
+  { name: '天蓝', hue: 190, color: 'oklch(0.65 0.18 190)' },
   { name: '孔雀蓝', hue: 195, color: 'oklch(0.65 0.18 195)' },
+  { name: '海蓝', hue: 200, color: 'oklch(0.65 0.18 200)' },
+  { name: '蔚蓝', hue: 205, color: 'oklch(0.65 0.18 205)' },
+  { name: '天空蓝', hue: 210, color: 'oklch(0.65 0.18 210)' },
+  { name: '钴蓝', hue: 215, color: 'oklch(0.65 0.18 215)' },
+  { name: '宝蓝', hue: 220, color: 'oklch(0.65 0.18 220)' },
+  { name: '靛蓝', hue: 225, color: 'oklch(0.65 0.18 225)' },
+  { name: '深蓝', hue: 230, color: 'oklch(0.65 0.18 230)' },
+  { name: '藏蓝', hue: 235, color: 'oklch(0.65 0.18 235)' },
+  { name: '深海蓝', hue: 240, color: 'oklch(0.65 0.18 240)' },
+
+  // 紫色系 (240-300度)
+  { name: '蓝紫', hue: 245, color: 'oklch(0.65 0.18 245)' },
+  { name: '紫蓝', hue: 250, color: 'oklch(0.65 0.18 250)' },
+  { name: '紫色', hue: 255, color: 'oklch(0.65 0.18 255)' },
+  { name: '深紫', hue: 260, color: 'oklch(0.65 0.18 260)' },
+  { name: '葡萄紫', hue: 265, color: 'oklch(0.65 0.18 265)' },
+  { name: '紫罗兰', hue: 270, color: 'oklch(0.65 0.18 270)' },
+  { name: '兰紫', hue: 275, color: 'oklch(0.65 0.18 275)' },
+  { name: '丁香紫', hue: 280, color: 'oklch(0.65 0.18 280)' },
+  { name: '薰衣草', hue: 285, color: 'oklch(0.65 0.18 285)' },
+  { name: '淡紫', hue: 290, color: 'oklch(0.65 0.18 290)' },
+  { name: '梅紫', hue: 295, color: 'oklch(0.65 0.18 295)' },
+  { name: '紫红', hue: 300, color: 'oklch(0.65 0.18 300)' },
+
+  // 粉红色系 (300-360度)
+  { name: '洋红', hue: 305, color: 'oklch(0.65 0.18 305)' },
+  { name: '品红', hue: 310, color: 'oklch(0.65 0.18 310)' },
+  { name: '桃红', hue: 315, color: 'oklch(0.65 0.18 315)' },
+  { name: '粉红', hue: 320, color: 'oklch(0.65 0.18 320)' },
+  { name: '蔷薇红', hue: 325, color: 'oklch(0.65 0.18 325)' },
+  { name: '玫瑰粉', hue: 330, color: 'oklch(0.65 0.18 330)' },
+  { name: '胭脂粉', hue: 335, color: 'oklch(0.65 0.18 335)' },
+  { name: '樱花粉', hue: 340, color: 'oklch(0.65 0.18 340)' },
+  { name: '桃花粉', hue: 345, color: 'oklch(0.65 0.18 345)' },
+  { name: '粉橙', hue: 350, color: 'oklch(0.65 0.18 350)' },
+  { name: '橙粉', hue: 355, color: 'oklch(0.65 0.18 355)' },
 ];
 
 // 默认设置
@@ -90,8 +161,8 @@ export const useThemeColor = () => {
   const hue = computed({
     get: () => themeColorSettings.value.hue,
     set: (value: number) => {
-      // 确保值在0-360范围内，支持0.1精度
-      const normalizedValue = Math.max(0, Math.min(360, Math.round(value * 10) / 10));
+      // 确保值在0-360范围内，支持0.01精度
+      const normalizedValue = Math.max(0, Math.min(360, Math.round(value * 100) / 100));
       themeColorSettings.value.hue = normalizedValue;
     }
   });
