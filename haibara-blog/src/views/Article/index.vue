@@ -451,8 +451,8 @@ function togglePointerRepel() {
                 <div class="notice-content">
                   <div class="notice-icon">💻</div>
                   <div class="notice-text">
-                    <h4>技术类文章提示</h4>
-                    <p>技术类文章暂不支持在特效文本框中展示，请点击右侧阅读模式按钮进入阅读模式以获得更好的阅读体验。</p>
+                    <h4>温馨提示</h4>
+                    <p>该文章为技术类文章，暂不支持在特效文本框中展示，请点击下方或右侧阅读模式按钮进入阅读模式以获得更好的阅读体验。</p>
                   </div>
                   <div class="notice-action">
                     <button @click="ReadingModeFunc" class="reading-mode-btn">

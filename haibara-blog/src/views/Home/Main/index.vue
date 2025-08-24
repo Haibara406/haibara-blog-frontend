@@ -23,7 +23,7 @@
       </div>
       <div>
         <el-divider border-style="dashed" content-position="center">
-          <div style="font-weight: bold">~~这里是网页的终点，也是我故事的起点，更是我们下一段旅程的开始，感谢你的陪伴~~</div>
+          <div style="font-weight: bold">~~到底啦，试试点击右下角的火箭吧~~</div>
         </el-divider>
       </div>
     </template>
