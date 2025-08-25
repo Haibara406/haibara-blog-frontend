@@ -69,6 +69,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
             }
         },
         build: {
+            sourcemap: false, // 显式关闭 source map
             rollupOptions: {
                 // 配置打包文件分类输出
                 output: {

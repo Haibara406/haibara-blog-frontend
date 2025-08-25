@@ -181,8 +181,8 @@ const checkDevToolsPreOpened = () => {
   if (!isEnabled.value) return false;
   
   // 方法1: 检查窗口尺寸差异
-  const widthThreshold = 160;
-  const heightThreshold = 160;
+  const widthThreshold = 250; // 增加阈值以减少误报
+  const heightThreshold = 250;
   
   if (window.outerWidth - window.innerWidth > widthThreshold || 
       window.outerHeight - window.innerHeight > heightThreshold) {
@@ -237,7 +237,7 @@ const checkDevToolsPreOpened = () => {
 const performDevToolsCheck = () => {
   if (!isEnabled.value) return;
 
-  const threshold = 160; // 开发者工具打开时内外高度/宽度的典型差异
+  const threshold = 250; // 增加阈值以减少误报
   if (window.outerWidth - window.innerWidth > threshold || 
       window.outerHeight - window.innerHeight > threshold) {
     if (!isWarningVisible.value) {
