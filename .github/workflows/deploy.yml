@@ -15,15 +15,15 @@ jobs:
       - name: 📥 检出代码
         uses: actions/checkout@v4
 
-      - name: 🟢 设置 Node.js 18
+      - name: 🟢 设置 Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: 📦 安装 pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10
 
       - name: 📦 获取 pnpm store 目录
         id: pnpm-cache
@@ -40,7 +40,7 @@ jobs:
       - name: 📦 安装依赖（博客端）
         run: |
           cd haibara-blog
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
 
       - name: 🔨 构建博客端
         run: |
@@ -110,15 +110,15 @@ jobs:
       - name: 📥 检出代码
         uses: actions/checkout@v4
 
-      - name: 🟢 设置 Node.js 18
+      - name: 🟢 设置 Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: 📦 安装 pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10
 
       - name: 📦 获取 pnpm store 目录
         id: pnpm-cache
@@ -135,7 +135,7 @@ jobs:
       - name: 📦 安装依赖（管理端）
         run: |
           cd haibara-admin
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
 
       - name: 🔨 构建管理端
         run: |
