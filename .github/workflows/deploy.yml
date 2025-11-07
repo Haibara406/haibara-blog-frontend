@@ -1,0 +1,214 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  # ==================== 博客端部署 ====================
+  deploy-blog:
+    name: 🌐 部署博客端
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 设置 Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 📦 获取 pnpm store 目录
+        id: pnpm-cache
+        run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: 🗃️ 设置 pnpm 缓存
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 📦 安装依赖（博客端）
+        run: |
+          cd haibara-blog
+          pnpm install --frozen-lockfile
+
+      - name: 🔨 构建博客端
+        run: |
+          cd haibara-blog
+          pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: 🚀 部署博客端到服务器
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 154.94.235.178
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "🔄 开始部署博客端..."
+            
+            # 创建临时目录
+            mkdir -p /tmp/blog-deploy
+
+      - name: 📤 上传构建文件
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 154.94.235.178
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "haibara-blog/dist/*"
+          target: "/tmp/blog-deploy/"
+          strip_components: 2
+
+      - name: 📦 更新博客端
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 154.94.235.178
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 创建备份目录
+            mkdir -p /data/nginx/backups
+            
+            # 备份旧版本
+            if [ -d /data/nginx/html/blog ] && [ "$(ls -A /data/nginx/html/blog)" ]; then
+              echo "📦 备份旧版本..."
+              tar -czf /data/nginx/backups/blog_$(date +%Y%m%d_%H%M%S).tar.gz -C /data/nginx/html blog
+            fi
+            
+            # 清空目录
+            rm -rf /data/nginx/html/blog/*
+            
+            # 部署新版本
+            mv /tmp/blog-deploy/* /data/nginx/html/blog/
+            
+            # 清理临时文件
+            rm -rf /tmp/blog-deploy
+            
+            # 测试并重载Nginx
+            nginx -t && nginx -s reload
+            
+            echo "✅ 博客端部署完成"
+
+  # ==================== 管理端部署 ====================
+  deploy-admin:
+    name: 🎛️ 部署管理端
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 设置 Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 📦 获取 pnpm store 目录
+        id: pnpm-cache
+        run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: 🗃️ 设置 pnpm 缓存
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 📦 安装依赖（管理端）
+        run: |
+          cd haibara-admin
+          pnpm install --frozen-lockfile
+
+      - name: 🔨 构建管理端
+        run: |
+          cd haibara-admin
+          pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: 🚀 部署管理端到服务器
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 154.94.235.178
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "🔄 开始部署管理端..."
+            mkdir -p /tmp/admin-deploy
+
+      - name: 📤 上传构建文件
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 154.94.235.178
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "haibara-admin/dist/*"
+          target: "/tmp/admin-deploy/"
+          strip_components: 2
+
+      - name: 📦 更新管理端
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 154.94.235.178
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 创建备份目录
+            mkdir -p /data/nginx/backups
+            
+            # 备份旧版本
+            if [ -d /data/nginx/html/admin ] && [ "$(ls -A /data/nginx/html/admin)" ]; then
+              echo "📦 备份旧版本..."
+              tar -czf /data/nginx/backups/admin_$(date +%Y%m%d_%H%M%S).tar.gz -C /data/nginx/html admin
+            fi
+            
+            # 清空目录
+            rm -rf /data/nginx/html/admin/*
+            
+            # 部署新版本
+            mv /tmp/admin-deploy/* /data/nginx/html/admin/
+            
+            # 清理临时文件
+            rm -rf /tmp/admin-deploy
+            
+            # 测试并重载Nginx
+            nginx -t && nginx -s reload
+            
+            echo "✅ 管理端部署完成"
+
+  # ==================== 部署汇总 ====================
+  summary:
+    name: 📊 部署汇总
+    runs-on: ubuntu-latest
+    needs: [deploy-blog, deploy-admin]
+    if: always()
+
+    steps:
+      - name: 📢 部署结果
+        run: |
+          echo "## 🚀 部署结果汇总" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 博客端 | ${{ needs.deploy-blog.result == 'success' && '✅ 成功' || '❌ 失败' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 管理端 | ${{ needs.deploy-admin.result == 'success' && '✅ 成功' || '❌ 失败' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "构建时间: $(date)" >> $GITHUB_STEP_SUMMARY
